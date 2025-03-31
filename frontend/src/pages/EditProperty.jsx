@@ -11,10 +11,10 @@ export default function EditProperty() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    type: 'apartment',
+    type: '',
     price: '',
     location: {
-      address: '',
+      street: '',
       city: '',
       state: '',
       zipCode: ''
@@ -22,7 +22,7 @@ export default function EditProperty() {
     features: {
       bedrooms: '',
       bathrooms: '',
-      area: '',
+      squareFootage: '',
       furnished: false,
       parking: false,
       petsAllowed: false
@@ -39,12 +39,36 @@ export default function EditProperty() {
 
   const fetchProperty = async () => {
     try {
-      const response = await axios.get(API_ENDPOINTS.PROPERTY_BY_ID(id), {
+      const response = await axios.get(`${API_ENDPOINTS.PROPERTIES}/${id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
       });
-      setFormData(response.data);
+      
+      // Transform the data to match our form structure
+      const propertyData = {
+        title: response.data.title || '',
+        description: response.data.description || '',
+        type: response.data.type || '',
+        price: response.data.price || '',
+        location: {
+          street: response.data.location?.street || '',
+          city: response.data.location?.city || '',
+          state: response.data.location?.state || '',
+          zipCode: response.data.location?.zipCode || ''
+        },
+        features: {
+          bedrooms: response.data.features?.bedrooms || '',
+          bathrooms: response.data.features?.bathrooms || '',
+          squareFootage: response.data.features?.squareFootage || '',
+          furnished: response.data.features?.furnished || false,
+          parking: response.data.features?.parking || false,
+          petsAllowed: response.data.features?.petsAllowed || false
+        },
+        images: response.data.images || []
+      };
+      
+      setFormData(propertyData);
     } catch (error) {
       setError('Error fetching property details');
       console.error('Error:', error);
@@ -93,9 +117,10 @@ export default function EditProperty() {
     submitData.append('description', formData.description);
     submitData.append('type', formData.type);
     submitData.append('price', formData.price);
+    submitData.append('status', 'New');
 
     // Add location fields
-    submitData.append('location[address]', formData.location.address);
+    submitData.append('location[street]', formData.location.street);
     submitData.append('location[city]', formData.location.city);
     submitData.append('location[state]', formData.location.state);
     submitData.append('location[zipCode]', formData.location.zipCode);
@@ -103,7 +128,7 @@ export default function EditProperty() {
     // Add features fields
     submitData.append('features[bedrooms]', formData.features.bedrooms);
     submitData.append('features[bathrooms]', formData.features.bathrooms);
-    submitData.append('features[area]', formData.features.area);
+    submitData.append('features[squareFootage]', formData.features.squareFootage);
     submitData.append('features[furnished]', formData.features.furnished);
     submitData.append('features[parking]', formData.features.parking);
     submitData.append('features[petsAllowed]', formData.features.petsAllowed);
@@ -250,15 +275,15 @@ export default function EditProperty() {
                 <h2 className="text-xl font-semibold text-gray-900">Location</h2>
                 
                 <div>
-                  <label htmlFor="location.address" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="location.street" className="block text-sm font-medium text-gray-700">
                     Street Address
                   </label>
                   <input
                     type="text"
-                    id="location.address"
-                    name="location.address"
+                    id="location.street"
+                    name="location.street"
                     required
-                    value={formData.location.address}
+                    value={formData.location.street}
                     onChange={handleChange}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-md focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors duration-200 hover:border-gray-400 bg-white py-3 px-4"
                     placeholder="Enter street address"
@@ -357,17 +382,17 @@ export default function EditProperty() {
                   </div>
 
                   <div>
-                    <label htmlFor="features.area" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="features.squareFootage" className="block text-sm font-medium text-gray-700">
                       Area (sq ft)
                     </label>
                     <div className="mt-1 relative rounded-md shadow-sm">
                       <input
                         type="number"
-                        id="features.area"
-                        name="features.area"
+                        id="features.squareFootage"
+                        name="features.squareFootage"
                         required
                         min="0"
-                        value={formData.features.area}
+                        value={formData.features.squareFootage}
                         onChange={handleChange}
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-md focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors duration-200 hover:border-gray-400 bg-white py-3 px-4"
                         placeholder="Square footage"
@@ -457,11 +482,15 @@ export default function EditProperty() {
                 {formData.images.length > 0 && (
                   <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
                     {formData.images.map((image, index) => (
-                      <div key={index} className="relative group">
+                      <div key={index} className="relative group w-24 h-24">
                         <img
-                          src={typeof image === 'string' ? `http://localhost:5000/${image.replace(/\\/g, '/')}` : URL.createObjectURL(image)}
-                          alt={`Property image ${index + 1}`}
-                          className="h-32 w-full rounded-lg object-cover transition-transform duration-200 group-hover:scale-105"
+                          src={typeof image === 'string' 
+                            ? image.startsWith('http') 
+                              ? image 
+                              : `http://localhost:5000/uploads/${image}`
+                            : URL.createObjectURL(image)}
+                          alt={`Property ${index + 1}`}
+                          className="h-24 w-24 object-cover rounded-lg"
                         />
                         <button
                           type="button"

@@ -13,7 +13,7 @@ const propertySchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ['Apartment', 'House', 'Condo', 'Studio']
+    enum: ['apartment', 'house', 'condo', 'townhouse', 'commercial']
   },
   price: {
     type: Number,
@@ -58,6 +58,19 @@ const propertySchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  applications: [{
+    tenant: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending'
+    },
+    moveInDate: Date,
+    message: String
+  }],
   available: {
     type: Boolean,
     default: true

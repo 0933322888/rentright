@@ -5,23 +5,25 @@ import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api';
 
 export default function MyProperties() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [properties, setProperties] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
+    if (!loading) {
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+      if (user.role !== 'landlord') {
+        navigate('/');
+        return;
+      }
+      fetchProperties();
     }
-    if (user.role !== 'landlord') {
-      navigate('/');
-      return;
-    }
-    fetchProperties();
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
 
   const fetchProperties = async () => {
     try {
@@ -35,20 +37,54 @@ export default function MyProperties() {
       });
       setProperties(response.data);
     } catch (error) {
+      if (error.response?.status === 401) {
+        navigate('/login');
+        return;
+      }
       setError('Error fetching properties');
       console.error('Error:', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleSubmit = async (propertyId) => {
     try {
-      await axios.put(`${API_ENDPOINTS.PROPERTIES}/${propertyId}`, {
-        status: 'Submitted'
-      }, {
+      const property = properties.find(p => p._id === propertyId);
+      if (!property) return;
+
+      const submitData = new FormData();
+      submitData.append('title', property.title);
+      submitData.append('description', property.description);
+      submitData.append('type', property.type);
+      submitData.append('price', property.price);
+      submitData.append('status', 'Submitted');
+
+      // Add location fields
+      submitData.append('location[street]', property.location.street);
+      submitData.append('location[city]', property.location.city);
+      submitData.append('location[state]', property.location.state);
+      submitData.append('location[zipCode]', property.location.zipCode);
+
+      // Add features fields
+      submitData.append('features[bedrooms]', property.features.bedrooms);
+      submitData.append('features[bathrooms]', property.features.bathrooms);
+      submitData.append('features[squareFootage]', property.features.squareFootage);
+      submitData.append('features[furnished]', property.features.furnished);
+      submitData.append('features[parking]', property.features.parking);
+      submitData.append('features[petsAllowed]', property.features.petsAllowed);
+
+      // Add existing images
+      if (property.images && property.images.length > 0) {
+        property.images.forEach(image => {
+          submitData.append('existingImages', image);
+        });
+      }
+
+      await axios.put(`${API_ENDPOINTS.PROPERTIES}/${propertyId}`, submitData, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'multipart/form-data'
         }
       });
       fetchProperties();
@@ -65,9 +101,10 @@ export default function MyProperties() {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
         });
-        fetchProperties();
+        setProperties(properties.filter(property => property._id !== propertyId));
       } catch (error) {
         console.error('Error deleting property:', error);
+        alert('Failed to delete property. Please try again.');
       }
     }
   };
@@ -87,14 +124,9 @@ export default function MyProperties() {
     }
   };
 
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
-        <p className="text-gray-600">Loading your properties...</p>
-      </div>
-    </div>
-  );
+  if (loading || isLoading) {
+    return <div className="text-center py-12">Loading...</div>;
+  }
 
   if (error) return (
     <div className="min-h-screen flex items-center justify-center">
@@ -162,11 +194,15 @@ export default function MyProperties() {
                       <tr key={property._id} className="hover:bg-gray-50">
                         <td className="whitespace-nowrap py-6 pl-4 pr-3 text-sm sm:pl-6">
                           <div className="flex items-center">
-                            <div className="h-16 w-16 flex-shrink-0">
+                            <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg">
                               <img
-                                className="h-16 w-16 rounded-lg object-cover"
-                                src={property.images[0] ? `http://localhost:5000/${property.images[0].replace(/\\/g, '/')}` : 'https://via.placeholder.com/400x300'}
-                                alt=""
+                                src={property.images && property.images.length > 0 
+                                  ? property.images[0].startsWith('http') 
+                                    ? property.images[0] 
+                                    : `http://localhost:5000/uploads/${property.images[0]}`
+                                  : 'https://via.placeholder.com/400x300'}
+                                alt={property.title}
+                                className="h-16 w-16 object-cover"
                               />
                             </div>
                             <div className="ml-4">

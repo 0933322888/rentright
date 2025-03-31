@@ -26,6 +26,7 @@ export const AuthProvider = ({ children }) => {
       console.error('Error fetching user profile:', error);
       localStorage.removeItem('token');
       delete axios.defaults.headers.common['Authorization'];
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -40,7 +41,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', data.token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
       setUser(data);
-      return { success: true };
+      return { success: true, ...data };
     } catch (error) {
       return {
         success: false,
@@ -55,7 +56,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('token', data.token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
       setUser(data);
-      return { success: true };
+      return { success: true, ...data };
     } catch (error) {
       return {
         success: false,

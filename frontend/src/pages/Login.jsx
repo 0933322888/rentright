@@ -24,7 +24,11 @@ export default function Login() {
     const result = await login(formData.email, formData.password);
     
     if (result.success) {
-      navigate('/');
+      if (result.role === 'landlord') {
+        navigate('/my-properties');
+      } else {
+        navigate('/');
+      }
     } else {
       setError(result.message);
     }

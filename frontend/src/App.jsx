@@ -20,7 +20,11 @@ import { useAuth } from './context/AuthContext';
 
 // Protected route component
 function ProtectedRoute({ children, allowedRoles = [] }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div className="text-center py-12">Loading...</div>;
+  }
 
   if (!user) {
     return <Navigate to="/login" replace />;
@@ -35,7 +39,11 @@ function ProtectedRoute({ children, allowedRoles = [] }) {
 
 // Role-based redirect for home page
 function HomeRedirect() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div className="text-center py-12">Loading...</div>;
+  }
 
   if (user?.role === 'landlord') {
     return <Navigate to="/my-properties" replace />;

@@ -1,11 +1,12 @@
 import Property from '../models/propertyModel.js';
+import mongoose from 'mongoose';
 
 export const createProperty = async (req, res) => {
   try {
     const property = new Property({
       ...req.body,
       landlord: req.user._id,
-      images: req.files ? req.files.map(file => file.path) : []
+      images: req.files ? req.files.map(file => file.path.replace(/\\/g, '/').split('uploads/')[1]) : []
     });
 
     const createdProperty = await property.save();
@@ -24,7 +25,8 @@ export const getProperties = async (req, res) => {
       bedrooms, 
       city, 
       furnished,
-      available 
+      available,
+      landlord 
     } = req.query;
 
     const filter = {};
@@ -39,9 +41,11 @@ export const getProperties = async (req, res) => {
     if (bedrooms) filter['features.bedrooms'] = Number(bedrooms);
     if (furnished) filter['features.furnished'] = furnished === 'true';
     if (available) filter.available = available === 'true';
+    if (landlord) filter.landlord = landlord;
 
     const properties = await Property.find(filter)
       .populate('landlord', 'name email phone')
+      .populate('tenant', 'name email phone')
       .sort('-createdAt');
 
     res.json(properties);
@@ -52,6 +56,11 @@ export const getProperties = async (req, res) => {
 
 export const getPropertyById = async (req, res) => {
   try {
+    // Check if the ID is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid property ID format' });
+    }
+
     const property = await Property.findById(req.params.id)
       .populate('landlord', 'name email phone')
       .populate('applications.tenant', 'name email phone');
@@ -62,6 +71,7 @@ export const getPropertyById = async (req, res) => {
       res.status(404).json({ message: 'Property not found' });
     }
   } catch (error) {
+    console.error('Error in getPropertyById:', error);
     res.status(400).json({ message: error.message });
   }
 };
@@ -84,7 +94,7 @@ export const updateProperty = async (req, res) => {
       [];
 
     // Handle new images
-    const newImages = req.files ? req.files.map(file => file.path) : [];
+    const newImages = req.files ? req.files.map(file => file.path.replace(/\\/g, '/').split('uploads/')[1]) : [];
 
     // Combine existing and new images
     const updatedImages = [...existingImages, ...newImages];
@@ -116,7 +126,7 @@ export const deleteProperty = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to delete this property' });
     }
 
-    await property.remove();
+    await Property.findByIdAndDelete(req.params.id);
     res.json({ message: 'Property removed' });
   } catch (error) {
     res.status(400).json({ message: error.message });
