@@ -13,17 +13,15 @@ const propertySchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ['apartment', 'house', 'condo', 'townhouse']
+    enum: ['Apartment', 'House', 'Condo', 'Studio']
   },
   price: {
     type: Number,
-    required: true
+    required: true,
+    min: 0
   },
   location: {
-    address: {
-      type: String,
-      required: true
-    },
+    street: String,
     city: {
       type: String,
       required: true
@@ -32,41 +30,29 @@ const propertySchema = new mongoose.Schema({
       type: String,
       required: true
     },
-    zipCode: {
-      type: String,
-      required: true
-    }
+    zipCode: String
   },
   features: {
-    bedrooms: {
-      type: Number,
-      required: true
-    },
-    bathrooms: {
-      type: Number,
-      required: true
-    },
-    area: {
-      type: Number,
-      required: true
-    },
-    furnished: {
-      type: Boolean,
-      default: false
-    },
-    parking: {
-      type: Boolean,
-      default: false
-    },
-    petsAllowed: {
-      type: Boolean,
-      default: false
-    }
+    bedrooms: Number,
+    bathrooms: Number,
+    squareFootage: Number,
+    parking: Boolean,
+    furnished: Boolean,
+    petsAllowed: Boolean
   },
   images: [{
-    type: String,
-    required: true
+    type: String
   }],
+  status: {
+    type: String,
+    required: true,
+    enum: ['New', 'Review', 'Submitted', 'Rented'],
+    default: 'New'
+  },
+  tenant: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
   landlord: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -76,25 +62,12 @@ const propertySchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  applications: [{
-    tenant: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    status: {
-      type: String,
-      enum: ['pending', 'approved', 'rejected'],
-      default: 'pending'
-    },
-    appliedAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
   createdAt: {
     type: Date,
     default: Date.now
   }
+}, {
+  timestamps: true
 });
 
 const Property = mongoose.model('Property', propertySchema);

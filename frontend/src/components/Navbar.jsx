@@ -1,15 +1,8 @@
 import { Fragment } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Disclosure, Menu, Transition } from '@headlessui/react';
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, XMarkIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
-
-const navigation = [
-  { name: 'Home', href: '/' },
-  { name: 'Properties', href: '/properties' },
-  { name: 'About', href: '/about' },
-  { name: 'Contact', href: '/contact' },
-];
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
@@ -18,11 +11,40 @@ function classNames(...classes) {
 export default function Navbar() {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
-  const navigationItems = [
-    ...navigation,
-    ...(user?.role === 'landlord' ? [{ name: 'Add Property', href: '/add-property' }] : []),
-  ];
+  // Define navigation items based on user role
+  const getNavigationItems = () => {
+    if (!user) {
+      return [
+        { name: 'Home', href: '/' },
+        { name: 'Properties', href: '/properties' },
+        { name: 'About', href: '/about' },
+        { name: 'Contact', href: '/contact' },
+      ];
+    }
+
+    if (user.role === 'landlord') {
+      return [
+        { name: 'My Properties', href: '/my-properties' },
+        { name: 'Contact', href: '/contact' },
+      ];
+    }
+
+    // Tenant navigation
+    return [
+      { name: 'Properties', href: '/properties' },
+      { name: 'My Applications', href: '/applications' },
+
+    ];
+  };
+
+  const navigationItems = getNavigationItems();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <Disclosure as="nav" className="bg-white shadow w-full">
@@ -32,8 +54,8 @@ export default function Navbar() {
             <div className="flex h-16 justify-between">
               <div className="flex">
                 <div className="flex flex-shrink-0 items-center">
-                  <Link to="/" className="text-xl font-bold text-indigo-600">
-                    RentalApp
+                  <Link to={user?.role === 'landlord' ? '/my-properties' : '/'} className="text-xl font-bold text-indigo-600">
+                    RentRight
                   </Link>
                 </div>
                 <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -53,16 +75,16 @@ export default function Navbar() {
                   ))}
                 </div>
               </div>
-              <div className="hidden sm:ml-6 sm:flex sm:items-center">
+
+              <div className="flex items-center">
                 {user ? (
                   <Menu as="div" className="relative ml-3">
                     <div>
-                      <Menu.Button className="flex rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                      <Menu.Button className="flex items-center rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                         <span className="sr-only">Open user menu</span>
-                        <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                          <span className="text-indigo-600 font-medium">
-                            {user.name.charAt(0).toUpperCase()}
-                          </span>
+                        <div className="flex items-center">
+                          <span className="mr-2 text-gray-700">{user.name}</span>
+                          <UserCircleIcon className="h-8 w-8 text-gray-400" aria-hidden="true" />
                         </div>
                       </Menu.Button>
                     </div>
@@ -85,27 +107,14 @@ export default function Navbar() {
                                 'block px-4 py-2 text-sm text-gray-700'
                               )}
                             >
-                              Your Profile
-                            </Link>
-                          )}
-                        </Menu.Item>
-                        <Menu.Item>
-                          {({ active }) => (
-                            <Link
-                              to="/applications"
-                              className={classNames(
-                                active ? 'bg-gray-100' : '',
-                                'block px-4 py-2 text-sm text-gray-700'
-                              )}
-                            >
-                              Applications
+                              Profile
                             </Link>
                           )}
                         </Menu.Item>
                         <Menu.Item>
                           {({ active }) => (
                             <button
-                              onClick={logout}
+                              onClick={handleLogout}
                               className={classNames(
                                 active ? 'bg-gray-100' : '',
                                 'block w-full px-4 py-2 text-left text-sm text-gray-700'
@@ -122,7 +131,7 @@ export default function Navbar() {
                   <div className="flex space-x-4">
                     <Link
                       to="/login"
-                      className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
+                      className="text-gray-500 hover:text-gray-700 px-3 py-2 text-sm font-medium"
                     >
                       Login
                     </Link>
@@ -135,16 +144,6 @@ export default function Navbar() {
                   </div>
                 )}
               </div>
-              <div className="-mr-2 flex items-center sm:hidden">
-                <Disclosure.Button className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
-                  <span className="sr-only">Open main menu</span>
-                  {open ? (
-                    <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
-                  ) : (
-                    <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
-                  )}
-                </Disclosure.Button>
-              </div>
             </div>
           </div>
 
@@ -156,8 +155,8 @@ export default function Navbar() {
                   to={item.href}
                   className={classNames(
                     location.pathname === item.href
-                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700',
+                      ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                      : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700',
                     'block border-l-4 py-2 pl-3 pr-4 text-base font-medium'
                   )}
                 >
@@ -169,11 +168,7 @@ export default function Navbar() {
               <div className="border-t border-gray-200 pb-3 pt-4">
                 <div className="flex items-center px-4">
                   <div className="flex-shrink-0">
-                    <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                      <span className="text-indigo-600 font-medium">
-                        {user.name.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
+                    <UserCircleIcon className="h-8 w-8 text-gray-400" aria-hidden="true" />
                   </div>
                   <div className="ml-3">
                     <div className="text-base font-medium text-gray-800">{user.name}</div>
@@ -185,16 +180,10 @@ export default function Navbar() {
                     to="/profile"
                     className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800"
                   >
-                    Your Profile
-                  </Link>
-                  <Link
-                    to="/applications"
-                    className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800"
-                  >
-                    Applications
+                    Profile
                   </Link>
                   <button
-                    onClick={logout}
+                    onClick={handleLogout}
                     className="block w-full px-4 py-2 text-left text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800"
                   >
                     Sign out
