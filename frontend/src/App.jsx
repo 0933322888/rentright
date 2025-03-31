@@ -12,6 +12,7 @@ import Profile from './pages/Profile';
 import Applications from './pages/Applications';
 import About from './pages/About';
 import Contact from './pages/Contact';
+import LandlordBenefits from './pages/LandlordBenefits';
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
               <Route path="/applications" element={<Applications />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/landlord-benefits" element={<LandlordBenefits />} />
             </Routes>
           </main>
           <Footer />
