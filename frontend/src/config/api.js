@@ -7,6 +7,7 @@ export const API_ENDPOINTS = {
   
   // User endpoints
   USER_PROFILE: `${API_BASE_URL}/users/profile`,
+  UPDATE_TENANT_PROFILE: `${API_BASE_URL}/users/tenant-profile`,
   
   // Property endpoints
   PROPERTIES: `${API_BASE_URL}/properties`,

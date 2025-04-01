@@ -17,6 +17,7 @@ import Contact from './pages/Contact';
 import LandlordBenefits from './pages/LandlordBenefits';
 import TenantBenefits from './pages/TenantBenefits';
 import MyProperties from './pages/MyProperties';
+import TenantProfile from './pages/TenantProfile';
 import { useAuth } from './context/AuthContext';
 
 // Protected route component
@@ -80,6 +81,14 @@ export default function App() {
                 element={
                   <ProtectedRoute allowedRoles={['landlord']}>
                     <MyProperties />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/tenant-profile"
+                element={
+                  <ProtectedRoute allowedRoles={['tenant']}>
+                    <TenantProfile />
                   </ProtectedRoute>
                 }
               />

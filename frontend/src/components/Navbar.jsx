@@ -35,7 +35,7 @@ export default function Navbar() {
     return [
       { name: 'Properties', href: '/properties' },
       { name: 'My Applications', href: '/applications' },
-
+      { name: 'Tenant Profile', href: '/tenant-profile' },
     ];
   };
 
