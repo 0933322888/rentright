@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { API_ENDPOINTS } from '../config/api';
 
 export default function PropertyDetails() {
   const { id } = useParams();
@@ -22,7 +23,12 @@ export default function PropertyDetails() {
 
   const fetchPropertyDetails = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/properties/${id}`);
+      const response = await axios.get(API_ENDPOINTS.PROPERTY_BY_ID(id), {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      console.log('Property data:', response.data);
       setProperty(response.data);
     } catch (error) {
       setError('Error fetching property details');
@@ -63,7 +69,7 @@ export default function PropertyDetails() {
           {/* Property Images */}
           <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-lg bg-gray-200">
             <img
-              src={property.images[selectedImage] || 'https://via.placeholder.com/800x600'}
+              src={property.images[selectedImage] ? `http://localhost:5000/uploads/${property.images[selectedImage]}` : 'https://via.placeholder.com/800x600'}
               alt={property.title}
               className="h-full w-full object-cover object-center"
             />
@@ -79,7 +85,7 @@ export default function PropertyDetails() {
                   }`}
                 >
                   <img
-                    src={image}
+                    src={`http://localhost:5000/uploads/${image}`}
                     alt={`${property.title} - Image ${index + 1}`}
                     className="h-full w-full object-cover object-center"
                   />
@@ -97,7 +103,11 @@ export default function PropertyDetails() {
                 {property.type}
               </span>
             </div>
-            <p className="mt-2 text-gray-600">{property.location}</p>
+            <p className="mt-2 text-gray-600">
+              {property.location.street && `${property.location.street}, `}
+              {property.location.city}, {property.location.state}
+              {property.location.zipCode && ` ${property.location.zipCode}`}
+            </p>
           </div>
 
           <div className="mt-8">
@@ -109,8 +119,8 @@ export default function PropertyDetails() {
           <div className="mt-8">
             <h2 className="text-xl font-semibold text-gray-900">Features</h2>
             <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
-              {property.features.map((feature, index) => (
-                <div key={index} className="flex items-center">
+              {property.features && Object.entries(property.features).map(([key, value]) => (
+                <div key={key} className="flex items-center">
                   <svg
                     className="h-5 w-5 text-green-500"
                     xmlns="http://www.w3.org/2000/svg"
@@ -123,54 +133,32 @@ export default function PropertyDetails() {
                       clipRule="evenodd"
                     />
                   </svg>
-                  <span className="ml-2 text-gray-600">{feature}</span>
+                  <span className="ml-2 text-gray-600">
+                    {key.charAt(0).toUpperCase() + key.slice(1)}: {value}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Application Form */}
+          {/* Application Button */}
           {user?.role === 'tenant' && (
             <div className="mt-8">
-              <h2 className="text-xl font-semibold text-gray-900">Apply for this Property</h2>
-              <form onSubmit={handleApplicationSubmit} className="mt-4 space-y-4">
-                <div>
-                  <label htmlFor="moveInDate" className="block text-sm font-medium text-gray-700">
-                    Move-in Date
-                  </label>
-                  <input
-                    type="date"
-                    id="moveInDate"
-                    value={applicationData.moveInDate}
-                    onChange={(e) =>
-                      setApplicationData({ ...applicationData, moveInDate: e.target.value })
-                    }
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700">
-                    Message to Landlord
-                  </label>
-                  <textarea
-                    id="message"
-                    rows={4}
-                    value={applicationData.message}
-                    onChange={(e) =>
-                      setApplicationData({ ...applicationData, message: e.target.value })
-                    }
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    placeholder="Tell the landlord about yourself and why you're interested in this property..."
-                  />
-                </div>
+              {property.applications?.some(app => app.tenant._id === user._id) ? (
                 <button
-                  type="submit"
+                  disabled
+                  className="inline-flex justify-center rounded-md border border-transparent bg-gray-400 py-2 px-4 text-sm font-medium text-white shadow-sm cursor-not-allowed"
+                >
+                  Applied
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate(`/properties/${id}/apply`)}
                   className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                 >
-                  Submit Application
+                  Apply for this Property
                 </button>
-              </form>
+              )}
             </div>
           )}
         </div>

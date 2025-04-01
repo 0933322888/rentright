@@ -125,7 +125,11 @@ export default function PropertyList() {
                 <div key={property._id} className="group relative">
                   <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-lg bg-gray-200">
                     <img
-                      src={property.images[0] || 'https://via.placeholder.com/400x300'}
+                      src={property.images && property.images.length > 0 
+                        ? property.images[0].startsWith('http') 
+                          ? property.images[0] 
+                          : `http://localhost:5000/uploads/${property.images[0]}`
+                        : 'https://via.placeholder.com/400x300'}
                       alt={property.title}
                       className="h-full w-full object-cover object-center group-hover:opacity-75"
                     />
@@ -138,7 +142,9 @@ export default function PropertyList() {
                           {property.title}
                         </Link>
                       </h3>
-                      <p className="mt-1 text-sm text-gray-500">{property.location}</p>
+                      <p className="mt-1 text-sm text-gray-500">
+                        {property.location.street}, {property.location.city}, {property.location.state} {property.location.zipCode}
+                      </p>
                     </div>
                     <p className="text-sm font-medium text-gray-900">${property.price}/month</p>
                   </div>

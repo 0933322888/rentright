@@ -11,6 +11,7 @@ import AddProperty from './pages/AddProperty';
 import EditProperty from './pages/EditProperty';
 import Profile from './pages/Profile';
 import Applications from './pages/Applications';
+import NewApplication from './pages/NewApplication';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import LandlordBenefits from './pages/LandlordBenefits';
@@ -47,6 +48,10 @@ function HomeRedirect() {
 
   if (user?.role === 'landlord') {
     return <Navigate to="/my-properties" replace />;
+  }
+
+  if (user?.role === 'tenant') {
+    return <Navigate to="/properties" replace />;
   }
 
   return <Home />;
@@ -107,6 +112,14 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <Applications />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/properties/:propertyId/apply"
+                element={
+                  <ProtectedRoute allowedRoles={['tenant']}>
+                    <NewApplication />
                   </ProtectedRoute>
                 }
               />

@@ -1,5 +1,6 @@
 import Property from '../models/propertyModel.js';
 import mongoose from 'mongoose';
+import Application from '../models/applicationModel.js';
 
 export const createProperty = async (req, res) => {
   try {
@@ -153,9 +154,23 @@ export const applyForProperty = async (req, res) => {
       return res.status(400).json({ message: 'Already applied to this property' });
     }
 
+    // Create application document
+    const application = new Application({
+      property: property._id,
+      tenant: req.user._id,
+      moveInDate: req.body.moveInDate,
+      message: req.body.message,
+      status: 'pending'
+    });
+
+    await application.save();
+
+    // Update property's applications array
     property.applications.push({
       tenant: req.user._id,
-      status: 'pending'
+      status: 'pending',
+      moveInDate: req.body.moveInDate,
+      message: req.body.message
     });
 
     await property.save();
@@ -183,6 +198,7 @@ export const updateApplicationStatus = async (req, res) => {
       return res.status(404).json({ message: 'Application not found' });
     }
 
+    // Update property's application status
     application.status = status;
     if (status === 'approved') {
       property.available = false;
@@ -194,6 +210,16 @@ export const updateApplicationStatus = async (req, res) => {
     }
 
     await property.save();
+
+    // Update the separate application document
+    await Application.findByIdAndUpdate(
+      req.params.applicationId,
+      { 
+        status,
+        ...(status === 'approved' && { property: null }) // Remove property reference if approved
+      }
+    );
+
     res.json({ message: 'Application status updated successfully' });
   } catch (error) {
     res.status(400).json({ message: error.message });

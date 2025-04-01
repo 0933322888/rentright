@@ -23,10 +23,11 @@ export default function Applications() {
           Authorization: `Bearer ${token}`,
         },
       });
+      console.log('Fetched applications:', response.data);
       setApplications(response.data);
     } catch (error) {
+      console.error('Error fetching applications:', error.response?.data || error);
       setError('Error fetching applications');
-      console.error('Error:', error);
     } finally {
       setLoading(false);
     }
@@ -51,6 +52,25 @@ export default function Applications() {
     }
   };
 
+  const handleDelete = async (applicationId) => {
+    if (!window.confirm('Are you sure you want to delete this application?')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(API_ENDPOINTS.APPLICATION_BY_ID(applicationId), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      fetchApplications(); // Refresh the applications list
+    } catch (error) {
+      setError('Error deleting application');
+      console.error('Error:', error);
+    }
+  };
+
   if (!user) {
     navigate('/login');
     return null;
@@ -61,10 +81,12 @@ export default function Applications() {
 
   const filteredApplications = applications.filter(app => {
     if (user.role === 'landlord') {
-      return app.property.landlord === user._id;
+      return app.property.landlord._id.toString() === user._id.toString();
     }
-    return app.tenant === user._id;
+    return app.tenant._id.toString() === user._id.toString();
   });
+
+  console.log('Filtered applications:', filteredApplications);
 
   return (
     <div className="bg-white">
@@ -91,7 +113,9 @@ export default function Applications() {
                         {application.property.title}
                       </h3>
                       <p className="mt-1 text-sm text-gray-500">
-                        {application.property.location}
+                        {application.property.location.street && `${application.property.location.street}, `}
+                        {application.property.location.city}, {application.property.location.state}
+                        {application.property.location.zipCode && ` ${application.property.location.zipCode}`}
                       </p>
                     </div>
                     <span
@@ -120,33 +144,40 @@ export default function Applications() {
                     </div>
                   </div>
 
-                  {user.role === 'landlord' && application.status === 'pending' && (
-                    <div className="mt-6 flex justify-end space-x-3">
-                      <button
-                        onClick={() => handleStatusUpdate(application._id, 'rejected')}
-                        className="inline-flex items-center rounded-md border border-transparent bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                      >
-                        Reject
-                      </button>
-                      <button
-                        onClick={() => handleStatusUpdate(application._id, 'approved')}
-                        className="inline-flex items-center rounded-md border border-transparent bg-green-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                      >
-                        Approve
-                      </button>
-                    </div>
-                  )}
+                  <div className="mt-6 flex justify-end space-x-3">
+                    {user.role === 'landlord' && application.status === 'pending' && (
+                      <>
+                        <button
+                          onClick={() => handleStatusUpdate(application._id, 'rejected')}
+                          className="inline-flex items-center rounded-md border border-transparent bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                        >
+                          Reject
+                        </button>
+                        <button
+                          onClick={() => handleStatusUpdate(application._id, 'approved')}
+                          className="inline-flex items-center rounded-md border border-transparent bg-green-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                        >
+                          Approve
+                        </button>
+                      </>
+                    )}
 
-                  {user.role === 'tenant' && application.status === 'pending' && (
-                    <div className="mt-6">
+                    {user.role === 'tenant' && application.status === 'pending' && (
                       <button
                         onClick={() => navigate(`/properties/${application.property._id}`)}
                         className="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                       >
                         View Property
                       </button>
-                    </div>
-                  )}
+                    )}
+
+                    <button
+                      onClick={() => handleDelete(application._id)}
+                      className="inline-flex items-center rounded-md border border-transparent bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -155,4 +186,4 @@ export default function Applications() {
       </div>
     </div>
   );
-} 
+}
