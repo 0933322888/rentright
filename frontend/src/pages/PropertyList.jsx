@@ -123,7 +123,7 @@ export default function PropertyList() {
             ) : (
               properties.map((property) => (
                 <div key={property._id} className="group relative">
-                  <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-lg bg-gray-200">
+                  <div className="h-64 w-full overflow-hidden rounded-lg bg-gray-200">
                     <img
                       src={property.images && property.images.length > 0 
                         ? property.images[0].startsWith('http') 
@@ -132,6 +132,9 @@ export default function PropertyList() {
                         : 'https://via.placeholder.com/400x300'}
                       alt={property.title}
                       className="h-full w-full object-cover object-center group-hover:opacity-75"
+                      onError={(e) => {
+                        e.target.src = 'https://via.placeholder.com/400x300';
+                      }}
                     />
                   </div>
                   <div className="mt-4 flex justify-between">

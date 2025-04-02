@@ -16,14 +16,6 @@ const applicationSchema = new mongoose.Schema({
     enum: ['pending', 'approved', 'rejected'],
     default: 'pending'
   },
-  moveInDate: {
-    type: Date,
-    required: true
-  },
-  message: {
-    type: String,
-    required: true
-  },
   createdAt: {
     type: Date,
     default: Date.now

@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -11,14 +11,19 @@ import AddProperty from './pages/AddProperty';
 import EditProperty from './pages/EditProperty';
 import Profile from './pages/Profile';
 import Applications from './pages/Applications';
-import NewApplication from './pages/NewApplication';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import LandlordBenefits from './pages/LandlordBenefits';
 import TenantBenefits from './pages/TenantBenefits';
 import MyProperties from './pages/MyProperties';
 import TenantProfile from './pages/TenantProfile';
-import { useAuth } from './context/AuthContext';
+import AdminLayout from './components/AdminLayout';
+import AdminProperties from './pages/admin/Properties';
+import AdminLandlords from './pages/admin/Landlords';
+import AdminTenants from './pages/admin/Tenants';
+import AdminApplications from './pages/admin/Applications';
+import EditTenant from './pages/admin/EditTenant';
+import AdminDashboard from './pages/admin/Dashboard';
 
 // Protected route component
 function ProtectedRoute({ children, allowedRoles = [] }) {
@@ -47,6 +52,10 @@ function HomeRedirect() {
     return <div className="text-center py-12">Loading...</div>;
   }
 
+  if (user?.role === 'admin') {
+    return <Navigate to="/admin/properties" replace />;
+  }
+
   if (user?.role === 'landlord') {
     return <Navigate to="/my-properties" replace />;
   }
@@ -60,96 +69,104 @@ function HomeRedirect() {
 
 export default function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <div className="w-full min-h-screen flex flex-col">
+    <AuthProvider>
+      <Router>
+        <div className="min-h-screen bg-gray-50">
           <Navbar />
-          <main className="flex-grow w-full">
-            <Routes>
-              {/* Public routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/properties" element={<PropertyList />} />
-              <Route path="/properties/:id" element={<PropertyDetails />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/landlord-benefits" element={<LandlordBenefits />} />
-              <Route path="/tenant-benefits" element={<TenantBenefits />} />
+          <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/properties" element={<PropertyList />} />
+            <Route path="/properties/:id" element={<PropertyDetails />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/landlord-benefits" element={<LandlordBenefits />} />
+            <Route path="/tenant-benefits" element={<TenantBenefits />} />
+            
+            {/* Protected routes */}
+            <Route
+              path="/my-properties"
+              element={
+                <ProtectedRoute allowedRoles={['landlord']}>
+                  <MyProperties />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tenant-profile"
+              element={
+                <ProtectedRoute allowedRoles={['tenant']}>
+                  <TenantProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/add-property"
+              element={
+                <ProtectedRoute allowedRoles={['landlord']}>
+                  <AddProperty />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/properties/:id/edit"
+              element={
+                <ProtectedRoute allowedRoles={['landlord']}>
+                  <EditProperty />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/applications"
+              element={
+                <ProtectedRoute>
+                  <Applications />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/properties/:propertyId/apply"
+              element={
+                <ProtectedRoute allowedRoles={['tenant']}>
+                  <PropertyDetails />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Conditional routes based on role */}
+            <Route
+              path="/about"
+              element={
+                <ProtectedRoute allowedRoles={['tenant']}>
+                  <About />
+                </ProtectedRoute>
+              }
+            />
 
-              {/* Protected routes */}
-              <Route
-                path="/my-properties"
-                element={
-                  <ProtectedRoute allowedRoles={['landlord']}>
-                    <MyProperties />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/tenant-profile"
-                element={
-                  <ProtectedRoute allowedRoles={['tenant']}>
-                    <TenantProfile />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/add-property"
-                element={
-                  <ProtectedRoute allowedRoles={['landlord']}>
-                    <AddProperty />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/properties/:id/edit"
-                element={
-                  <ProtectedRoute allowedRoles={['landlord']}>
-                    <EditProperty />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/applications"
-                element={
-                  <ProtectedRoute>
-                    <Applications />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/properties/:propertyId/apply"
-                element={
-                  <ProtectedRoute allowedRoles={['tenant']}>
-                    <NewApplication />
-                  </ProtectedRoute>
-                }
-              />
+            {/* Home page with role-based redirect */}
+            <Route path="/" element={<HomeRedirect />} />
 
-              {/* Conditional routes based on role */}
-              <Route
-                path="/about"
-                element={
-                  <ProtectedRoute allowedRoles={['tenant']}>
-                    <About />
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Home page with role-based redirect */}
-              <Route path="/" element={<HomeRedirect />} />
-            </Routes>
-          </main>
+            {/* Admin routes */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="properties" element={<AdminProperties />} />
+              <Route path="landlords" element={<AdminLandlords />} />
+              <Route path="tenants" element={<AdminTenants />} />
+              <Route path="tenants/:id/edit" element={<EditTenant />} />
+              <Route path="applications" element={<AdminApplications />} />
+            </Route>
+          </Routes>
           <Footer />
         </div>
-      </AuthProvider>
-    </Router>
+      </Router>
+    </AuthProvider>
   );
 }

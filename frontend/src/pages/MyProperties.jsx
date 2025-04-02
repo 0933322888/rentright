@@ -194,7 +194,7 @@ export default function MyProperties() {
                       <tr key={property._id} className="hover:bg-gray-50">
                         <td className="whitespace-nowrap py-6 pl-4 pr-3 text-sm sm:pl-6">
                           <div className="flex items-center">
-                            <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg">
+                            <div className="h-16 w-16 flex-shrink-0">
                               <img
                                 src={property.images && property.images.length > 0 
                                   ? property.images[0].startsWith('http') 
@@ -202,7 +202,10 @@ export default function MyProperties() {
                                     : `http://localhost:5000/uploads/${property.images[0]}`
                                   : 'https://via.placeholder.com/400x300'}
                                 alt={property.title}
-                                className="h-16 w-16 object-cover"
+                                className="h-16 w-16 object-cover rounded-lg"
+                                onError={(e) => {
+                                  e.target.src = 'https://via.placeholder.com/400x300';
+                                }}
                               />
                             </div>
                             <div className="ml-4">

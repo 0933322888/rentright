@@ -24,6 +24,15 @@ export default function Navbar() {
       ];
     }
 
+    if (user.role === 'admin') {
+      return [
+        { name: 'Properties', href: '/admin/properties' },
+        { name: 'Landlords', href: '/admin/landlords' },
+        { name: 'Tenants', href: '/admin/tenants' },
+        { name: 'Applications', href: '/admin/applications' },
+      ];
+    }
+
     if (user.role === 'landlord') {
       return [
         { name: 'My Properties', href: '/my-properties' },

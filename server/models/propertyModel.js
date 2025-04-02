@@ -20,6 +20,9 @@ const propertySchema = new mongoose.Schema({
     required: true,
     min: 0
   },
+  amenities: [{
+    type: String
+  }],
   location: {
     street: String,
     city: {
@@ -46,7 +49,7 @@ const propertySchema = new mongoose.Schema({
   status: {
     type: String,
     required: true,
-    enum: ['New', 'Review', 'Submitted', 'Rented'],
+    enum: ['New', 'Review', 'Submitted', 'Rented', 'Active'],
     default: 'New'
   },
   tenant: {
@@ -68,8 +71,6 @@ const propertySchema = new mongoose.Schema({
       enum: ['pending', 'approved', 'rejected'],
       default: 'pending'
     },
-    moveInDate: Date,
-    message: String
   }],
   available: {
     type: Boolean,

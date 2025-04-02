@@ -117,6 +117,13 @@ export const getTenantProfile = async (req, res) => {
       }
     });
 
+    // Remove unnecessary fields
+    delete profileData._id;
+    delete profileData.__v;
+    delete profileData.tenant;
+    delete profileData.createdAt;
+    delete profileData.updatedAt;
+
     console.log('Profile data with URLs:', profileData);
     res.json(profileData);
   } catch (error) {

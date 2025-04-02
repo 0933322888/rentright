@@ -56,7 +56,7 @@ export const getApplicationById = async (req, res) => {
 // Create a new application
 export const createApplication = async (req, res) => {
   try {
-    const { propertyId, moveInDate, message } = req.body;
+    const { propertyId } = req.body;
 
     // Check if property exists and is available
     const property = await Property.findById(propertyId);
@@ -79,11 +79,18 @@ export const createApplication = async (req, res) => {
     const application = new Application({
       property: propertyId,
       tenant: req.user._id,
-      moveInDate,
-      message
+      status: 'pending'
     });
 
     const savedApplication = await application.save();
+
+    // Add application to property's applications array
+    property.applications.push({
+      tenant: req.user._id,
+      status: 'pending'
+    });
+    await property.save();
+
     res.status(201).json(savedApplication);
   } catch (error) {
     res.status(400).json({ message: error.message });

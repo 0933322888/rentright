@@ -1,23 +1,25 @@
-export const API_BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 export const API_ENDPOINTS = {
   // Auth endpoints
-  LOGIN: `${API_BASE_URL}/auth/login`,
-  REGISTER: `${API_BASE_URL}/auth/register`,
+  LOGIN: `${BASE_URL}/api/auth/login`,
+  REGISTER: `${BASE_URL}/api/auth/register`,
   
   // User endpoints
-  USER_PROFILE: `${API_BASE_URL}/users/profile`,
-  UPDATE_TENANT_PROFILE: `${API_BASE_URL}/users/tenant-profile`,
+  UPDATE_PROFILE: `${BASE_URL}/api/users/profile`,
+  UPDATE_TENANT_PROFILE: `${BASE_URL}/api/users/tenant-profile`,
+  GET_TENANT_PROFILE: `${BASE_URL}/api/users/tenant-profile`,
   
   // Property endpoints
-  PROPERTIES: `${API_BASE_URL}/properties`,
-  PROPERTY_BY_ID: (id) => `${API_BASE_URL}/properties/${id}`,
-  APPLY_FOR_PROPERTY: (id) => `${API_BASE_URL}/properties/${id}/apply`,
+  PROPERTIES: `${BASE_URL}/api/properties`,
+  AVAILABLE_PROPERTIES: `${BASE_URL}/api/properties/available`,
   
   // Application endpoints
-  APPLICATIONS: `${API_BASE_URL}/applications`,
-  APPLICATION_BY_ID: (id) => `${API_BASE_URL}/applications/${id}`,
+  APPLICATIONS: `${BASE_URL}/api/applications`,
   
-  // Contact endpoint
-  CONTACT: `${API_BASE_URL}/contact`
+  // Admin endpoints
+  ADMIN_PROPERTIES: `${BASE_URL}/api/admin/properties`,
+  ADMIN_LANDLORDS: `${BASE_URL}/api/admin/landlords`,
+  ADMIN_TENANTS: `${BASE_URL}/api/admin/tenants`,
+  ADMIN_APPLICATIONS: `${BASE_URL}/api/admin/applications`,
 }; 
