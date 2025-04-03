@@ -20,12 +20,16 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['tenant', 'landlord'],
+    enum: ['tenant', 'landlord', 'admin'],
     required: true
   },
   phone: {
     type: String,
     trim: true
+  },
+  rating: {
+    type: Number,
+    default: 5
   },
   createdAt: {
     type: Date,

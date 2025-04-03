@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../config/api';
 import { toast } from 'react-hot-toast';
@@ -199,6 +200,9 @@ export default function AdminProperties() {
                       Landlord
                     </th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      Tenant
+                    </th>
+                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                       Price
                     </th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
@@ -228,13 +232,30 @@ export default function AdminProperties() {
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {property.landlord.name} ({property.landlord.email})
+                        {property.landlord.name} 
+                        <br />
+                        {property.landlord.email}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        {property.tenant ? (
+                          <>
+                            <span className="font-bold">{property.tenant.name}</span>
+                            <br />
+                            {property.tenant.email}
+                          </>
+                        ) : '-'}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         ${property.price}/month
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         <div className="flex space-x-2">
+                          <Link
+                            to={`/properties/${property._id}`}
+                            className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          >
+                            View
+                          </Link>
                           {property.status === 'Pending' && (
                             <button
                               onClick={() => handleApprove(property._id)}

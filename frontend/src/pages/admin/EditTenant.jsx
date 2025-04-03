@@ -13,7 +13,8 @@ export default function EditTenant() {
     name: '',
     email: '',
     phone: '',
-    hasProfile: false
+    hasProfile: false,
+    rating: 0
   });
 
   useEffect(() => {
@@ -31,7 +32,8 @@ export default function EditTenant() {
         name: response.data.name || '',
         email: response.data.email || '',
         phone: response.data.phone || '',
-        hasProfile: response.data.hasProfile || false
+        hasProfile: response.data.hasProfile || false,
+        rating: response.data.rating || 0
       });
     } catch (err) {
       setError('Failed to fetch tenant details');
@@ -125,6 +127,26 @@ export default function EditTenant() {
                     onChange={handleChange}
                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   />
+                </div>
+
+                <div>
+                  <label htmlFor="rating" className="block text-sm font-medium text-gray-700">
+                    Rating
+                  </label>
+                  <select
+                    name="rating"
+                    id="rating"
+                    value={tenant.rating}
+                    onChange={handleChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  >
+                    <option value="0">No Rating</option>
+                    <option value="1">1 Star</option>
+                    <option value="2">2 Stars</option>
+                    <option value="3">3 Stars</option>
+                    <option value="4">4 Stars</option>
+                    <option value="5">5 Stars</option>
+                  </select>
                 </div>
 
                 <div className="flex items-center">

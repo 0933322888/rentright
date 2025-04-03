@@ -24,9 +24,11 @@ export const AuthProvider = ({ children }) => {
       setUser(data);
     } catch (error) {
       console.error('Error fetching user profile:', error);
-      localStorage.removeItem('token');
-      delete axios.defaults.headers.common['Authorization'];
-      setUser(null);
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        setUser(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -40,8 +42,9 @@ export const AuthProvider = ({ children }) => {
       });
       localStorage.setItem('token', data.token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
-      setUser(data);
-      return { success: true, ...data };
+      const profileResponse = await axios.get(API_ENDPOINTS.USER_PROFILE);
+      setUser(profileResponse.data);
+      return { success: true, ...profileResponse.data };
     } catch (error) {
       return {
         success: false,
@@ -55,8 +58,9 @@ export const AuthProvider = ({ children }) => {
       const { data } = await axios.post(API_ENDPOINTS.REGISTER, userData);
       localStorage.setItem('token', data.token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
-      setUser(data);
-      return { success: true, ...data };
+      const profileResponse = await axios.get(API_ENDPOINTS.USER_PROFILE);
+      setUser(profileResponse.data);
+      return { success: true, ...profileResponse.data };
     } catch (error) {
       return {
         success: false,

@@ -90,9 +90,17 @@ export const updateProperty = async (req, res) => {
     }
 
     // Handle existing images
-    const existingImages = req.body.existingImages ? 
-      (Array.isArray(req.body.existingImages) ? req.body.existingImages : [req.body.existingImages]) : 
-      [];
+    let existingImages = [];
+    if (req.body.existingImages) {
+      try {
+        existingImages = JSON.parse(req.body.existingImages);
+      } catch (error) {
+        console.error('Error parsing existingImages:', error);
+        existingImages = Array.isArray(req.body.existingImages) ? 
+          req.body.existingImages : 
+          [req.body.existingImages];
+      }
+    }
 
     // Handle new images
     const newImages = req.files ? req.files.map(file => file.path.replace(/\\/g, '/').split('uploads/')[1]) : [];
@@ -111,6 +119,7 @@ export const updateProperty = async (req, res) => {
 
     res.json(updatedProperty);
   } catch (error) {
+    console.error('Error updating property:', error);
     res.status(400).json({ message: error.message });
   }
 };
@@ -221,6 +230,46 @@ export const updateApplicationStatus = async (req, res) => {
     );
 
     res.json({ message: 'Application status updated successfully' });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const getAvailableProperties = async (req, res) => {
+  try {
+    const { 
+      type, 
+      minPrice, 
+      maxPrice, 
+      bedrooms, 
+      city, 
+      furnished,
+      location 
+    } = req.query;
+
+    const filter = {
+      available: true,
+      status: { $ne: 'Rented' }
+    };
+
+    if (type) filter.type = type;
+    if (city) filter['location.city'] = new RegExp(city, 'i');
+    if (location) {
+      filter['location.city'] = new RegExp(location, 'i');
+    }
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = Number(minPrice);
+      if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+    if (bedrooms) filter['features.bedrooms'] = Number(bedrooms);
+    if (furnished) filter['features.furnished'] = furnished === 'true';
+
+    const properties = await Property.find(filter)
+      .populate('landlord', 'name email phone')
+      .sort('-createdAt');
+
+    res.json(properties);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }

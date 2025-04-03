@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { API_ENDPOINTS } from '../config/api';
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -14,15 +15,37 @@ export default function Profile() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [tenantData, setTenantData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      setFormData({
-        name: user.name,
-        email: user.email,
-        phone: user.phone || '',
-      });
-    }
+    const fetchData = async () => {
+      if (user) {
+        try {
+          setFormData({
+            name: user.name || '',
+            email: user.email || '',
+            phone: user.phone || '',
+          });
+
+          // Fetch tenant data if user is a tenant
+          if (user.role === 'tenant') {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(API_ENDPOINTS.GET_TENANT_PROFILE, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            setTenantData(response.data);
+          }
+        } catch (error) {
+          console.error('Error fetching profile data:', error);
+          setError('Failed to load profile data');
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchData();
   }, [user]);
 
   const handleChange = (e) => {
@@ -44,10 +67,10 @@ export default function Profile() {
       if (result.success) {
         setSuccess('Profile updated successfully!');
       } else {
-        setError(result.message);
+        setError(result.message || 'Failed to update profile');
       }
     } catch (error) {
-      setError('Error updating profile');
+      setError(error.response?.data?.message || 'Error updating profile');
     } finally {
       setLoading(false);
     }
@@ -56,6 +79,17 @@ export default function Profile() {
   if (!user) {
     navigate('/login');
     return null;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -158,17 +192,36 @@ export default function Profile() {
 
               {user.role === 'tenant' && (
                 <div className="mt-8">
-                  <h2 className="text-lg font-medium text-gray-900">My Applications</h2>
-                  <p className="mt-1 text-sm text-gray-500">
-                    View and manage your property applications.
-                  </p>
-                  <div className="mt-4">
-                    <button
-                      onClick={() => navigate('/applications')}
-                      className="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                    >
-                      View Applications
-                    </button>
+                  <h2 className="text-lg font-medium text-gray-900">Tenant Information</h2>
+                  <div className="mt-4 space-y-4">
+                    {tenantData && (
+                      <>
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Eviction History</h3>
+                          <p className="mt-1 text-sm text-gray-900">{tenantData.hasBeenEvicted ? 'Yes' : 'No'}</p>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-500">Payment Capability</h3>
+                          <p className="mt-1 text-sm text-gray-900">
+                            {tenantData.canPayMoreThanOneMonth ? `Can pay ${tenantData.monthsAheadCanPay} months ahead` : 'Can pay one month at a time'}
+                          </p>
+                        </div>
+                      </>
+                    )}
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-500">Applications</h3>
+                      <p className="mt-1 text-sm text-gray-500">
+                        View and manage your property applications.
+                      </p>
+                      <div className="mt-2">
+                        <button
+                          onClick={() => navigate('/applications')}
+                          className="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        >
+                          View Applications
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

@@ -7,6 +7,7 @@ export const getAllProperties = async (req, res) => {
   try {
     const properties = await Property.find()
       .populate('landlord', 'name email')
+      .populate('tenant', 'name email')
       .sort('-createdAt');
     res.json(properties);
   } catch (error) {
@@ -99,9 +100,24 @@ export const getAllApplications = async (req, res) => {
   try {
     const applications = await Application.find()
       .populate('property', 'title location price')
-      .populate('tenant', 'name email')
+      .populate('tenant', 'name email rating')
       .sort('-createdAt');
     res.json(applications);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Delete application
+export const deleteApplication = async (req, res) => {
+  try {
+    const application = await Application.findById(req.params.id);
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    await Application.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Application deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -149,6 +165,48 @@ export const getTenantById = async (req, res) => {
   }
 };
 
+// Update application status
+export const updateApplicationStatus = async (req, res) => {
+  try {
+    const application = await Application.findById(req.params.id)
+      .populate('property', 'landlord available')
+      .populate('tenant', 'name email');
+
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    application.status = req.body.status;
+    await application.save();
+
+    // If application is approved, update property
+    if (req.body.status === 'Approved') {
+      await Property.findByIdAndUpdate(
+        application.property._id,
+        { 
+          available: false,
+          status: 'Rented',
+          tenant: application.tenant._id
+        }
+      );
+      
+      // Reject all other pending applications for this property
+      await Application.updateMany(
+        {
+          property: application.property._id,
+          _id: { $ne: application._id },
+          status: 'Pending'
+        },
+        { status: 'Declined' }
+      );
+    }
+
+    res.json({ message: 'Application status updated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // Update tenant
 export const updateTenant = async (req, res) => {
   try {
@@ -166,6 +224,7 @@ export const updateTenant = async (req, res) => {
     tenant.email = req.body.email || tenant.email;
     tenant.phone = req.body.phone || tenant.phone;
     tenant.hasProfile = req.body.hasProfile !== undefined ? req.body.hasProfile : tenant.hasProfile;
+    tenant.rating = req.body.rating !== undefined ? Number(req.body.rating) : tenant.rating;
 
     const updatedTenant = await tenant.save();
     res.json(updatedTenant);

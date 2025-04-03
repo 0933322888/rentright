@@ -116,21 +116,6 @@ export const updateApplicationStatus = async (req, res) => {
     application.status = status;
     await application.save();
 
-    // If application is approved, update property availability
-    if (status === 'approved') {
-      await Property.findByIdAndUpdate(application.property._id, { available: false });
-      
-      // Reject all other pending applications for this property
-      await Application.updateMany(
-        {
-          property: application.property._id,
-          _id: { $ne: application._id },
-          status: 'pending'
-        },
-        { status: 'rejected' }
-      );
-    }
-
     res.json(application);
   } catch (error) {
     res.status(400).json({ message: error.message });

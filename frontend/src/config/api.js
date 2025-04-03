@@ -6,6 +6,7 @@ export const API_ENDPOINTS = {
   REGISTER: `${BASE_URL}/api/auth/register`,
   
   // User endpoints
+  USER_PROFILE: `${BASE_URL}/api/users/profile`,
   UPDATE_PROFILE: `${BASE_URL}/api/users/profile`,
   UPDATE_TENANT_PROFILE: `${BASE_URL}/api/users/tenant-profile`,
   GET_TENANT_PROFILE: `${BASE_URL}/api/users/tenant-profile`,

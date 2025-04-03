@@ -4,6 +4,7 @@ import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import ImageCarousel from '../components/ImageCarousel';
 
 const PropertyDetails = () => {
   const [property, setProperty] = useState(null);
@@ -99,19 +100,8 @@ const PropertyDetails = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-        <div className="relative h-96 w-full">
-          <img
-            src={property.images && property.images.length > 0 
-              ? property.images[0].startsWith('http') 
-                ? property.images[0] 
-                : `http://localhost:5000/uploads/${property.images[0]}`
-              : 'https://via.placeholder.com/800x400'}
-            alt={property.title}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.target.src = 'https://via.placeholder.com/800x400';
-            }}
-          />
+        <div className="mb-8">
+          <ImageCarousel images={property.images} />
         </div>
         
         <div className="p-6">

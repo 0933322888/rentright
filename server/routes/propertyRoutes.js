@@ -6,7 +6,8 @@ import {
   updateProperty,
   deleteProperty,
   applyForProperty,
-  updateApplicationStatus
+  updateApplicationStatus,
+  getAvailableProperties
 } from '../controllers/propertyController.js';
 import { protect, restrictTo } from '../middleware/authMiddleware.js';
 import multer from 'multer';
@@ -40,6 +41,7 @@ const upload = multer({ storage: storage });
 
 // Public routes
 router.get('/', getProperties);
+router.get('/available', getAvailableProperties);
 router.get('/:id', getPropertyById);
 
 // Protected routes

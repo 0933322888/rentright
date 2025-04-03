@@ -5,25 +5,15 @@ import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api';
 
 export default function MyProperties() {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [properties, setProperties] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!loading) {
-      if (!user) {
-        navigate('/login');
-        return;
-      }
-      if (user.role !== 'landlord') {
-        navigate('/');
-        return;
-      }
-      fetchProperties();
-    }
-  }, [user, loading, navigate]);
+    fetchProperties();
+  }, []);
 
   const fetchProperties = async () => {
     try {
@@ -37,10 +27,6 @@ export default function MyProperties() {
       });
       setProperties(response.data);
     } catch (error) {
-      if (error.response?.status === 401) {
-        navigate('/login');
-        return;
-      }
       setError('Error fetching properties');
       console.error('Error:', error);
     } finally {
@@ -124,7 +110,7 @@ export default function MyProperties() {
     }
   };
 
-  if (loading || isLoading) {
+  if (isLoading) {
     return <div className="text-center py-12">Loading...</div>;
   }
 

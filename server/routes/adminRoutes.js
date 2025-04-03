@@ -7,6 +7,8 @@ import {
   approveProperty,
   deleteProperty,
   deleteTenant,
+  deleteApplication,
+  updateApplicationStatus,
   getTenantById,
   updateTenant
 } from '../controllers/adminController.js';
@@ -29,5 +31,7 @@ router.get('/tenants/:id', getTenantById);
 router.put('/tenants/:id', updateTenant);
 router.delete('/tenants/:id', deleteTenant);
 router.get('/applications', getAllApplications);
+router.delete('/applications/:id', deleteApplication);
+router.patch('/applications/:id', updateApplicationStatus);
 
 export default router; 

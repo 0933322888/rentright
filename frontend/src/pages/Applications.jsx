@@ -78,8 +78,8 @@ export default function Applications() {
   if (error) return <div className="text-center py-12 text-red-600">{error}</div>;
 
   const filteredApplications = applications.filter(app => {
-    if (!app || !app.property || !app.tenant) return false;
-    return app.tenant._id.toString() === user._id.toString();
+    if (!app || !app.property || !app.tenant || !app.tenant._id || !user || !user._id) return false;
+    return app.tenant._id === user._id;
   });
 
   return (
