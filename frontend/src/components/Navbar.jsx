@@ -44,6 +44,7 @@ export default function Navbar() {
     return [
       { name: 'Properties', href: '/properties' },
       { name: 'My Applications', href: '/applications' },
+      { name: 'My Tickets', href: '/my-tickets' },
       { name: 'Tenant Profile', href: '/tenant-profile' },
     ];
   };

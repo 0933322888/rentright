@@ -164,9 +164,9 @@ export default function AdminApplications() {
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             >
               <option value="all">All</option>
-              <option value="Pending">Pending</option>
-              <option value="Approved">Approved</option>
-              <option value="Declined">Declined</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="declined">Declined</option>
             </select>
           </div>
         </div>
@@ -239,8 +239,8 @@ export default function AdminApplications() {
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
-                          application.status === 'Approved' ? 'bg-green-100 text-green-800' :
-                          application.status === 'Rejected' ? 'bg-red-100 text-red-800' :
+                          application.status === 'approved' ? 'bg-green-100 text-green-800' :
+                          application.status === 'rejected' ? 'bg-red-100 text-red-800' :
                           'bg-yellow-100 text-yellow-800'
                         }`}>
                           {application.status}
@@ -251,16 +251,16 @@ export default function AdminApplications() {
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         <div className="flex space-x-2">
-                          {application.status === 'Pending' && (
+                          {application.status === 'pending' && (
                             <>
                               <button
-                                onClick={() => handleStatusUpdate(application._id, 'Approved')}
+                                onClick={() => handleStatusUpdate(application._id, 'approved')}
                                 className="inline-flex items-center rounded-md border border-transparent bg-green-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                               >
                                 Approve
                               </button>
                               <button
-                                onClick={() => handleStatusUpdate(application._id, 'Declined')}
+                                onClick={() => handleStatusUpdate(application._id, 'declined')}
                                 className="inline-flex items-center rounded-md border border-transparent bg-red-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                               >
                                 Decline

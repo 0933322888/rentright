@@ -23,4 +23,8 @@ export const API_ENDPOINTS = {
   ADMIN_LANDLORDS: `${BASE_URL}/api/admin/landlords`,
   ADMIN_TENANTS: `${BASE_URL}/api/admin/tenants`,
   ADMIN_APPLICATIONS: `${BASE_URL}/api/admin/applications`,
+
+  // Ticket endpoints
+  TICKETS: `${BASE_URL}/api/tickets`,
+  MY_TICKETS: `${BASE_URL}/api/tickets/my-tickets`,
 }; 

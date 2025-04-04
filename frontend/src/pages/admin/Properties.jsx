@@ -224,8 +224,8 @@ export default function AdminProperties() {
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
-                          property.status === 'Active' ? 'bg-green-100 text-green-800' :
-                          property.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                          property.status === 'active' ? 'bg-green-100 text-green-800' :
+                          property.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                           'bg-gray-100 text-gray-800'
                         }`}>
                           {property.status}
@@ -251,12 +251,12 @@ export default function AdminProperties() {
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         <div className="flex space-x-2">
                           <Link
-                            to={`/properties/${property._id}`}
+                            to={`/admin/properties/${property._id}`}
                             className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                           >
                             View
                           </Link>
-                          {property.status === 'Pending' && (
+                          {property.status === 'pending' && (
                             <button
                               onClick={() => handleApprove(property._id)}
                               className="inline-flex items-center rounded-md border border-transparent bg-green-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
