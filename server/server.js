@@ -7,6 +7,7 @@ import propertyRoutes from './routes/propertyRoutes.js';
 import applicationRoutes from './routes/applicationRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import ticketRoutes from './routes/ticketRoutes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -26,6 +27,7 @@ app.use(cors());
 app.use(express.json());
 
 // Serve static files from uploads directory
+app.use('/uploads/tenant-documents/thumbnails', express.static(path.join(__dirname, 'uploads/tenant-documents/thumbnails')));
 app.use('/uploads/tenant-documents', express.static(path.join(__dirname, 'uploads/tenant-documents')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -35,6 +37,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/tickets', ticketRoutes);
 
 const PORT = process.env.PORT || 5000;
 

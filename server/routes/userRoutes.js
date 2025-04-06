@@ -26,6 +26,6 @@ router.put('/profile', protect, updateProfile);
 // Tenant profile routes
 router.get('/tenant-profile', protect, getTenantProfile);
 router.post('/tenant-profile', protect, updateTenantProfile);
-router.delete('/tenant-profile/:field', protect, deleteDocument);
+router.delete('/tenant-profile/:field/:index', protect, deleteDocument);
 
 export default router; 

@@ -23,7 +23,7 @@ export const approveProperty = async (req, res) => {
       return res.status(404).json({ message: 'Property not found' });
     }
 
-    property.status = 'Active';
+    property.status = 'active';
     await property.save();
 
     res.json({ message: 'Property approved successfully' });
@@ -180,12 +180,26 @@ export const updateApplicationStatus = async (req, res) => {
     await application.save();
 
     // If application is approved, update property
-    if (req.body.status === 'Approved') {
+    if (req.body.status.toLowerCase() === 'approved') {
+      // Update the property's applications array
+      await Property.findByIdAndUpdate(
+        application.property._id,
+        { 
+          $set: {
+            'applications.$[elem].status': 'approved'
+          }
+        },
+        { 
+          arrayFilters: [{ 'elem.tenant': application.tenant._id }]
+        }
+      );
+      
+      // Update property status
       await Property.findByIdAndUpdate(
         application.property._id,
         { 
           available: false,
-          status: 'Rented',
+          status: 'rented',
           tenant: application.tenant._id
         }
       );
@@ -195,9 +209,9 @@ export const updateApplicationStatus = async (req, res) => {
         {
           property: application.property._id,
           _id: { $ne: application._id },
-          status: 'Pending'
+          status: 'pending'
         },
-        { status: 'Declined' }
+        { status: 'declined' }
       );
     }
 

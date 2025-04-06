@@ -21,6 +21,7 @@ import AdminRoute from './components/AdminRoute';
 import Layout from './components/Layout';
 import AdminLayout from './components/AdminLayout';
 import CreateTicket from './pages/CreateTicket';
+import TenantProfile from './pages/TenantProfile';
 
 // Role-based home redirect component
 function HomeRedirect() {
@@ -60,9 +61,10 @@ function App() {
               <Route path="properties/create" element={<AddProperty />} />
               <Route path="properties/edit/:id" element={<EditProperty />} />
               <Route path="my-properties" element={<MyProperties />} />
-              <Route path="my-applications" element={<Applications />} />
+              <Route path="applications" element={<Applications />} />
               <Route path="my-tickets" element={<MyTickets />} />
               <Route path="create-ticket" element={<CreateTicket />} />
+              <Route path="tenant-profile" element={<TenantProfile />} />
             </Route>
           </Route>
 

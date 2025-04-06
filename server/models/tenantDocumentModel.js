@@ -1,5 +1,11 @@
 import mongoose from 'mongoose';
 
+const documentSchema = new mongoose.Schema({
+  path: String,
+  filename: String,
+  uploadedAt: Date
+});
+
 const tenantDocumentSchema = new mongoose.Schema({
   tenant: {
     type: mongoose.Schema.Types.ObjectId,
@@ -23,31 +29,11 @@ const tenantDocumentSchema = new mongoose.Schema({
       return this.canPayMoreThanOneMonth === 'yes';
     }
   },
-  proofOfIdentity: {
-    path: String,
-    filename: String,
-    uploadedAt: Date
-  },
-  proofOfIncome: {
-    path: String,
-    filename: String,
-    uploadedAt: Date
-  },
-  creditHistory: {
-    path: String,
-    filename: String,
-    uploadedAt: Date
-  },
-  rentalHistory: {
-    path: String,
-    filename: String,
-    uploadedAt: Date
-  },
-  additionalDocuments: {
-    path: String,
-    filename: String,
-    uploadedAt: Date
-  },
+  proofOfIdentity: [documentSchema],
+  proofOfIncome: [documentSchema],
+  creditHistory: [documentSchema],
+  rentalHistory: [documentSchema],
+  additionalDocuments: [documentSchema],
   createdAt: {
     type: Date,
     default: Date.now

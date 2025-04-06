@@ -40,7 +40,7 @@ const sampleLandlords = [
   },
   {
     name: 'Michael Brown',
-    email: 'michael@example.com',
+    email: 'l@l',
     password: '123',
     role: 'landlord',
     isVerified: false,
@@ -66,8 +66,8 @@ const sampleTenants = [
     phone: '555-0202'
   },
   {
-    name: 'Lisa Anderson',
-    email: 'lisa@example.com',
+    name: 'Lisa Anderson Tenant',
+    email: 't@t',
     password: '123',
     role: 'tenant',
     hasProfile: false,
@@ -77,7 +77,7 @@ const sampleTenants = [
     name: 'Lisa Anderson Admin',
     email: 'a@a',
     password: '123',
-    role: 'tenant',
+    role: 'admin',
     hasProfile: true,
     phone: '111-0203'
   }
@@ -104,8 +104,8 @@ const sampleProperties = [
       zipCode: '10001'
     },
     amenities: ['Parking', 'Gym', 'Pool'],
-    images: ['https://media.istockphoto.com/id/1255835530/photo/modern-custom-suburban-home-exterior.jpg?s=1024x1024&w=is&k=20&c=4TmxYMrPLVb8u09dT5amw1vBsAVbHCxMWZIXqoy-I34='],
-    status: 'Active'
+    images: ['https://media.istockphoto.com/id/1255835530/photo/modern-custom-suburban-home-exterior.jpg?s=1024x1024&w=is&k=20&c=4TmxYMrPLVb8u09dT5amw1vBsAVbHCxMWZIXqoy-I34=', 'https://media.istockphoto.com/id/520774645/photo/house-exterior-with-curb-appeal.jpg?s=1024x1024&w=is&k=20&c=4rwljqZ3Sd5f2aI3e7um6fKpILko-OrrFiEQCJA38ug=', 'https://media.istockphoto.com/id/590074124/photo/classic-american-house-with-siding-trim-and-red-entry-door.jpg?s=1024x1024&w=is&k=20&c=NXIxkzhayUFnOGqI1hhNFW04ufCpYO_F6KNgNiCHNMo='],
+    status: 'active'
   },
   {
     title: 'Cozy Suburban House',
@@ -127,8 +127,8 @@ const sampleProperties = [
       zipCode: '90001'
     },
     amenities: ['Backyard', 'Garage', 'Fireplace'],
-    images: ['https://media.istockphoto.com/id/590074124/photo/classic-american-house-with-siding-trim-and-red-entry-door.jpg?s=1024x1024&w=is&k=20&c=NXIxkzhayUFnOGqI1hhNFW04ufCpYO_F6KNgNiCHNMo='],
-    status: 'Submitted'
+    images: ['https://media.istockphoto.com/id/520774645/photo/house-exterior-with-curb-appeal.jpg?s=1024x1024&w=is&k=20&c=4rwljqZ3Sd5f2aI3e7um6fKpILko-OrrFiEQCJA38ug=', 'https://media.istockphoto.com/id/590074124/photo/classic-american-house-with-siding-trim-and-red-entry-door.jpg?s=1024x1024&w=is&k=20&c=NXIxkzhayUFnOGqI1hhNFW04ufCpYO_F6KNgNiCHNMo='],
+    status: 'submitted'
   },
   {
     title: 'Luxury Condo with View',
@@ -150,8 +150,11 @@ const sampleProperties = [
       zipCode: '60601'
     },
     amenities: ['Doorman', 'Concierge', 'Rooftop Deck'],
-    images: ['https://media.istockphoto.com/id/520774645/photo/house-exterior-with-curb-appeal.jpg?s=1024x1024&w=is&k=20&c=4rwljqZ3Sd5f2aI3e7um6fKpILko-OrrFiEQCJA38ug='],
-    status: 'Active'
+    images: [
+      'https://media.istockphoto.com/id/520774645/photo/house-exterior-with-curb-appeal.jpg?s=1024x1024&w=is&k=20&c=4rwljqZ3Sd5f2aI3e7um6fKpILko-OrrFiEQCJA38ug=', 
+      'https://media.istockphoto.com/id/590074124/photo/classic-american-house-with-siding-trim-and-red-entry-door.jpg?s=1024x1024&w=is&k=20&c=NXIxkzhayUFnOGqI1hhNFW04ufCpYO_F6KNgNiCHNMo=', 
+      'https://media.istockphoto.com/id/1255835530/photo/modern-custom-suburban-home-exterior.jpg?s=1024x1024&w=is&k=20&c=4TmxYMrPLVb8u09dT5amw1vBsAVbHCxMWZIXqoy-I34='],
+    status: 'active'
   }
 ];
 

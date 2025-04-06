@@ -2,14 +2,50 @@ import TenantDocument from '../models/tenantDocumentModel.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import sharp from 'sharp';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const uploadsDir = path.join(__dirname, '../uploads/tenant-documents');
+const thumbnailsDir = path.join(__dirname, '../uploads/tenant-documents/thumbnails');
+
+// Ensure directories exist
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
+if (!fs.existsSync(thumbnailsDir)) {
+  fs.mkdirSync(thumbnailsDir, { recursive: true });
+}
+
+const generateThumbnail = async (filepath, filename) => {
+  try {
+    const thumbnailPath = path.join(thumbnailsDir, filename);
+    
+    // Ensure the thumbnails directory exists
+    if (!fs.existsSync(thumbnailsDir)) {
+      fs.mkdirSync(thumbnailsDir, { recursive: true });
+    }
+
+    // Generate thumbnail with sharp
+    await sharp(filepath)
+      .resize(300, 300, {
+        fit: 'inside',
+        withoutEnlargement: true
+      })
+      .jpeg({ 
+        quality: 80,
+        progressive: true
+      })
+      .toFile(thumbnailPath);
+
+    console.log('Thumbnail generated successfully:', thumbnailPath);
+    return `/uploads/tenant-documents/thumbnails/${filename}`;
+  } catch (error) {
+    console.error('Error generating thumbnail:', error);
+    return null;
+  }
+};
 
 export const updateTenantProfile = async (req, res) => {
   try {
@@ -38,40 +74,48 @@ export const updateTenantProfile = async (req, res) => {
     // Handle each document upload
     for (const field of documentFields) {
       if (req.files && req.files[field]) {
-        const file = req.files[field];
-        console.log(`Processing ${field}:`, file);
+        const files = Array.isArray(req.files[field]) ? req.files[field] : [req.files[field]];
         
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        
-        // Get the file extension with dot
-        const fileExt = path.extname(file.name);
-        // Get the filename without extension
-        const baseName = path.basename(file.name, fileExt);
-        // Create sanitized filename with proper extension
-        const sanitizedName = baseName.replace(/[^a-zA-Z0-9]/g, '_');
-        const filename = `${uniqueSuffix}-${sanitizedName}${fileExt}`;
-        
-        const filepath = path.join(uploadsDir, filename);
+        for (const file of files) {
+          console.log(`Processing ${field}:`, file);
+          
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+          
+          // Get the file extension with dot
+          const fileExt = path.extname(file.name);
+          // Get the filename without extension
+          const baseName = path.basename(file.name, fileExt);
+          // Create sanitized filename with proper extension
+          const sanitizedName = baseName.replace(/[^a-zA-Z0-9]/g, '_');
+          const filename = `${uniqueSuffix}-${sanitizedName}${fileExt}`;
+          
+          const filepath = path.join(uploadsDir, filename);
 
-        console.log('Saving file to:', filepath);
+          console.log('Saving file to:', filepath);
 
-        // Delete old file if it exists
-        if (tenantDocument[field]?.filename) {
-          const oldFilePath = path.join(uploadsDir, tenantDocument[field].filename);
-          if (fs.existsSync(oldFilePath)) {
-            fs.unlinkSync(oldFilePath);
+          // Move file to uploads directory
+          await file.mv(filepath);
+
+          // Generate thumbnail for image files
+          let thumbnailUrl = null;
+          if (file.mimetype.startsWith('image/')) {
+            thumbnailUrl = await generateThumbnail(filepath, filename);
+            console.log('Generated thumbnail URL:', thumbnailUrl);
           }
+
+          // Update document record
+          if (!tenantDocument[field]) {
+            tenantDocument[field] = [];
+          }
+          
+          tenantDocument[field].push({
+            path: filepath,
+            filename: filename,
+            uploadedAt: new Date(),
+            thumbnailUrl: thumbnailUrl,
+            mimeType: file.mimetype
+          });
         }
-
-        // Move file to uploads directory
-        await file.mv(filepath);
-
-        // Update document record
-        tenantDocument[field] = {
-          path: filepath,
-          filename: filename,
-          uploadedAt: new Date()
-        };
       }
     }
 
@@ -83,7 +127,28 @@ export const updateTenantProfile = async (req, res) => {
     const savedDocument = await tenantDocument.save();
     console.log('Saved document:', savedDocument);
 
-    res.json(savedDocument);
+    // Format the response data with URLs
+    const responseData = savedDocument.toObject();
+    
+    // Add URLs for each document
+    documentFields.forEach(field => {
+      if (responseData[field] && Array.isArray(responseData[field])) {
+        responseData[field] = responseData[field].map(doc => ({
+          ...doc,
+          url: `/uploads/tenant-documents/${doc.filename}`,
+          thumbnailUrl: doc.thumbnailUrl || `/uploads/tenant-documents/${doc.filename}`
+        }));
+      }
+    });
+
+    // Remove unnecessary fields
+    delete responseData._id;
+    delete responseData.__v;
+    delete responseData.tenant;
+    delete responseData.createdAt;
+    delete responseData.updatedAt;
+
+    res.json(responseData);
   } catch (error) {
     console.error('Error in updateTenantProfile:', error);
     res.status(500).json({ message: error.message });
@@ -109,11 +174,12 @@ export const getTenantProfile = async (req, res) => {
     // Add URLs for each document
     const documentFields = ['proofOfIdentity', 'proofOfIncome', 'creditHistory', 'rentalHistory', 'additionalDocuments'];
     documentFields.forEach(field => {
-      if (profileData[field]?.filename) {
-        profileData[field] = {
-          ...profileData[field],
-          url: `/uploads/tenant-documents/${profileData[field].filename}`
-        };
+      if (profileData[field] && Array.isArray(profileData[field])) {
+        profileData[field] = profileData[field].map(doc => ({
+          ...doc,
+          url: `/uploads/tenant-documents/${doc.filename}`,
+          thumbnailUrl: doc.thumbnailUrl || `/uploads/tenant-documents/${doc.filename}`
+        }));
       }
     });
 
@@ -134,36 +200,75 @@ export const getTenantProfile = async (req, res) => {
 
 export const deleteDocument = async (req, res) => {
   try {
-    const { field } = req.params;
-    const tenantDocument = await TenantDocument.findOne({ tenant: req.user._id });
+    const { field, index } = req.params;
+    console.log('Deleting document:', { field, index });
 
+    const tenantDocument = await TenantDocument.findOne({ tenant: req.user._id });
     if (!tenantDocument) {
+      console.log('Tenant document not found');
       return res.status(404).json({ message: 'Tenant profile not found' });
     }
 
     // Check if user has permission to delete this document
     if (req.user.role === 'tenant' && tenantDocument.tenant.toString() !== req.user._id.toString()) {
+      console.log('Unauthorized access attempt');
       return res.status(403).json({ message: 'Not authorized to delete this document' });
     }
 
-    // Check if the document exists
-    if (!tenantDocument[field]) {
+    // Check if the document field exists and is an array
+    if (!tenantDocument[field] || !Array.isArray(tenantDocument[field])) {
+      console.log('Document field not found or not an array:', field);
+      return res.status(404).json({ message: 'Document field not found' });
+    }
+
+    // Check if the document at the specified index exists
+    if (!tenantDocument[field][index]) {
+      console.log('Document at index not found:', index);
       return res.status(404).json({ message: 'Document not found' });
     }
 
-    // Delete the file from the filesystem
-    const filepath = path.join(uploadsDir, tenantDocument[field].filename);
+    const document = tenantDocument[field][index];
+    console.log('Document to delete:', document);
+
+    // Delete the original file from the filesystem
+    const filepath = path.join(uploadsDir, document.filename);
+    console.log('Attempting to delete file:', filepath);
     if (fs.existsSync(filepath)) {
       fs.unlinkSync(filepath);
+      console.log('Original file deleted successfully');
+    } else {
+      console.log('Original file not found:', filepath);
     }
 
-    // Remove the document reference from the database
-    tenantDocument[field] = undefined;
+    // Delete the thumbnail file if it exists
+    if (document.thumbnailUrl) {
+      const thumbnailFilename = path.basename(document.thumbnailUrl);
+      const thumbnailPath = path.join(thumbnailsDir, thumbnailFilename);
+      console.log('Attempting to delete thumbnail:', thumbnailPath);
+      if (fs.existsSync(thumbnailPath)) {
+        fs.unlinkSync(thumbnailPath);
+        console.log('Thumbnail deleted successfully');
+      } else {
+        console.log('Thumbnail file not found:', thumbnailPath);
+      }
+    }
+
+    // Remove the document from the array
+    tenantDocument[field].splice(index, 1);
     await tenantDocument.save();
+    console.log('Document removed from database');
 
     res.json({ message: 'Document deleted successfully' });
   } catch (error) {
-    console.error('Error in deleteDocument:', error);
-    res.status(500).json({ message: error.message });
+    console.error('Detailed error in deleteDocument:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      path: error.path
+    });
+    res.status(500).json({ 
+      message: 'Failed to delete document',
+      error: error.message 
+    });
   }
 }; 

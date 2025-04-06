@@ -49,8 +49,8 @@ const propertySchema = new mongoose.Schema({
   status: {
     type: String,
     required: true,
-    enum: ['New', 'Review', 'Submitted', 'Rented', 'Active'],
-    default: 'New'
+    enum: ['new', 'review', 'submitted', 'rented', 'active'],
+    default: 'new'
   },
   tenant: {
     type: mongoose.Schema.Types.ObjectId,
@@ -64,11 +64,12 @@ const propertySchema = new mongoose.Schema({
   applications: [{
     tenant: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
+      ref: 'User',
+      required: true
     },
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected'],
+      enum: ['pending', 'approved', 'declined'],
       default: 'pending'
     },
   }],

@@ -60,22 +60,19 @@ export default function TenantProfile() {
           const initialDocuments = {};
           const initialPreviews = {};
 
-          const documentFields = [
-            'proofOfIdentity',
-            'proofOfIncome',
-            'creditHistory',
-            'rentalHistory',
-            'additionalDocuments'
-          ];
+          // Process each document field
+          ['proofOfIdentity', 'proofOfIncome', 'creditHistory', 'rentalHistory', 'additionalDocuments'].forEach(field => {
+            if (data[field] && Array.isArray(data[field])) {
+              initialDocuments[field] = data[field].map(doc => ({
+                name: doc.originalName || 'Document',
+                type: doc.mimeType || 'application/octet-stream'
+              }));
 
-          documentFields.forEach(field => {
-            if (data[field]?.url) {
-              initialDocuments[field] = [{
-                name: data[field].filename,
-                type: data[field].filename.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/*',
-                isExisting: true
-              }];
-              initialPreviews[field] = [data[field].url];
+              initialPreviews[field] = data[field].map(doc => ({
+                url: doc.url,
+                thumbnailUrl: doc.thumbnailUrl,
+                type: doc.mimeType?.startsWith('image/') ? 'image' : 'pdf'
+              }));
             } else {
               initialDocuments[field] = [];
               initialPreviews[field] = [];
@@ -86,7 +83,31 @@ export default function TenantProfile() {
           setPreviews(initialPreviews);
         }
       } catch (error) {
-        toast.error('Failed to load tenant profile data');
+        console.error('Error fetching tenant profile:', error);
+        if (error.response?.status === 404) {
+          // New tenant without a profile - initialize empty states
+          setAnswers({
+            hasBeenEvicted: '',
+            canPayMoreThanOneMonth: '',
+            monthsAheadCanPay: ''
+          });
+          setDocuments({
+            proofOfIdentity: [],
+            proofOfIncome: [],
+            creditHistory: [],
+            rentalHistory: [],
+            additionalDocuments: []
+          });
+          setPreviews({
+            proofOfIdentity: [],
+            proofOfIncome: [],
+            creditHistory: [],
+            rentalHistory: [],
+            additionalDocuments: []
+          });
+        } else {
+          setError('Failed to load tenant profile data');
+        }
       } finally {
         setLoading(false);
       }
@@ -109,48 +130,142 @@ export default function TenantProfile() {
     }));
   };
 
-  const handleFileChange = async (e, field) => {
-    const selectedFiles = Array.from(e.target.files);
-    if (!selectedFiles.length) return;
-
-    try {
-      // Update documents state
-      setDocuments(prev => ({
-        ...prev,
-        [field]: selectedFiles.map(file => ({
-          name: file.name,
-          type: file.type,
-          file: file,
-          isExisting: false
-        }))
-      }));
-
-      // Generate previews
-      const newPreviews = await Promise.all(
-        selectedFiles.map(file => {
-          if (file.type === 'application/pdf') {
-            return 'pdf';
-          }
-          return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve(e.target.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          });
-        })
-      );
-
-      setPreviews(prev => ({
-        ...prev,
-        [field]: newPreviews
-      }));
-    } catch (error) {
-      console.error('Error handling file change:', error);
-      toast.error('Error processing selected files. Please try again.');
+  const handleFileChange = (field, acceptedFiles) => {
+    // Filter out any files that are too large (10MB limit)
+    const validFiles = acceptedFiles.filter(file => file.size <= 10 * 1024 * 1024);
+    
+    if (validFiles.length < acceptedFiles.length) {
+      toast.error('Some files were skipped because they exceed the 10MB size limit');
     }
+
+    // Create previews for the new files
+    const newPreviews = validFiles.map(file => {
+      const isImage = file.type.startsWith('image/');
+      const isPdf = file.type === 'application/pdf';
+
+      if (isImage) {
+        return {
+          type: 'image',
+          url: URL.createObjectURL(file),
+          thumbnailUrl: URL.createObjectURL(file), // Use the same URL for initial preview
+          mimeType: file.type
+        };
+      } else if (isPdf) {
+        return {
+          type: 'pdf',
+          url: URL.createObjectURL(file),
+          mimeType: file.type
+        };
+      } else {
+        return {
+          type: 'other',
+          url: null,
+          mimeType: file.type
+        };
+      }
+    });
+
+    // Update documents state
+    setDocuments(prev => ({
+      ...prev,
+      [field]: [...prev[field], ...validFiles]
+    }));
+
+    // Update previews state
+    setPreviews(prev => ({
+      ...prev,
+      [field]: [...prev[field], ...newPreviews]
+    }));
   };
 
   const handleDeleteDocument = async (field, index) => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      const response = await axios.delete(`${API_ENDPOINTS.BASE_URL}/api/users/tenant-profile/${field}/${index}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.status === 200) {
+        // Update the documents and previews state
+        setDocuments(prev => ({
+          ...prev,
+          [field]: prev[field].filter((_, i) => i !== index)
+        }));
+        setPreviews(prev => ({
+          ...prev,
+          [field]: prev[field].filter((_, i) => i !== index)
+        }));
+        setSuccess('Document deleted successfully');
+      }
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      setError('Failed to delete document');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const { getRootProps: getIdentityProps, getInputProps: getIdentityInputProps } = useDropzone({
+    onDrop: files => handleFileChange('proofOfIdentity', files),
+    accept: {
+      'image/*': ['.jpeg', '.jpg', '.png'],
+      'application/pdf': ['.pdf']
+    },
+    maxSize: 10 * 1024 * 1024 // 10MB
+  });
+
+  const { getRootProps: getIncomeProps, getInputProps: getIncomeInputProps } = useDropzone({
+    onDrop: files => handleFileChange('proofOfIncome', files),
+    accept: {
+      'image/*': ['.jpeg', '.jpg', '.png'],
+      'application/pdf': ['.pdf']
+    },
+    maxSize: 10 * 1024 * 1024 // 10MB
+  });
+
+  const { getRootProps: getCreditProps, getInputProps: getCreditInputProps } = useDropzone({
+    onDrop: files => handleFileChange('creditHistory', files),
+    accept: {
+      'image/*': ['.jpeg', '.jpg', '.png'],
+      'application/pdf': ['.pdf']
+    },
+    maxSize: 10 * 1024 * 1024 // 10MB
+  });
+
+  const { getRootProps: getRentalProps, getInputProps: getRentalInputProps } = useDropzone({
+    onDrop: files => handleFileChange('rentalHistory', files),
+    accept: {
+      'image/*': ['.jpeg', '.jpg', '.png'],
+      'application/pdf': ['.pdf']
+    },
+    maxSize: 10 * 1024 * 1024 // 10MB
+  });
+
+  const { getRootProps: getAdditionalProps, getInputProps: getAdditionalInputProps } = useDropzone({
+    onDrop: files => handleFileChange('additionalDocuments', files),
+    accept: {
+      'image/*': ['.jpeg', '.jpg', '.png'],
+      'application/pdf': ['.pdf']
+    },
+    maxSize: 10 * 1024 * 1024 // 10MB
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -158,172 +273,128 @@ export default function TenantProfile() {
         return;
       }
 
-      // If the document is from the server (has a URL), delete it from the server
-      const preview = previews[field][index];
-      if (typeof preview === 'string' && !preview.startsWith('data:')) {
-        await axios.delete(`${API_ENDPOINTS.UPDATE_TENANT_PROFILE}/${field}/${index}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-      }
-
-      // Update local state
-      setDocuments(prev => ({
-        ...prev,
-        [field]: prev[field].filter((_, i) => i !== index)
-      }));
-      setPreviews(prev => ({
-        ...prev,
-        [field]: prev[field].filter((_, i) => i !== index)
-      }));
-    } catch (error) {
-      console.error('Error deleting document:', error);
-      setError(error.response?.data?.message || 'Error deleting document');
-    }
-  };
-
-  const { getRootProps: getIdentityProps, getInputProps: getIdentityInputProps } = useDropzone({
-    onDrop: (files) => handleFileChange(files, 'proofOfIdentity'),
-    accept: {
-      'application/pdf': ['.pdf'],
-      'image/*': ['.jpg', '.jpeg', '.png']
-    },
-    multiple: true
-  });
-
-  const { getRootProps: getIncomeProps, getInputProps: getIncomeInputProps } = useDropzone({
-    onDrop: (files) => handleFileChange(files, 'proofOfIncome'),
-    accept: {
-      'application/pdf': ['.pdf'],
-      'image/*': ['.jpg', '.jpeg', '.png']
-    },
-    multiple: true
-  });
-
-  const { getRootProps: getCreditProps, getInputProps: getCreditInputProps } = useDropzone({
-    onDrop: (files) => handleFileChange(files, 'creditHistory'),
-    accept: {
-      'application/pdf': ['.pdf'],
-      'image/*': ['.jpg', '.jpeg', '.png']
-    },
-    multiple: true
-  });
-
-  const { getRootProps: getRentalProps, getInputProps: getRentalInputProps } = useDropzone({
-    onDrop: (files) => handleFileChange(files, 'rentalHistory'),
-    accept: {
-      'application/pdf': ['.pdf'],
-      'image/*': ['.jpg', '.jpeg', '.png']
-    },
-    multiple: true
-  });
-
-  const { getRootProps: getAdditionalProps, getInputProps: getAdditionalInputProps } = useDropzone({
-    onDrop: (files) => handleFileChange(files, 'additionalDocuments'),
-    accept: {
-      'application/pdf': ['.pdf'],
-      'image/*': ['.jpg', '.jpeg', '.png']
-    },
-    multiple: true
-  });
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError('');
-      setSuccess('');
-
-      // Create FormData instance
       const formData = new FormData();
-
-      // Add answers to FormData
-      Object.entries(answers).forEach(([key, value]) => {
-        formData.append(key, value);
-      });
-
-      // Add files to FormData
+      
+      // Add files to formData
       Object.entries(documents).forEach(([field, files]) => {
-        if (files.length > 0) {
-          const file = files[0]; // We're only handling one file per field for now
-          if (!file.isExisting && file.file) {
-            formData.append(field, file.file);
-          } else if (file.isExisting) {
-            // If it's an existing file, send the URL/path
-            formData.append(`${field}Existing`, 'true');
-          }
+        if (files && files.length > 0) {
+          files.forEach(file => {
+            if (file instanceof File) {
+              formData.append(field, file);
+            }
+          });
         }
       });
 
-      // Send the request
-      const response = await axios.post(
-        API_ENDPOINTS.UPDATE_TENANT_PROFILE,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
+      // Add other form data
+      formData.append('hasBeenEvicted', answers.hasBeenEvicted);
+      formData.append('canPayMoreThanOneMonth', answers.canPayMoreThanOneMonth);
+      formData.append('monthsAheadCanPay', answers.monthsAheadCanPay);
+
+      const response = await axios.post(API_ENDPOINTS.UPDATE_TENANT_PROFILE, formData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
         }
-      );
+      });
 
       if (response.status === 200) {
-        toast.success('Profile updated successfully');
+        // Update documents and previews state with the response data
+        const updatedDocuments = {};
+        const updatedPreviews = {};
+        const documentFields = ['proofOfIdentity', 'proofOfIncome', 'creditHistory', 'rentalHistory', 'additionalDocuments'];
+        
+        documentFields.forEach(field => {
+          if (response.data[field]) {
+            updatedDocuments[field] = response.data[field].map(doc => ({
+              name: doc.filename,
+              type: doc.mimeType || 'application/octet-stream'
+            }));
+
+            updatedPreviews[field] = response.data[field].map(doc => ({
+              url: doc.url,
+              thumbnailUrl: doc.thumbnailUrl || doc.url,
+              type: doc.mimeType?.startsWith('image/') ? 'image' : 'pdf',
+              mimeType: doc.mimeType
+            }));
+          } else {
+            updatedDocuments[field] = [];
+            updatedPreviews[field] = [];
+          }
+        });
+
+        setDocuments(updatedDocuments);
+        setPreviews(updatedPreviews);
+        setSuccess('Profile updated successfully');
       }
     } catch (error) {
-      console.error('Error updating tenant profile:', error);
-      toast.error('Failed to update profile. Please try again.');
+      console.error('Error updating profile:', error);
+      setError(error.response?.data?.message || 'Failed to update profile');
     } finally {
       setLoading(false);
     }
   };
 
-  const renderDocumentPreview = (field, label) => {
-    const preview = previews[field];
-    const files = documents[field];
+  const renderDocumentPreview = (field, index) => {
+    const previewsList = previews[field];
+    const filesList = documents[field];
 
-    if (!preview || !files || files.length === 0) return null;
+    if (!previewsList || !filesList || !previewsList[index] || !filesList[index]) {
+      return null;
+    }
+
+    const preview = previewsList[index];
+    const file = filesList[index];
+
+    if (file.type === 'pdf') {
+      return (
+        <div className="relative group">
+          <div className="w-full aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
+            <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
+            <button
+              type="button"
+              onClick={() => handleDeleteDocument(field, index)}
+              className="text-white hover:text-red-500"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      );
+    }
 
     return (
-      <div className="mt-2">
-        <div className="relative inline-block">
-          {preview.map((p, index) => (
-            <div key={index} className="relative">
-              {files[index].type === 'application/pdf' || p === 'pdf' ? (
-                <div className="flex items-center space-x-2 bg-gray-100 p-2 rounded-md">
-                  <svg className="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-sm text-gray-600">{files[index].name}</span>
-                </div>
-              ) : (
-                <div className="relative">
-                  <img
-                    src={p}
-                    alt={`${label} preview`}
-                    className="max-h-32 rounded-md"
-                    onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/150?text=Error+Loading+Image';
-                    }}
-                  />
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={() => handleDeleteDocument(field, index)}
-                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          ))}
+      <div className="relative group">
+        <img
+          src={preview.thumbnailUrl ? `${API_ENDPOINTS.BASE_URL}${preview.thumbnailUrl}` : `${API_ENDPOINTS.BASE_URL}${preview.url}`}
+          alt={`Document preview ${index + 1}`}
+          className="w-full aspect-square object-cover rounded-lg"
+          onError={(e) => {
+            // If thumbnail fails, try the original image
+            if (e.target.src.includes('thumbnails')) {
+              e.target.src = `${API_ENDPOINTS.BASE_URL}${preview.url}`;
+            } else {
+              // If both fail, show fallback
+              e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNlZWVlZWUiLz48cGF0aCBkPSJNMTI1IDg1QzEyNSA5My4yODQzIDExOC4yODQgMTAwIDExMCAxMDBDMTAxLjcxNiAxMDAgOTUgOTMuMjg0MyA5NSA4NUM5NSA3Ni43MTU3IDEwMS43MTYgNzAgMTEwIDcwQzExOC4yODQgNzAgMTI1IDc2LjcxNTcgMTI1IDg1WiIgZmlsbD0iI2NjY2NjYyIvPjxwYXRoIGQ9Ik03MCAxNDBDNzAgMTMxLjcxNiA3Ni43MTU3IDEyNSA4NSAxMjVIMTM1QzE0My4yODQgMTI1IDE1MCAxMzEuNzE2IDE1MCAxNDBWMTUwQzE1MCAxNTguMjg0IDE0My4yODQgMTY1IDEzNSAxNjVIODVDNzYuNzE1NyAxNjUgNzAgMTU4LjI4NCA3MCAxNTBWMTQwWiIgZmlsbD0iI2NjY2NjYyIvPjwvc3ZnPg==';
+            }
+          }}
+        />
+        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
+          <button
+            type="button"
+            onClick={() => handleDeleteDocument(field, index)}
+            className="text-white hover:text-red-500"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
         </div>
       </div>
     );
@@ -458,7 +529,15 @@ export default function TenantProfile() {
                     <p className="text-xs text-gray-500">PDF, JPG, JPEG, PNG up to 10MB</p>
                   </div>
                 </div>
-                {renderDocumentPreview('proofOfIdentity', 'Proof of Identity')}
+                <div className="mt-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {previews['proofOfIdentity']?.map((_, index) => (
+                      <div key={index} className="relative">
+                        {renderDocumentPreview('proofOfIdentity', index)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {/* Proof of Income & Employment */}
@@ -484,7 +563,15 @@ export default function TenantProfile() {
                     <p className="text-xs text-gray-500">PDF, JPG, JPEG, PNG up to 10MB</p>
                   </div>
                 </div>
-                {renderDocumentPreview('proofOfIncome', 'Proof of Income')}
+                <div className="mt-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {previews['proofOfIncome']?.map((_, index) => (
+                      <div key={index} className="relative">
+                        {renderDocumentPreview('proofOfIncome', index)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {/* Credit History */}
@@ -507,7 +594,15 @@ export default function TenantProfile() {
                     <p className="text-xs text-gray-500">PDF, JPG, JPEG, PNG up to 10MB</p>
                   </div>
                 </div>
-                {renderDocumentPreview('creditHistory', 'Credit History')}
+                <div className="mt-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {previews['creditHistory']?.map((_, index) => (
+                      <div key={index} className="relative">
+                        {renderDocumentPreview('creditHistory', index)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {/* Rental History & References */}
@@ -533,7 +628,15 @@ export default function TenantProfile() {
                     <p className="text-xs text-gray-500">PDF, JPG, JPEG, PNG up to 10MB</p>
                   </div>
                 </div>
-                {renderDocumentPreview('rentalHistory', 'Rental History')}
+                <div className="mt-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {previews['rentalHistory']?.map((_, index) => (
+                      <div key={index} className="relative">
+                        {renderDocumentPreview('rentalHistory', index)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {/* Additional Documents */}
@@ -559,7 +662,15 @@ export default function TenantProfile() {
                     <p className="text-xs text-gray-500">PDF, JPG, JPEG, PNG up to 10MB</p>
                   </div>
                 </div>
-                {renderDocumentPreview('additionalDocuments', 'Additional Documents')}
+                <div className="mt-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {previews['additionalDocuments']?.map((_, index) => (
+                      <div key={index} className="relative">
+                        {renderDocumentPreview('additionalDocuments', index)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {error && (
