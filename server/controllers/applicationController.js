@@ -56,20 +56,20 @@ export const getApplicationById = async (req, res) => {
 // Create a new application
 export const createApplication = async (req, res) => {
   try {
-    const { propertyId } = req.body;
+    const { property } = req.body;
 
     // Check if property exists and is available
-    const property = await Property.findById(propertyId);
-    if (!property) {
+    const propertyDoc = await Property.findById(property);
+    if (!propertyDoc) {
       return res.status(404).json({ message: 'Property not found' });
     }
-    if (!property.available) {
+    if (!propertyDoc.available) {
       return res.status(400).json({ message: 'Property is not available' });
     }
 
     // Check if user has already applied
     const existingApplication = await Application.findOne({
-      property: propertyId,
+      property,
       tenant: req.user._id
     });
     if (existingApplication) {
@@ -77,7 +77,7 @@ export const createApplication = async (req, res) => {
     }
 
     const application = new Application({
-      property: propertyId,
+      property,
       tenant: req.user._id,
       status: 'pending'
     });
@@ -85,11 +85,11 @@ export const createApplication = async (req, res) => {
     const savedApplication = await application.save();
 
     // Add application to property's applications array
-    property.applications.push({
+    propertyDoc.applications.push({
       tenant: req.user._id,
       status: 'pending'
     });
-    await property.save();
+    await propertyDoc.save();
 
     res.status(201).json(savedApplication);
   } catch (error) {

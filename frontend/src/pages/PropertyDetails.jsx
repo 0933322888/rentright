@@ -16,18 +16,27 @@ const PropertyDetails = () => {
   const [hasApplied, setHasApplied] = useState(false);
 
   useEffect(() => {
-    const fetchProperty = async () => {
+    const fetchPropertyAndApplicationStatus = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${API_ENDPOINTS.PROPERTIES}/${id}`);
-        setProperty(response.data);
+        // Fetch property details
+        const propertyResponse = await axios.get(`${API_ENDPOINTS.PROPERTIES}/${id}`);
+        setProperty(propertyResponse.data);
         
-        // Check if the current user has already applied
-        if (user && response.data.applications) {
-          const userApplication = response.data.applications.find(
-            app => app.tenant._id === user._id
+        // If user is a tenant, check their application status
+        if (user && user.role === 'tenant') {
+          const token = localStorage.getItem('token');
+          const applicationsResponse = await axios.get(API_ENDPOINTS.APPLICATIONS, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          // Check if user has already applied for this property
+          const hasExistingApplication = applicationsResponse.data.some(
+            application => application.property._id === id
           );
-          setHasApplied(!!userApplication);
+          setHasApplied(hasExistingApplication);
         }
         
         setError(null);
@@ -39,7 +48,7 @@ const PropertyDetails = () => {
       }
     };
 
-    fetchProperty();
+    fetchPropertyAndApplicationStatus();
   }, [id, user]);
 
   const handleApply = async () => {
@@ -69,7 +78,7 @@ const PropertyDetails = () => {
 
       const response = await axios.post(
         API_ENDPOINTS.APPLICATIONS,
-        { propertyId: id },
+        { property: id },
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -79,6 +88,7 @@ const PropertyDetails = () => {
       );
 
       if (response.data) {
+        setHasApplied(true);
         toast.success('Application submitted successfully!');
         navigate('/applications');
       }

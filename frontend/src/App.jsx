@@ -24,6 +24,9 @@ import CreateTicket from './pages/CreateTicket';
 import TenantProfile from './pages/TenantProfile';
 import LandlordBenefits from './pages/LandlordBenefits';
 import TenantBenefits from './pages/TenantBenefits';
+import Contact from './pages/Contact';
+import About from './pages/About';
+import PropertyDetails from './pages/PropertyDetails';
 
 // Role-based home redirect component
 function HomeRedirect() {
@@ -55,8 +58,11 @@ function App() {
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
             <Route path="properties" element={<PropertyList />} />
+            <Route path="properties/:id" element={<PropertyDetails />} />
             <Route path="landlord-benefits" element={<LandlordBenefits />} />
             <Route path="tenant-benefits" element={<TenantBenefits />} />
+            <Route path="contact" element={<Contact />} />
+            <Route path="about" element={<About />} />
           </Route>
 
           {/* Protected routes */}
