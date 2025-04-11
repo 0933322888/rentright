@@ -91,16 +91,16 @@ export default function Home() {
         {/* Full-screen background image */}
         <div className="absolute inset-0">
           <img
-            src="/images/hero-property2.png" // Replace with your image path
+            src="/images/hero-property2.png"
             alt="Modern property"
-            className="h-full w-full object-cover"
+            className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-black/30" /> {/* Dark overlay for better contrast */}
+          <div className="absolute inset-0 bg-black/30" />
         </div>
         
         {/* Content overlay */}
         <div className="relative">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8 py-24 sm:py-32">
+          <div className="container mx-auto px-6 lg:px-8 py-24 sm:py-32">
             <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-12 max-w-2xl">
               <h1 className="text-[3.5rem] font-bold leading-[1.1] tracking-tight text-gray-900">
                 Transform Your Property Management Experience
