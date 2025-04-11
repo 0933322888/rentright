@@ -8,6 +8,7 @@ import applicationRoutes from './routes/applicationRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import ticketRoutes from './routes/ticketRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -38,6 +39,7 @@ app.use('/api/properties', propertyRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/tickets', ticketRoutes);
+app.use('/api/payments', paymentRoutes);
 
 const PORT = process.env.PORT || 5000;
 

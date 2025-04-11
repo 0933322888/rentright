@@ -1,6 +1,7 @@
 import Property from '../models/propertyModel.js';
 import User from '../models/userModel.js';
 import Application from '../models/applicationModel.js';
+import TenantDocument from '../models/tenantDocumentModel.js';
 
 // Get all properties for admin
 export const getAllProperties = async (req, res) => {
@@ -78,18 +79,23 @@ export const getAllTenants = async (req, res) => {
       .select('-password')
       .sort('-createdAt');
 
-    // Get application counts for each tenant
-    const tenantsWithApplicationCount = await Promise.all(
+    // Get application counts and tenant documents for each tenant
+    const tenantsWithDetails = await Promise.all(
       tenants.map(async (tenant) => {
-        const applicationCount = await Application.countDocuments({ tenant: tenant._id });
+        const [applicationCount, tenantDocument] = await Promise.all([
+          Application.countDocuments({ tenant: tenant._id }),
+          TenantDocument.findOne({ tenant: tenant._id })
+        ]);
+        
         return {
           ...tenant.toObject(),
-          applicationCount
+          applicationCount,
+          tenantDocument: tenantDocument || null
         };
       })
     );
 
-    res.json(tenantsWithApplicationCount);
+    res.json(tenantsWithDetails);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -159,7 +165,17 @@ export const getTenantById = async (req, res) => {
       return res.status(400).json({ message: 'User is not a tenant' });
     }
 
-    res.json(tenant);
+    // Get tenant document
+    const tenantDocument = await TenantDocument.findOne({ tenant: tenant._id });
+
+    // Get application count
+    const applicationCount = await Application.countDocuments({ tenant: tenant._id });
+
+    res.json({
+      ...tenant.toObject(),
+      applicationCount,
+      tenantDocument: tenantDocument || null
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -179,7 +195,7 @@ export const updateApplicationStatus = async (req, res) => {
     application.status = req.body.status;
     await application.save();
 
-    // If application is approved, update property
+    // If application is approved, update property and handle other applications
     if (req.body.status.toLowerCase() === 'approved') {
       // Update the property's applications array
       await Property.findByIdAndUpdate(
@@ -204,19 +220,50 @@ export const updateApplicationStatus = async (req, res) => {
         }
       );
       
-      // Reject all other pending applications for this property
-      await Application.updateMany(
-        {
-          property: application.property._id,
-          _id: { $ne: application._id },
-          status: 'pending'
-        },
-        { status: 'declined' }
-      );
+      // Get all applications for this property
+      const allPropertyApplications = await Application.find({
+        property: application.property._id
+      });
+
+      // Update other applications
+      for (const app of allPropertyApplications) {
+        if (app._id.toString() !== application._id.toString()) {
+          // If it's the same tenant's application
+          if (app.tenant.toString() === application.tenant._id.toString()) {
+            // If it's already approved, set to expired
+            if (app.status === 'approved') {
+              app.status = 'expired';
+            } else {
+              // Otherwise, set to declined
+              app.status = 'declined';
+            }
+          } else {
+            // For other tenants' applications, set to declined
+            app.status = 'declined';
+          }
+          await app.save();
+        }
+      }
+
+      // Also update all other applications of the same tenant for other properties
+      const otherTenantApplications = await Application.find({
+        tenant: application.tenant._id,
+        _id: { $ne: application._id }
+      });
+
+      for (const app of otherTenantApplications) {
+        if (app.status === 'approved') {
+          app.status = 'expired';
+        } else {
+          app.status = 'declined';
+        }
+        await app.save();
+      }
     }
 
     res.json({ message: 'Application status updated successfully' });
   } catch (error) {
+    console.error('Error updating application status:', error);
     res.status(500).json({ message: error.message });
   }
 };

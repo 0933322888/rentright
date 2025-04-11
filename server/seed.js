@@ -2,6 +2,9 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import User from './models/userModel.js';
 import Property from './models/propertyModel.js';
+import TenantDocument from './models/tenantDocumentModel.js';
+import Application from './models/applicationModel.js';
+import Ticket from './models/ticketModel.js';
 import bcrypt from 'bcryptjs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -167,6 +170,9 @@ const seed = async () => {
     // Clear existing data
     await User.deleteMany({});
     await Property.deleteMany({});
+    await TenantDocument.deleteMany({});
+    await Ticket.deleteMany({});
+    await Application.deleteMany({});
     console.log('Cleared existing data');
 
     // Hash passwords
