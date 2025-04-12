@@ -28,4 +28,5 @@ export const API_ENDPOINTS = {
   // Ticket endpoints
   TICKETS: `${BASE_URL}/api/tickets`,
   MY_TICKETS: `${BASE_URL}/api/tickets/my-tickets`,
+  ADMIN_TICKETS: `${BASE_URL}/api/tickets`,
 }; 

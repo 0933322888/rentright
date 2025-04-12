@@ -30,6 +30,7 @@ export default function AdminTenants() {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setTenants(response.data);
+      console.log(response.data);
     } catch (err) {
       setError('Failed to fetch tenants');
       console.error('Error fetching tenants:', err);
@@ -146,7 +147,7 @@ export default function AdminTenants() {
           </div>
           <div>
             <label htmlFor="profileStatus" className="block text-sm font-medium text-gray-700">
-              Profile Status
+              Applicant Profile Status
             </label>
             <select
               name="profileStatus"
@@ -189,7 +190,7 @@ export default function AdminTenants() {
                       Rating
                     </th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Profile Status
+                      Applicant Profile Status
                     </th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                       Actions
@@ -240,11 +241,19 @@ export default function AdminTenants() {
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
-                          tenant.hasProfile ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {tenant.hasProfile ? 'Complete' : 'Incomplete'}
-                        </span>
+                        <div className="flex items-center space-x-2">
+                          <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
+                            tenant.tenantDocument?.hasBeenEvicted ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {tenant.tenantDocument?.hasBeenEvicted ? 'Complete' : 'Incomplete'}
+                          </span>
+                          <button
+                            onClick={() => navigate(`/admin/tenants/${tenant._id}/profile`)}
+                            className="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                          >
+                            View
+                          </button>
+                        </div>
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         <div className="flex space-x-2">

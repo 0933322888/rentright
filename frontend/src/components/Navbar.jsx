@@ -1,8 +1,11 @@
-import { Fragment } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Disclosure, Menu, Transition } from '@headlessui/react';
 import { Bars3Icon, XMarkIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
+import { API_ENDPOINTS } from '../config/api';
+import '../styles/navbar.css';
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
@@ -12,6 +15,37 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [hasApprovedApplication, setHasApprovedApplication] = useState(
+    localStorage.getItem('hasApprovedApplication') === 'true'
+  );
+
+  useEffect(() => {
+    const checkApprovedApplication = async () => {
+      if (user?.role === 'tenant') {
+        try {
+          const response = await axios.get(API_ENDPOINTS.APPLICATIONS, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          const hasApproved = response.data.some(app => app.status === 'approved');
+          setHasApprovedApplication(hasApproved);
+          localStorage.setItem('hasApprovedApplication', hasApproved);
+        } catch (error) {
+          console.error('Error checking approved applications:', error);
+        }
+      } else {
+        // Reset the state when user is not a tenant
+        setHasApprovedApplication(false);
+        localStorage.removeItem('hasApprovedApplication');
+      }
+    };
+
+    // Only check when user changes or on initial load
+    if (user) {
+      checkApprovedApplication();
+    }
+  }, [user]);
 
   // Define navigation items based on user role
   const getNavigationItems = () => {
@@ -41,12 +75,14 @@ export default function Navbar() {
     }
 
     // Tenant navigation
-    return [
+    const tenantItems = [
+      { name: 'Dashboard', href: '/dashboard' },
+      { name: 'My Lease', href: '/my-lease', show: hasApprovedApplication },
       { name: 'Properties', href: '/properties' },
-      { name: 'My Applications', href: '/applications' },
-      { name: 'My Tickets', href: '/my-tickets' },
-      { name: 'Tenant Profile', href: '/tenant-profile' },
-    ];
+      { name: 'My Applications', href: '/applications' }
+    ].filter(item => !item.hasOwnProperty('show') || item.show);
+
+    return tenantItems;
   };
 
   const navigationItems = getNavigationItems();
@@ -64,7 +100,7 @@ export default function Navbar() {
             <div className="flex h-16 justify-between">
               <div className="flex">
                 <div className="flex flex-shrink-0 items-center">
-                  <Link to={user?.role === 'landlord' ? '/my-properties' : '/'} className="text-xl font-bold text-indigo-600">
+                  <Link to={user?.role === 'landlord' ? '/my-properties' : '/'} className="text-xl font-bold text-indigo-600 navbar-link">
                     RentRight
                   </Link>
                 </div>
@@ -77,7 +113,7 @@ export default function Navbar() {
                         location.pathname === item.href
                           ? 'border-indigo-500 text-gray-900'
                           : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-                        'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium'
+                        'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium navbar-link'
                       )}
                     >
                       {item.name}
@@ -114,7 +150,7 @@ export default function Navbar() {
                               to="/profile"
                               className={classNames(
                                 active ? 'bg-gray-100' : '',
-                                'block px-4 py-2 text-sm text-gray-700'
+                                'block px-4 py-2 text-sm text-gray-700 navbar-link menu-item'
                               )}
                             >
                               Profile
@@ -127,7 +163,7 @@ export default function Navbar() {
                               onClick={handleLogout}
                               className={classNames(
                                 active ? 'bg-gray-100' : '',
-                                'block w-full px-4 py-2 text-left text-sm text-gray-700'
+                                'block w-full px-4 py-2 text-left text-sm text-gray-700 navbar-link menu-item'
                               )}
                             >
                               Sign out
@@ -141,13 +177,13 @@ export default function Navbar() {
                   <div className="flex space-x-4">
                     <Link
                       to="/login"
-                      className="text-gray-500 hover:text-gray-700 px-3 py-2 text-sm font-medium"
+                      className="text-gray-500 hover:text-gray-700 px-3 py-2 text-sm font-medium navbar-link"
                     >
                       Login
                     </Link>
                     <Link
                       to="/register"
-                      className="bg-indigo-600 text-white hover:bg-indigo-500 px-3 py-2 rounded-md text-sm font-medium"
+                      className="bg-indigo-600 text-white hover:bg-indigo-500 px-3 py-2 rounded-md text-sm font-medium navbar-link"
                     >
                       Register
                     </Link>
@@ -188,13 +224,13 @@ export default function Navbar() {
                 <div className="mt-3 space-y-1">
                   <Link
                     to="/profile"
-                    className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+                    className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800 navbar-link menu-item"
                   >
                     Profile
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="block w-full px-4 py-2 text-left text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+                    className="block w-full px-4 py-2 text-left text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800 navbar-link menu-item"
                   >
                     Sign out
                   </button>
@@ -205,13 +241,13 @@ export default function Navbar() {
                 <div className="space-y-1">
                   <Link
                     to="/login"
-                    className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+                    className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800 navbar-link"
                   >
                     Login
                   </Link>
                   <Link
                     to="/register"
-                    className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+                    className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800 navbar-link"
                   >
                     Register
                   </Link>

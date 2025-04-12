@@ -1,0 +1,17 @@
+.navbar-link {
+  text-decoration: none !important;
+}
+
+.navbar-link:hover {
+  text-decoration: none !important;
+}
+
+/* Override Bootstrap's default link styles */
+a.nav-link {
+  text-decoration: none !important;
+}
+
+/* Ensure menu items don't have underlines */
+.menu-item {
+  text-decoration: none !important;
+} 

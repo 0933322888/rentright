@@ -2,9 +2,12 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function PropertyList() {
+  const { user } = useAuth();
   const [properties, setProperties] = useState([]);
+  const [appliedProperties, setAppliedProperties] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     type: '',
@@ -16,6 +19,29 @@ export default function PropertyList() {
   useEffect(() => {
     fetchProperties();
   }, [filters]);
+
+  useEffect(() => {
+    if (user?.role === 'tenant') {
+      fetchUserApplications();
+    }
+  }, [user]);
+
+  const fetchUserApplications = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(API_ENDPOINTS.APPLICATIONS, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const appliedPropertyIds = new Set(
+        response.data.map(application => application.property._id)
+      );
+      setAppliedProperties(appliedPropertyIds);
+    } catch (error) {
+      console.error('Error fetching applications:', error);
+    }
+  };
 
   const fetchProperties = async () => {
     try {
@@ -141,6 +167,13 @@ export default function PropertyList() {
                         e.target.src = 'https://via.placeholder.com/800x400';
                       }}
                     />
+                    {user?.role === 'tenant' && appliedProperties.has(property._id) && (
+                      <div className="absolute top-2 right-2">
+                        <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                          Applied
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="p-4">
                     <div className="flex justify-between">

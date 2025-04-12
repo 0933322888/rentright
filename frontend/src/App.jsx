@@ -16,6 +16,7 @@ import AdminApplications from './pages/admin/Applications';
 import AdminTickets from './pages/admin/Tickets';
 import AdminLandlords from './pages/admin/Landlords';
 import AdminTenants from './pages/admin/Tenants';
+import AdminTenantProfile from './pages/admin/AdminTenantProfile';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import Layout from './components/Layout';
@@ -27,6 +28,9 @@ import TenantBenefits from './pages/TenantBenefits';
 import Contact from './pages/Contact';
 import About from './pages/About';
 import PropertyDetails from './pages/PropertyDetails';
+import MyLease from './pages/MyLease';
+import TenantDashboard from './pages/TenantDashboard';
+import Profile from './pages/Profile';
 
 // Role-based home redirect component
 function HomeRedirect() {
@@ -41,59 +45,77 @@ function HomeRedirect() {
   }
 
   if (user?.role === 'tenant') {
-    return <Navigate to="/properties" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <Home />;
+}
+
+// Separate component for routes that need auth context
+function AppRoutes() {
+  const { user } = useAuth();
+
+  return (
+    <Routes>
+      {/* Public routes */}
+      <Route element={<Layout />}>
+        <Route path="/" element={<HomeRedirect />} />
+        <Route path="login" element={<Login />} />
+        <Route path="register" element={<Register />} />
+        <Route path="properties" element={<PropertyList />} />
+        <Route path="properties/:id" element={<PropertyDetails />} />
+        <Route path="landlord-benefits" element={<LandlordBenefits />} />
+        <Route path="tenant-benefits" element={<TenantBenefits />} />
+        <Route path="contact" element={<Contact />} />
+        <Route path="about" element={<About />} />
+      </Route>
+
+      {/* Protected routes */}
+      <Route element={<ProtectedRoute />}>
+        <Route element={<Layout />}>
+          <Route path="properties/create" element={<AddProperty />} />
+          <Route path="properties/edit/:id" element={<EditProperty />} />
+          <Route path="my-properties" element={<MyProperties />} />
+          <Route path="applications" element={<Applications />} />
+          <Route path="my-tickets" element={<MyTickets />} />
+          <Route path="create-ticket" element={<CreateTicket />} />
+          <Route path="profile" element={<Profile />} />
+          
+          {/* Tenant specific routes */}
+          {user?.role === 'tenant' && (
+            <>
+              <Route path="dashboard" element={<TenantDashboard />} />
+              <Route path="my-lease" element={<MyLease />} />
+            </>
+          )}
+        </Route>
+      </Route>
+
+      {/* Admin routes */}
+      <Route element={<AdminRoute />}>
+        <Route element={<AdminLayout />}>
+          <Route path="admin" element={<AdminDashboard />} />
+          <Route path="admin/properties" element={<AdminProperties />} />
+          <Route path="admin/properties/:id" element={<AdminPropertyDetails />} />
+          <Route path="admin/applications" element={<AdminApplications />} />
+          <Route path="admin/tickets" element={<AdminTickets />} />
+          <Route path="admin/landlords" element={<AdminLandlords />} />
+          <Route path="admin/tenants" element={<AdminTenants />} />
+          <Route path="admin/tenants/:id/profile" element={<AdminTenantProfile />} />
+        </Route>
+      </Route>
+
+      {/* Catch all route */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 }
 
 function App() {
   return (
     <AuthProvider>
       <Router>
-        <Routes>
-          {/* Public routes */}
-          <Route element={<Layout />}>
-            <Route path="/" element={<HomeRedirect />} />
-            <Route path="login" element={<Login />} />
-            <Route path="register" element={<Register />} />
-            <Route path="properties" element={<PropertyList />} />
-            <Route path="properties/:id" element={<PropertyDetails />} />
-            <Route path="landlord-benefits" element={<LandlordBenefits />} />
-            <Route path="tenant-benefits" element={<TenantBenefits />} />
-            <Route path="contact" element={<Contact />} />
-            <Route path="about" element={<About />} />
-          </Route>
-
-          {/* Protected routes */}
-          <Route element={<ProtectedRoute />}>
-            <Route element={<Layout />}>
-              <Route path="properties/create" element={<AddProperty />} />
-              <Route path="properties/edit/:id" element={<EditProperty />} />
-              <Route path="my-properties" element={<MyProperties />} />
-              <Route path="applications" element={<Applications />} />
-              <Route path="my-tickets" element={<MyTickets />} />
-              <Route path="create-ticket" element={<CreateTicket />} />
-              <Route path="tenant-profile" element={<TenantProfile />} />
-            </Route>
-          </Route>
-
-          {/* Admin routes */}
-          <Route element={<AdminRoute />}>
-            <Route element={<AdminLayout />}>
-              <Route path="admin" element={<AdminDashboard />} />
-              <Route path="admin/properties" element={<AdminProperties />} />
-              <Route path="admin/properties/:id" element={<AdminPropertyDetails />} />
-              <Route path="admin/applications" element={<AdminApplications />} />
-              <Route path="admin/tickets" element={<AdminTickets />} />
-              <Route path="admin/landlords" element={<AdminLandlords />} />
-              <Route path="admin/tenants" element={<AdminTenants />} />
-            </Route>
-          </Route>
-
-          {/* Catch all route */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <AppRoutes />
       </Router>
     </AuthProvider>
   );

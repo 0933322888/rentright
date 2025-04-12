@@ -29,7 +29,7 @@ export default function AdminTickets() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get(API_ENDPOINTS.TICKETS, {
+      const response = await axios.get(API_ENDPOINTS.ADMIN_TICKETS, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTickets(response.data);
@@ -55,7 +55,7 @@ export default function AdminTickets() {
       setUpdatingPriority(true);
       const token = localStorage.getItem('token');
       await axios.patch(
-        `${API_ENDPOINTS.TICKETS}/${ticketId}/priority`,
+        `${API_ENDPOINTS.ADMIN_TICKETS}/${ticketId}/priority`,
         { priority: newPriority },
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -80,7 +80,7 @@ export default function AdminTickets() {
     try {
       const token = localStorage.getItem('token');
       await axios.patch(
-        `${API_ENDPOINTS.TICKETS}/${ticketId}/status`,
+        `${API_ENDPOINTS.ADMIN_TICKETS}/${ticketId}/status`,
         { status: newStatus },
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -108,7 +108,7 @@ export default function AdminTickets() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${API_ENDPOINTS.TICKETS}/${ticketId}/comments`,
+        `${API_ENDPOINTS.ADMIN_TICKETS}/${ticketId}/comments`,
         { text: newComment },
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -323,15 +323,15 @@ export default function AdminTickets() {
                       <tr>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
-                            {ticket.property.title}
+                            {ticket.property?.title || 'N/A'}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {ticket.property.location.street}, {ticket.property.location.city}
+                            {ticket.property ? `${ticket.property.location?.street || ''}, ${ticket.property.location?.city || ''}` : 'No location data'}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{ticket.tenant.name}</div>
-                          <div className="text-sm text-gray-500">{ticket.tenant.email}</div>
+                          <div className="text-sm text-gray-900">{ticket.tenant?.name || 'N/A'}</div>
+                          <div className="text-sm text-gray-500">{ticket.tenant?.email || 'N/A'}</div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm text-gray-900">{ticket.description}</div>

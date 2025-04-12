@@ -3,4 +3,5 @@
 /server/node_modules
 /frontend/node_modules
 /frontend/package-lock.json
+/frontend/.env
 /server/package-lock.json
