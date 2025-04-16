@@ -97,7 +97,7 @@ export default function MyTickets() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading tickets...</p>
         </div>
       </div>
@@ -114,13 +114,13 @@ export default function MyTickets() {
 
   return (
     <div className="bg-white">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl py-16 sm:py-24 lg:max-w-none lg:py-32">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900">My Repair Tickets</h1>
+      <div className="px-6 pt-6">
+        <div>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-semibold text-gray-900">My Repair Tickets</h1>
             <button
               onClick={() => navigate('/create-ticket')}
-              className="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              className="inline-flex items-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
             >
               Create New Ticket
             </button>
@@ -131,11 +131,11 @@ export default function MyTickets() {
               No tickets found. Create your first repair ticket!
             </div>
           ) : (
-            <div className="mt-8 space-y-4">
+            <div className="space-y-4 pb-6">
               {tickets.map((ticket) => (
                 <div
                   key={ticket._id}
-                  className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+                  className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-start justify-between">
                     <div>
@@ -161,7 +161,7 @@ export default function MyTickets() {
                       <div className="flex space-x-2">
                         <button
                           onClick={() => setCommentingTicketId(ticket._id)}
-                          className="text-sm text-indigo-600 hover:text-indigo-800"
+                          className="text-sm text-primary-600 hover:text-primary-800"
                         >
                           Add Comment
                         </button>
@@ -222,7 +222,7 @@ export default function MyTickets() {
             <textarea
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
               rows={4}
               placeholder="Enter your comment..."
             />
@@ -232,13 +232,13 @@ export default function MyTickets() {
                   setCommentingTicketId(null);
                   setNewComment('');
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleAddComment(commentingTicketId)}
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
               >
                 Add Comment
               </button>

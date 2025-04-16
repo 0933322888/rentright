@@ -41,7 +41,11 @@ const propertySchema = new mongoose.Schema({
     squareFootage: Number,
     parking: Boolean,
     furnished: Boolean,
-    petsAllowed: Boolean
+    petsAllowed: Boolean,
+    refrigerator: Boolean,
+    dishwasher: Boolean,
+    airConditioner: Boolean,
+    balcony: Boolean,
   },
   images: [{
     type: String

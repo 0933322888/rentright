@@ -87,13 +87,6 @@ const MyLease = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">My Lease</h1>
-        <p className="mt-2 text-sm text-gray-600">
-          Property: {leaseDetails.property.title}
-        </p>
-      </div>
-
       <Tab.Group>
         <Tab.List className="flex rounded-xl bg-white shadow-md p-1 space-x-1">
           {tabs.map((tab) => (
@@ -118,13 +111,13 @@ const MyLease = () => {
         </Tab.List>
 
         <Tab.Panels className="mt-6 bg-white rounded-xl shadow-md">
-          <Tab.Panel className="p-6 focus:outline-none">
+          <Tab.Panel className="focus:outline-none">
             <LeaseAgreement leaseDetails={leaseDetails} />
           </Tab.Panel>
-          <Tab.Panel className="p-6 focus:outline-none">
+          <Tab.Panel className="focus:outline-none">
             <MyTickets />
           </Tab.Panel>
-          <Tab.Panel className="p-6 focus:outline-none">
+          <Tab.Panel className="focus:outline-none">
             <Payments leaseDetails={leaseDetails} />
           </Tab.Panel>
         </Tab.Panels>

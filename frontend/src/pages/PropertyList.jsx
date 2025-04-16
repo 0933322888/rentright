@@ -85,7 +85,7 @@ export default function PropertyList() {
                 name="type"
                 value={filters.type}
                 onChange={handleFilterChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
               >
                 <option value="">All Types</option>
                 <option value="apartment">Apartment</option>
@@ -105,7 +105,7 @@ export default function PropertyList() {
                 name="minPrice"
                 value={filters.minPrice}
                 onChange={handleFilterChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                 placeholder="Min price"
               />
             </div>
@@ -120,7 +120,7 @@ export default function PropertyList() {
                 name="maxPrice"
                 value={filters.maxPrice}
                 onChange={handleFilterChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                 placeholder="Max price"
               />
             </div>
@@ -135,7 +135,7 @@ export default function PropertyList() {
                 name="location"
                 value={filters.location}
                 onChange={handleFilterChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                 placeholder="Enter location"
               />
             </div>
@@ -169,7 +169,7 @@ export default function PropertyList() {
                     />
                     {user?.role === 'tenant' && appliedProperties.has(property._id) && (
                       <div className="absolute top-2 right-2">
-                        <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                        <span className="inline-flex items-center rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800">
                           Applied
                         </span>
                       </div>
@@ -188,7 +188,7 @@ export default function PropertyList() {
                       <p className="text-lg font-medium text-gray-900">${property.price}/month</p>
                     </div>
                     <div className="mt-2">
-                      <span className="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800">
+                      <span className="inline-flex items-center rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800">
                         {property.type}
                       </span>
                     </div>

@@ -35,8 +35,8 @@ export default function AdminNavbar() {
             <div className="flex h-16 justify-between">
               <div className="flex">
                 <div className="flex flex-shrink-0 items-center">
-                  <Link to="/admin" className="text-xl font-bold text-indigo-600">
-                    Admin Dashboard
+                  <Link to="/admin" className="text-xl font-bold text-primary-600 navbar-link">
+                    RentRight Admin
                   </Link>
                 </div>
                 <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -46,9 +46,9 @@ export default function AdminNavbar() {
                       to={item.href}
                       className={classNames(
                         location.pathname === item.href
-                          ? 'border-indigo-500 text-gray-900'
+                          ? 'border-primary-500 text-gray-900'
                           : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-                        'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium'
+                        'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium navbar-link'
                       )}
                     >
                       {item.name}
@@ -60,7 +60,7 @@ export default function AdminNavbar() {
               <div className="flex items-center">
                 <Menu as="div" className="relative ml-3">
                   <div>
-                    <Menu.Button className="flex items-center rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    <Menu.Button className="flex items-center rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
                       <span className="sr-only">Open user menu</span>
                       <div className="flex items-center">
                         <span className="mr-2 text-gray-700">{user?.name}</span>
@@ -119,9 +119,9 @@ export default function AdminNavbar() {
                   to={item.href}
                   className={classNames(
                     location.pathname === item.href
-                      ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                      ? 'bg-primary-50 border-primary-500 text-primary-700'
                       : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700',
-                    'block border-l-4 py-2 pl-3 pr-4 text-base font-medium'
+                    'block border-l-4 py-2 pl-3 pr-4 text-base font-medium navbar-link'
                   )}
                 >
                   {item.name}

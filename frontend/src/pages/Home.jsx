@@ -103,21 +103,22 @@ export default function Home() {
           <div className="container mx-auto px-6 lg:px-8 py-24 sm:py-32">
             <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-12 max-w-2xl">
               <h1 className="text-[3.5rem] font-bold leading-[1.1] tracking-tight text-gray-900">
-                Transform Your Property Management Experience
+                Like Real Estate Broker, but better in all aspects
               </h1>
               <p className="mt-6 text-lg leading-8 text-gray-600">
-                RentRight provides landlords with powerful tools to manage properties efficiently, maximize returns, and grow their rental business.
+                Try it and you won't want to go back. 
+              </p>
+              <p className="mt-6 text-lg leading-8 text-gray-600">
+                RentRight is a complete solution for the entire rental journey - everything a landlord needs in one place. At the cost of a single broker, you get a team of experts working for you and we want to be your lifelong partner.
               </p>
               <div className="mt-10 flex items-center gap-x-6">
                 <Link
                   to="/register"
-                  className="rounded-md bg-indigo-600 px-5 py-3 text-base font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                  className="rounded-md bg-primary-600 px-5 py-3 text-base font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
                 >
                   Get Started
                 </Link>
-                <Link to="/properties" className="text-base font-semibold leading-6 text-gray-900">
-                  View Properties →
-                </Link>
+                
               </div>
             </div>
           </div>
@@ -128,8 +129,8 @@ export default function Home() {
       <div className="mx-auto max-w-7xl px-6 lg:px-8 py-24 sm:py-32">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Landlord Section */}
-          <div className="relative bg-indigo-50 rounded-2xl p-8 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-white to-indigo-50" />
+          <div className="relative bg-primary-50 rounded-2xl p-8 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-white to-primary-50" />
             <div className="relative">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold tracking-tight text-gray-900">
@@ -143,7 +144,7 @@ export default function Home() {
                 {landlordBenefits.map((benefit) => (
                   <div key={benefit.title} className="flex items-start gap-4">
                     <div className="flex-shrink-0">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600 text-white">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-600 text-white">
                         {benefit.icon}
                       </div>
                     </div>
@@ -157,7 +158,7 @@ export default function Home() {
               <div className="mt-8 text-center">
                 <Link
                   to="/landlord-benefits"
-                  className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                  className="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
                 >
                   Explore Landlord Features
                   <svg className="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

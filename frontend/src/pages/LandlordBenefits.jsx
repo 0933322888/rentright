@@ -124,27 +124,16 @@ export default function LandlordBenefits() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-indigo-50 to-white">
+      <div className="relative overflow-hidden bg-gradient-to-b from-primary-50 to-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24 sm:py-32">
           <div className="text-center">
             <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
               Why Choose RentRight?
             </h1>
             <p className="mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto">
-              Discover how our comprehensive platform empowers landlords to manage properties efficiently,
+              Discover how our comprehensive platform empowers landlords to manage properties efficiently, 
               maximize returns, and grow their rental business.
             </p>
-            <div className="mt-10 flex items-center justify-center gap-x-6">
-              <Link
-                to="/register"
-                className="rounded-md bg-indigo-600 px-5 py-3 text-base font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-              >
-                Get Started
-              </Link>
-              <Link to="/contact" className="text-base font-semibold leading-6 text-gray-900">
-                Contact Sales →
-              </Link>
-            </div>
           </div>
         </div>
       </div>
@@ -162,7 +151,7 @@ export default function LandlordBenefits() {
                 <div className={`space-y-6 ${index % 2 === 0 ? 'lg:order-1' : 'lg:order-2'}`}>
                   <div className="flex items-center gap-4">
                     <div className="flex-shrink-0">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-600 text-white">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-600 text-white">
                         {benefit.icon}
                       </div>
                     </div>
@@ -176,7 +165,7 @@ export default function LandlordBenefits() {
                   <ul className="space-y-3">
                     {benefit.features.map((feature, featureIndex) => (
                       <li key={featureIndex} className="flex items-start gap-3">
-                        <svg className="h-6 w-6 flex-none text-indigo-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="h-6 w-6 flex-none text-primary-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <span className="text-gray-600">{feature}</span>
@@ -200,21 +189,24 @@ export default function LandlordBenefits() {
       </div>
 
       {/* CTA Section */}
-      <div className="bg-indigo-50">
+      <div className="bg-primary-50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24 sm:py-32">
           <div className="text-center">
             <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              Ready to Transform Your Property Management?
+              Ready to try new experience of being a landlord?
             </h2>
             <p className="mt-6 text-lg leading-8 text-gray-600 max-w-2xl mx-auto">
-              Join thousands of successful landlords who are already using RentRight to streamline their rental business.
+              Join us and we will be your lifelong partner. 
             </p>
-            <div className="mt-10 flex items-center justify-center gap-x-6">
+              <div className="mt-10 flex items-center justify-center gap-x-6">
               <Link
                 to="/register"
-                className="rounded-md bg-indigo-600 px-5 py-3 text-base font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                className="rounded-md bg-primary-600 px-5 py-3 text-base font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
               >
-                Register Now
+                Get Started
+              </Link>
+              <Link to="/contact" className="text-base font-semibold leading-6 text-gray-900">
+                Questions? Contact Us →
               </Link>
             </div>
           </div>

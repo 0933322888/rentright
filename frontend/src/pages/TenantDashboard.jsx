@@ -55,7 +55,7 @@ const TenantDashboard = () => {
               <Card.Title>Profile Overview</Card.Title>
               <Card.Text>
                 <strong>Email:</strong> {user.email}<br />
-                <strong>Phone:</strong> {tenantData?.phone || 'Not set'}<br />
+                <strong>Phone:</strong> {user.phone || 'Not set'}<br />
                 <strong>Status:</strong> {tenantData?.status || 'Active'}
               </Card.Text>
               <Link to="/profile">

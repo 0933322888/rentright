@@ -22,7 +22,7 @@ import AdminRoute from './components/AdminRoute';
 import Layout from './components/Layout';
 import AdminLayout from './components/AdminLayout';
 import CreateTicket from './pages/CreateTicket';
-import TenantProfile from './pages/TenantProfile';
+import Profile from './pages/Profile';
 import LandlordBenefits from './pages/LandlordBenefits';
 import TenantBenefits from './pages/TenantBenefits';
 import Contact from './pages/Contact';
@@ -30,7 +30,6 @@ import About from './pages/About';
 import PropertyDetails from './pages/PropertyDetails';
 import MyLease from './pages/MyLease';
 import TenantDashboard from './pages/TenantDashboard';
-import Profile from './pages/Profile';
 
 // Role-based home redirect component
 function HomeRedirect() {

@@ -51,7 +51,7 @@ function DocumentUpload({ field, documents, previews, onDrop, onDelete }) {
             <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           <div className="flex text-sm text-gray-600">
-            <label className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+            <label className="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500">
               <span>Upload files</span>
               <input {...getInputProps()} />
             </label>
@@ -114,7 +114,7 @@ export default function Profile() {
               headers: { Authorization: `Bearer ${token}` }
             });
             const { data } = response;
-            
+
             if (data) {
               setAnswers({
                 hasBeenEvicted: data.hasBeenEvicted || '',
@@ -214,7 +214,7 @@ export default function Profile() {
     try {
       const token = localStorage.getItem('token');
       const formData = new FormData();
-      
+
       // Add answers to form data with proper type conversion
       Object.entries(answers).forEach(([key, value]) => {
         if (key === 'hasBeenEvicted' || key === 'canPayMoreThanOneMonth') {
@@ -307,7 +307,7 @@ export default function Profile() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading profile...</p>
         </div>
       </div>
@@ -332,7 +332,7 @@ export default function Profile() {
                 id="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
               />
             </div>
             <div>
@@ -343,7 +343,7 @@ export default function Profile() {
                 id="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
               />
             </div>
             <div>
@@ -354,14 +354,14 @@ export default function Profile() {
                 id="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
               />
             </div>
             <div>
               <button
                 type="submit"
                 disabled={loading}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="inline-flex justify-center rounded-md border border-transparent bg-primary-600 py-2 px-4 text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
               >
                 {loading ? 'Updating...' : 'Update Profile'}
               </button>
@@ -374,12 +374,14 @@ export default function Profile() {
         <div className="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
           <div className="px-4 py-5 sm:px-6">
             <h3 className="text-lg leading-6 font-medium text-gray-900">Tenant Information</h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">Complete your tenant profile to improve your chances of finding the perfect property.</p>
+            <p className="mt-1 max-w-2xl text-sm text-gray-500">
+              We will use this information for each application to help you find the perfect property.
+            </p>
           </div>
           <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
             <form onSubmit={handleTenantSubmit} className="space-y-6">
               <div>
-                <label htmlFor="hasBeenEvicted" className="block text-sm font-medium text-gray-700">Have you ever been evicted?</label>
+                <label className="block text-sm font-medium text-gray-700">Have you ever been evicted?</label>
                 <div className="mt-2 space-x-4">
                   <label className="inline-flex items-center">
                     <input
@@ -388,7 +390,7 @@ export default function Profile() {
                       value="true"
                       checked={answers.hasBeenEvicted === 'true'}
                       onChange={handleAnswerChange}
-                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
                     />
                     <span className="ml-2 text-sm text-gray-700">Yes</span>
                   </label>
@@ -399,14 +401,14 @@ export default function Profile() {
                       value="false"
                       checked={answers.hasBeenEvicted === 'false'}
                       onChange={handleAnswerChange}
-                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
                     />
                     <span className="ml-2 text-sm text-gray-700">No</span>
                   </label>
                 </div>
               </div>
               <div>
-                <label htmlFor="canPayMoreThanOneMonth" className="block text-sm font-medium text-gray-700">Can you pay more than one month's rent at a time?</label>
+                <label className="block text-sm font-medium text-gray-700">Can you pay more than one month's rent at a time?</label>
                 <div className="mt-2 space-x-4">
                   <label className="inline-flex items-center">
                     <input
@@ -415,7 +417,7 @@ export default function Profile() {
                       value="true"
                       checked={answers.canPayMoreThanOneMonth === 'true'}
                       onChange={handleAnswerChange}
-                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
                     />
                     <span className="ml-2 text-sm text-gray-700">Yes</span>
                   </label>
@@ -426,7 +428,7 @@ export default function Profile() {
                       value="false"
                       checked={answers.canPayMoreThanOneMonth === 'false'}
                       onChange={handleAnswerChange}
-                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
                     />
                     <span className="ml-2 text-sm text-gray-700">No</span>
                   </label>
@@ -442,7 +444,7 @@ export default function Profile() {
                     value={answers.monthsAheadCanPay}
                     onChange={handleAnswerChange}
                     min="1"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                   />
                 </div>
               )}
@@ -463,7 +465,7 @@ export default function Profile() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="inline-flex justify-center rounded-md border border-transparent bg-primary-600 py-2 px-4 text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                 >
                   {loading ? 'Updating...' : 'Update Tenant Profile'}
                 </button>
