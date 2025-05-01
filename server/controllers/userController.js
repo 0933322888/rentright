@@ -30,9 +30,26 @@ export const updateProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
     if (user) {
+      if (user.role === 'admin') {
+        return res.status(403).json({ message: 'Admin cannot update profile picture' });
+      }
+
       user.name = req.body.name || user.name;
       user.email = req.body.email || user.email;
       user.phone = req.body.phone || user.phone;
+
+      if (req.files && req.files.profilePicture) {
+        const file = req.files.profilePicture;
+        const filename = `${user._id}-${Date.now()}${path.extname(file.name)}`;
+        const uploadPath = path.join(__dirname, '../uploads/profile-pictures', filename);
+        
+        // Ensure directory exists
+        await fs.promises.mkdir(path.dirname(uploadPath), { recursive: true });
+        
+        // Move the file
+        await file.mv(uploadPath);
+        user.profilePicture = `/uploads/profile-pictures/${filename}`;
+      }
 
       if (req.body.password) {
         user.password = req.body.password;
