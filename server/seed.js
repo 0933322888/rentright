@@ -26,7 +26,7 @@ if (!MONGODB_URI) {
 
 const sampleLandlords = [
   {
-    name: 'John Smith',
+    name: 'John Smith Landlord',
     email: 'john@example.com',
     password: '123',
     role: 'landlord',
@@ -34,7 +34,7 @@ const sampleLandlords = [
     phone: '555-0101'
   },
   {
-    name: 'Sarah Johnson',
+    name: 'Sarah Johnson Landlord',
     email: 'sarah@example.com',
     password: '123',
     role: 'landlord',
@@ -42,7 +42,7 @@ const sampleLandlords = [
     phone: '555-0102'
   },
   {
-    name: 'Michael Brown',
+    name: 'Michael Brown Landlord',
     email: 'l@l',
     password: '123',
     role: 'landlord',
@@ -53,7 +53,7 @@ const sampleLandlords = [
 
 const sampleTenants = [
   {
-    name: 'Emily Davis',
+    name: 'Emily Davis Tenant',
     email: 'emily@example.com',
     password: '123',
     role: 'tenant',
@@ -61,7 +61,7 @@ const sampleTenants = [
     phone: '555-0201'
   },
   {
-    name: 'David Wilson',
+    name: 'David Wilson Tenant',
     email: 'david@example.com',
     password: '123',
     role: 'tenant',

@@ -51,7 +51,7 @@ router.use(protect);
 router.post('/', restrictTo('landlord'), upload.array('images', 5), createProperty);
 router.put('/:id', restrictTo('landlord'), upload.array('images', 5), updateProperty);
 router.delete('/:id', restrictTo('landlord'), deleteProperty);
-router.put('/:propertyId/applications/:applicationId', restrictTo('landlord'), updateApplicationStatus);
+router.put('/:propertyId/applications/:applicationId/status', restrictTo('landlord'), updateApplicationStatus);
 
 // Tenant routes
 router.post('/:id/apply', restrictTo('tenant'), applyForProperty);

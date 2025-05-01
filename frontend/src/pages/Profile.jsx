@@ -9,6 +9,7 @@ import { toast, Toaster } from 'react-hot-toast';
 // Separate component for document upload
 function DocumentUpload({ field, documents, previews, onDrop, onDelete }) {
   const { getRootProps, getInputProps } = useDropzone({ onDrop });
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   return (
     <div className="space-y-4">
@@ -16,34 +17,43 @@ function DocumentUpload({ field, documents, previews, onDrop, onDelete }) {
         {field.replace(/([A-Z])/g, ' $1').trim()}
       </h4>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {documents[field].map((_, index) => (
-          <div key={index} className="relative group">
-            {previews[field][index]?.type === 'image' ? (
-              <img
-                src={previews[field][index].url}
-                alt={`Preview ${index + 1}`}
-                className="w-full h-32 object-cover rounded-lg"
-              />
-            ) : (
-              <div className="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center">
-                <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-              </div>
-            )}
-            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
+        {documents[field].map((_, index) => {
+          const preview = previews[field][index];
+          const isImage = preview?.type === 'image' || 
+                         (preview?.url && (preview.url.endsWith('.jpg') || 
+                                         preview.url.endsWith('.jpeg') || 
+                                         preview.url.endsWith('.png') || 
+                                         preview.url.endsWith('.gif')));
+
+          return (
+            <div key={index} className="relative">
+              {isImage ? (
+                <img
+                  src={preview?.url.startsWith('data:') ? 
+                    preview.url : 
+                    `${BASE_URL}${preview.url}`}
+                  alt={`${field} ${index + 1}`}
+                  className="w-full h-32 object-cover rounded-lg"
+                />
+              ) : (
+                <div className="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <svg className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              )}
               <button
                 type="button"
                 onClick={() => onDelete(field, index)}
-                className="text-white hover:text-red-500"
+                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       <div {...getRootProps()} className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
         <div className="space-y-1 text-center">
@@ -110,43 +120,51 @@ export default function Profile() {
           // Fetch tenant data if user is a tenant
           if (user.role === 'tenant') {
             const token = localStorage.getItem('token');
-            const response = await axios.get(API_ENDPOINTS.GET_TENANT_PROFILE, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            const { data } = response;
-
-            if (data) {
-              setAnswers({
-                hasBeenEvicted: data.hasBeenEvicted || '',
-                canPayMoreThanOneMonth: data.canPayMoreThanOneMonth || '',
-                monthsAheadCanPay: data.monthsAheadCanPay || ''
+            try {
+              const response = await axios.get(API_ENDPOINTS.GET_TENANT_PROFILE, {
+                headers: { Authorization: `Bearer ${token}` }
               });
+              const { data } = response;
+              console.log('Fetched tenant data:', data);
 
-              // Initialize documents and previews states
-              const initialDocuments = {};
-              const initialPreviews = {};
+              if (data) {
+                const newAnswers = {
+                  hasBeenEvicted: data.hasBeenEvicted === 'yes' ? 'true' : 'false',
+                  canPayMoreThanOneMonth: data.canPayMoreThanOneMonth === 'yes' ? 'true' : 'false',
+                  monthsAheadCanPay: data.monthsAheadCanPay || ''
+                };
+                console.log('Setting initial answers:', newAnswers);
+                setAnswers(newAnswers);
 
-              // Process each document field
-              ['proofOfIdentity', 'proofOfIncome', 'creditHistory', 'rentalHistory', 'additionalDocuments'].forEach(field => {
-                if (data[field] && Array.isArray(data[field])) {
-                  initialDocuments[field] = data[field].map(doc => ({
-                    name: doc.originalName || 'Document',
-                    type: doc.mimeType || 'application/octet-stream'
-                  }));
+                // Initialize documents and previews states
+                const initialDocuments = {};
+                const initialPreviews = {};
 
-                  initialPreviews[field] = data[field].map(doc => ({
-                    url: doc.url,
-                    thumbnailUrl: doc.thumbnailUrl,
-                    type: doc.mimeType?.startsWith('image/') ? 'image' : 'pdf'
-                  }));
-                } else {
-                  initialDocuments[field] = [];
-                  initialPreviews[field] = [];
-                }
-              });
+                // Process each document field
+                ['proofOfIdentity', 'proofOfIncome', 'creditHistory', 'rentalHistory', 'additionalDocuments'].forEach(field => {
+                  if (data[field] && Array.isArray(data[field])) {
+                    initialDocuments[field] = data[field].map(doc => ({
+                      name: doc.originalName || 'Document',
+                      type: doc.mimeType || 'application/octet-stream'
+                    }));
 
-              setDocuments(initialDocuments);
-              setPreviews(initialPreviews);
+                    initialPreviews[field] = data[field].map(doc => ({
+                      url: doc.url,
+                      thumbnailUrl: doc.thumbnailUrl,
+                      type: doc.mimeType?.startsWith('image/') ? 'image' : 'pdf'
+                    }));
+                  } else {
+                    initialDocuments[field] = [];
+                    initialPreviews[field] = [];
+                  }
+                });
+
+                setDocuments(initialDocuments);
+                setPreviews(initialPreviews);
+              }
+            } catch (error) {
+              console.error('Error fetching tenant profile:', error);
+              setError('Failed to load tenant profile');
             }
           }
         } catch (error) {
@@ -218,7 +236,7 @@ export default function Profile() {
       // Add answers to form data with proper type conversion
       Object.entries(answers).forEach(([key, value]) => {
         if (key === 'hasBeenEvicted' || key === 'canPayMoreThanOneMonth') {
-          formData.append(key, value === 'true');
+          formData.append(key, value === 'true' ? 'yes' : 'no');
         } else {
           formData.append(key, value);
         }
@@ -243,6 +261,45 @@ export default function Profile() {
       );
 
       if (response.status === 200) {
+        const { data } = response;
+        console.log('Server response data:', data);
+        
+        // Update the answers state with the new values from the server
+        const updatedAnswers = {
+          hasBeenEvicted: data.hasBeenEvicted === 'yes' ? 'true' : 'false',
+          canPayMoreThanOneMonth: data.canPayMoreThanOneMonth === 'yes' ? 'true' : 'false',
+          monthsAheadCanPay: data.monthsAheadCanPay || ''
+        };
+        console.log('Updated answers:', updatedAnswers);
+        setAnswers(updatedAnswers);
+
+        // Update documents and previews
+        const updatedDocuments = {};
+        const updatedPreviews = {};
+
+        ['proofOfIdentity', 'proofOfIncome', 'creditHistory', 'rentalHistory', 'additionalDocuments'].forEach(field => {
+          if (data[field] && Array.isArray(data[field])) {
+            updatedDocuments[field] = data[field].map(doc => ({
+              name: doc.originalName || 'Document',
+              type: doc.mimeType || 'application/octet-stream'
+            }));
+
+            updatedPreviews[field] = data[field].map(doc => ({
+              url: doc.url,
+              thumbnailUrl: doc.thumbnailUrl,
+              type: doc.mimeType?.startsWith('image/') ? 'image' : 'pdf'
+            }));
+          } else {
+            updatedDocuments[field] = [];
+            updatedPreviews[field] = [];
+          }
+        });
+
+        console.log('Updated documents:', updatedDocuments);
+        console.log('Updated previews:', updatedPreviews);
+
+        setDocuments(updatedDocuments);
+        setPreviews(updatedPreviews);
         setSuccess('Tenant profile updated successfully');
       }
     } catch (error) {
@@ -287,15 +344,32 @@ export default function Profile() {
     });
   };
 
-  const handleDeleteDocument = (field, index) => {
-    setDocuments(prev => ({
-      ...prev,
-      [field]: prev[field].filter((_, i) => i !== index)
-    }));
-    setPreviews(prev => ({
-      ...prev,
-      [field]: prev[field].filter((_, i) => i !== index)
-    }));
+  const handleDeleteDocument = async (field, index) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // If the document exists on the server (has a URL), make an API call to delete it
+      if (previews[field][index]?.url && !previews[field][index]?.url.startsWith('data:')) {
+        await axios.delete(`${API_ENDPOINTS.GET_TENANT_PROFILE}/${field}/${index}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+
+      // Update local state
+      setDocuments(prev => ({
+        ...prev,
+        [field]: prev[field].filter((_, i) => i !== index)
+      }));
+      setPreviews(prev => ({
+        ...prev,
+        [field]: prev[field].filter((_, i) => i !== index)
+      }));
+
+      toast.success('Document deleted successfully');
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast.error('Failed to delete document');
+    }
   };
 
   if (!user) {
@@ -373,7 +447,7 @@ export default function Profile() {
       {user?.role === 'tenant' && (
         <div className="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
           <div className="px-4 py-5 sm:px-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900">Tenant Information</h3>
+            <h3 className="text-lg leading-6 font-medium text-gray-900">Tenant Application</h3>
             <p className="mt-1 max-w-2xl text-sm text-gray-500">
               We will use this information for each application to help you find the perfect property.
             </p>

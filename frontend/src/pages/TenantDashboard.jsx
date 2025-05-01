@@ -15,12 +15,13 @@ const TenantDashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
+        const token = localStorage.getItem('token');
         const [profileRes, applicationsRes] = await Promise.all([
           axios.get(API_ENDPOINTS.TENANT_PROFILE, {
-            headers: { Authorization: `Bearer ${user.token}` },
+            headers: { Authorization: `Bearer ${token}` },
           }),
           axios.get(API_ENDPOINTS.APPLICATIONS, {
-            headers: { Authorization: `Bearer ${user.token}` },
+            headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
 

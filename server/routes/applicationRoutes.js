@@ -4,7 +4,8 @@ import {
   getApplicationById,
   createApplication,
   updateApplicationStatus,
-  deleteApplication
+  deleteApplication,
+  getPropertyApplications
 } from '../controllers/applicationController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -15,6 +16,9 @@ router.use(protect);
 
 // Get all applications (filtered by user role)
 router.get('/', getApplications);
+
+// Get applications for a specific property
+router.get('/property/:propertyId', getPropertyApplications);
 
 // Get a single application
 router.get('/:id', getApplicationById);

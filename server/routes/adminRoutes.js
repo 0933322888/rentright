@@ -8,7 +8,6 @@ import {
   deleteProperty,
   deleteTenant,
   deleteApplication,
-  updateApplicationStatus,
   getTenantById,
   updateTenant
 } from '../controllers/adminController.js';
@@ -21,17 +20,22 @@ const router = express.Router();
 router.use(protect);
 router.use(isAdmin);
 
-// Admin routes
+// Property routes
 router.get('/properties', getAllProperties);
 router.patch('/properties/:id/approve', approveProperty);
 router.delete('/properties/:id', deleteProperty);
+
+// Landlord routes
 router.get('/landlords', getAllLandlords);
+
+// Tenant routes
 router.get('/tenants', getAllTenants);
 router.get('/tenants/:id', getTenantById);
-router.put('/tenants/:id', updateTenant);
+router.patch('/tenants/:id', updateTenant);
 router.delete('/tenants/:id', deleteTenant);
+
+// Application routes
 router.get('/applications', getAllApplications);
 router.delete('/applications/:id', deleteApplication);
-router.patch('/applications/:id', updateApplicationStatus);
 
 export default router; 

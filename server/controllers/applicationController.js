@@ -1,5 +1,6 @@
 import Application from '../models/applicationModel.js';
 import Property from '../models/propertyModel.js';
+import TenantDocument from '../models/tenantDocumentModel.js';
 
 // Get all applications (filtered by user role)
 export const getApplications = async (req, res) => {
@@ -139,6 +140,63 @@ export const deleteApplication = async (req, res) => {
 
     await Application.findByIdAndDelete(req.params.id);
     res.json({ message: 'Application deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get applications for a specific property
+export const getPropertyApplications = async (req, res) => {
+  try {
+    const { propertyId } = req.params;
+    
+    // Check if property exists and belongs to the landlord
+    const property = await Property.findById(propertyId);
+    if (!property) {
+      return res.status(404).json({ message: 'Property not found' });
+    }
+
+    // Only allow landlord to view applications for their property
+    if (property.landlord.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to view these applications' });
+    }
+
+    const applications = await Application.find({ property: propertyId })
+      .populate('tenant', 'name email phone')
+      .sort('-createdAt');
+
+    // Get tenant documents for each application
+    const applicationsWithDocuments = await Promise.all(
+      applications.map(async (application) => {
+        const tenantDocument = await TenantDocument.findOne({ tenant: application.tenant._id });
+        if (tenantDocument) {
+          // Format the document data to include URLs
+          const formattedDocument = tenantDocument.toObject();
+          const documentFields = ['proofOfIdentity', 'proofOfIncome', 'creditHistory', 'rentalHistory', 'additionalDocuments'];
+          
+          documentFields.forEach(field => {
+            if (formattedDocument[field] && Array.isArray(formattedDocument[field])) {
+              formattedDocument[field] = formattedDocument[field].map(doc => ({
+                ...doc,
+                url: `/uploads/tenant-documents/${doc.filename}`,
+                thumbnailUrl: `/uploads/tenant-documents/thumbnails/${doc.filename}`
+              }));
+            }
+          });
+
+          return {
+            ...application.toObject(),
+            tenantDocument: formattedDocument
+          };
+        }
+        return {
+          ...application.toObject(),
+          tenantDocument: null
+        };
+      })
+    );
+
+    res.json(applicationsWithDocuments);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

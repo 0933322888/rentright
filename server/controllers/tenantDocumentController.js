@@ -120,9 +120,15 @@ export const updateTenantProfile = async (req, res) => {
     }
 
     // Update additional fields
-    if (req.body.hasBeenEvicted) {tenantDocument.hasBeenEvicted = req.body.hasBeenEvicted;}
-    if (req.body.canPayMoreThanOneMonth) tenantDocument.canPayMoreThanOneMonth = req.body.canPayMoreThanOneMonth;
-    if (req.body.monthsAheadCanPay) tenantDocument.monthsAheadCanPay = req.body.monthsAheadCanPay;
+    if (req.body.hasBeenEvicted) {
+      tenantDocument.hasBeenEvicted = req.body.hasBeenEvicted;
+    }
+    if (req.body.canPayMoreThanOneMonth) {
+      tenantDocument.canPayMoreThanOneMonth = req.body.canPayMoreThanOneMonth;
+    }
+    if (req.body.monthsAheadCanPay) {
+      tenantDocument.monthsAheadCanPay = req.body.monthsAheadCanPay;
+    }
 
     const savedDocument = await tenantDocument.save();
     console.log('Saved document:', savedDocument);

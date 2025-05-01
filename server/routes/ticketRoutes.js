@@ -7,7 +7,8 @@ import {
   updateTicketStatus,
   getTicketById,
   updateTicketPriority,
-  addComment
+  addComment,
+  getPropertyTickets
 } from '../controllers/ticketController.js';
 import Ticket from '../models/ticketModel.js';
 
@@ -17,6 +18,9 @@ const router = express.Router();
 router.post('/', protect, restrictTo('tenant'), createTicket);
 router.get('/my-tickets', protect, restrictTo('tenant'), getTenantTickets);
 router.get('/:ticketId', protect, getTicketById);
+
+// Property tickets route
+router.get('/property/:propertyId', protect, getPropertyTickets);
 
 // Admin routes
 router.get('/', protect, restrictTo('admin'), getAllTickets);

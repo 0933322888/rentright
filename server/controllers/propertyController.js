@@ -64,6 +64,7 @@ export const getPropertyById = async (req, res) => {
 
     const property = await Property.findById(req.params.id)
       .populate('landlord', 'name email phone')
+      .populate('tenant', 'name email phone')
       .populate('applications.tenant', 'name email phone');
 
     if (property) {
@@ -202,35 +203,64 @@ export const updateApplicationStatus = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to update applications' });
     }
 
-    const application = property.applications.id(req.params.applicationId);
+    // Find the application in the Application collection
+    const application = await Application.findById(req.params.applicationId);
     if (!application) {
       return res.status(404).json({ message: 'Application not found' });
     }
 
-    // Update property's application status
+    console.log('Current property state:', {
+      id: property._id,
+      tenant: property.tenant,
+      available: property.available,
+      application: application
+    });
+
+    // Update application status
     application.status = status;
+    await application.save();
+
+    // Update property's tenant if application is approved
     if (status === 'approved') {
       property.available = false;
-      property.applications.forEach(app => {
-        if (app._id.toString() !== req.params.applicationId) {
-          app.status = 'rejected';
-        }
+      property.tenant = application.tenant;
+      
+      // Update all other applications to rejected
+      await Application.updateMany(
+        { 
+          property: property._id,
+          _id: { $ne: application._id }
+        },
+        { status: 'rejected' }
+      );
+
+      console.log('After approval:', {
+        id: property._id,
+        tenant: property.tenant,
+        available: property.available
       });
+    } else if (status === 'declined') {
+      // If the application is declined, remove the tenant if it was this application
+      if (property.tenant && property.tenant.toString() === application.tenant.toString()) {
+        property.tenant = null;
+        property.available = true;
+      }
     }
 
+    // Save the property
     await property.save();
 
-    // Update the separate application document
-    await Application.findByIdAndUpdate(
-      req.params.applicationId,
-      { 
-        status,
-        ...(status === 'approved' && { property: null }) // Remove property reference if approved
-      }
-    );
+    // Verify the property was saved correctly
+    const updatedProperty = await Property.findById(property._id).populate('tenant');
+    console.log('Property after save:', {
+      id: updatedProperty._id,
+      tenant: updatedProperty.tenant,
+      available: updatedProperty.available
+    });
 
     res.json({ message: 'Application status updated successfully' });
   } catch (error) {
+    console.error('Error in updateApplicationStatus:', error);
     res.status(400).json({ message: error.message });
   }
 };

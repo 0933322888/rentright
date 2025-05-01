@@ -11,7 +11,7 @@ export const createTicket = async (req, res) => {
     console.log('Creating ticket for:', { propertyId, tenantId });
 
     // First find the property to check if user is the current tenant
-    const property = await Property.findById(propertyId);
+    const property = await Property.findById(propertyId).populate('tenant');
     if (!property) {
       console.log('Property not found:', propertyId);
       return res.status(404).json({ message: 'Property not found' });
@@ -24,7 +24,7 @@ export const createTicket = async (req, res) => {
     });
 
     // Check if user is the current tenant of the property
-    if (!property.tenant || property.tenant.toString() !== tenantId.toString()) {
+    if (!property.tenant || property.tenant._id.toString() !== tenantId.toString()) {
       console.log('User is not the tenant of the property:', {
         propertyTenant: property.tenant,
         currentUser: tenantId
@@ -160,6 +160,21 @@ export const addComment = async (req, res) => {
       .populate('comments.user', 'name email role');
 
     res.json(populatedTicket);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get tickets by property ID
+export const getPropertyTickets = async (req, res) => {
+  try {
+    const { propertyId } = req.params;
+    const tickets = await Ticket.find({ property: propertyId })
+      .populate('property', 'title location')
+      .populate('tenant', 'name email')
+      .populate('comments.user', 'name email role')
+      .sort({ createdAt: -1 });
+    res.json(tickets);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

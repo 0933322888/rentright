@@ -1,15 +1,50 @@
 import React from 'react';
+import axios from 'axios';
+import { API_ENDPOINTS } from '../../config/api';
+import { toast } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 const LeaseAgreement = ({ leaseDetails }) => {
+  const navigate = useNavigate();
+
   const formatLocation = (location) => {
     if (!location) return '';
     const { street, city, state, zipCode } = location;
     return `${street}, ${city}, ${state} ${zipCode}`;
   };
 
+  const handleTerminate = async () => {
+    if (!window.confirm('Are you sure you want to terminate this lease? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await axios.post(
+        `${API_ENDPOINTS.APPLICATIONS}/${leaseDetails._id}/terminate`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        }
+      );
+      toast.success('Lease terminated successfully');
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('Error terminating lease:', err);
+      toast.error('Failed to terminate lease');
+    }
+  };
+
   return (
     <div className="bg-white shadow rounded-lg p-6">
-      <h2 className="text-2xl font-bold mb-6">Lease Agreement</h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Lease Agreement</h2>
+        <button
+          onClick={handleTerminate}
+          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+        >
+          Terminate Lease
+        </button>
+      </div>
       
       <div className="space-y-6">
         <div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api';
 import { useAuth } from '../context/AuthContext';
@@ -115,7 +115,17 @@ const PropertyDetails = () => {
         </div>
         
         <div className="p-6">
-          <h1 className="text-3xl font-bold mb-4">{property.title}</h1>
+          <div className="flex justify-between items-start mb-4">
+            <h1 className="text-3xl font-bold">{property.title}</h1>
+            {user?.role === 'landlord' && (
+              <Link
+                to={`/properties/${id}/applications`}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              >
+                View Applications
+              </Link>
+            )}
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>

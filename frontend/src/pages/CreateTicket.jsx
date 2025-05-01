@@ -24,22 +24,44 @@ export default function CreateTicket() {
   const fetchTenantProperty = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(API_ENDPOINTS.PROPERTIES, {
+      // First get the approved application
+      const applicationsResponse = await axios.get(API_ENDPOINTS.APPLICATIONS, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Find the property where user is the current tenant
-      const tenantProperty = response.data.find(prop => 
-        prop.tenant && prop.tenant._id.toString() === user._id.toString()
-      );
+      console.log('Applications response:', applicationsResponse.data);
       
-      if (!tenantProperty) {
-        setError('No property found where you are the current tenant. You must be renting a property to create a ticket.');
+      const approvedApplication = applicationsResponse.data.find(app => app.status === 'approved');
+      
+      console.log('Approved application:', approvedApplication);
+      
+      if (!approvedApplication) {
+        setError('No approved application found. You must have an approved application to create a ticket.');
+        return;
+      }
+
+      // Then verify the property's tenant status
+      const propertyResponse = await axios.get(`${API_ENDPOINTS.PROPERTIES}/${approvedApplication.property._id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      console.log('Property response:', propertyResponse.data);
+      console.log('Current user:', user);
+
+      const propertyData = propertyResponse.data;
+      
+      if (!propertyData.tenant || propertyData.tenant._id !== user._id) {
+        console.log('Tenant check failed:', {
+          propertyTenant: propertyData.tenant,
+          currentUser: user._id
+        });
+        setError('You are not the current tenant of this property. Please contact the landlord.');
         return;
       }
       
-      setProperty(tenantProperty);
+      setProperty(propertyData);
     } catch (error) {
+      console.error('Error in fetchTenantProperty:', error);
       setError('Failed to load your property');
     }
   };

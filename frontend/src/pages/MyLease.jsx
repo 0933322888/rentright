@@ -2,21 +2,30 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api';
-import { Tab } from '@headlessui/react';
+import { 
+  Box, 
+  Typography, 
+  Paper,
+  Tab
+} from '@mui/material';
+import TabContext from '@mui/lab/TabContext';
+import TabList from '@mui/lab/TabList';
+import TabPanel from '@mui/lab/TabPanel';
 import MyTickets from './MyTickets';
 import LeaseAgreement from '../components/lease/LeaseAgreement';
 import Payments from '../components/lease/Payments';
 import { toast } from 'react-hot-toast';
-
-function classNames(...classes) {
-  return classes.filter(Boolean).join(' ');
-}
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import InfoIcon from '@mui/icons-material/Info';
 
 const MyLease = () => {
   const { user } = useAuth();
   const [leaseDetails, setLeaseDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [tabValue, setTabValue] = useState('lease');
+  const [hasNewTickets, setHasNewTickets] = useState(false);
 
   useEffect(() => {
     const fetchLeaseDetails = async () => {
@@ -47,6 +56,10 @@ const MyLease = () => {
 
     fetchLeaseDetails();
   }, [user]);
+
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+  };
 
   if (loading) {
     return (
@@ -79,49 +92,63 @@ const MyLease = () => {
     );
   }
 
-  const tabs = [
-    { name: 'Lease Agreement', icon: '📄' },
-    { name: 'Repair Tickets', icon: '🎫' },
-    { name: 'Payments', icon: '💰' }
-  ];
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <Tab.Group>
-        <Tab.List className="flex rounded-xl bg-white shadow-md p-1 space-x-1">
-          {tabs.map((tab) => (
-            <Tab
-              key={tab.name}
-              className={({ selected }) =>
-                classNames(
-                  'w-full py-3 px-4 text-sm font-medium leading-5 rounded-lg transition-all duration-200',
-                  'focus:outline-none focus:ring-2 ring-offset-2 ring-offset-indigo-400 ring-indigo-300',
-                  selected
-                    ? 'bg-indigo-600 text-white shadow hover:bg-indigo-700'
-                    : 'text-gray-600 hover:bg-indigo-50 hover:text-indigo-600'
-                )
-              }
+      <TabContext value={tabValue}>
+        <Box sx={{ display: 'flex', gap: 3 }}>
+          <Box sx={{ borderRight: 1, borderColor: 'divider', pr: 2 }}>
+            <TabList 
+              onChange={handleTabChange} 
+              value={tabValue}
+              orientation="vertical"
             >
-              <div className="flex items-center justify-center space-x-2">
-                <span className="text-lg">{tab.icon}</span>
-                <span>{tab.name}</span>
-              </div>
-            </Tab>
-          ))}
-        </Tab.List>
+              <Tab
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CheckCircleIcon sx={{ color: 'success.light' }} />
+                    <Typography>Lease Agreement</Typography>
+                  </Box>
+                }
+                value="lease"
+              />
+              <Tab
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {hasNewTickets ? (
+                      <InfoIcon sx={{ color: 'info.light' }} />
+                    ) : (
+                      <CheckCircleIcon sx={{ color: 'success.light' }} />
+                    )}
+                    <Typography>Repair Tickets</Typography>
+                  </Box>
+                }
+                value="tickets"
+              />
+              <Tab
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <CheckCircleIcon sx={{ color: 'success.light' }} />
+                    <Typography>Payments</Typography>
+                  </Box>
+                }
+                value="payments"
+              />
+            </TabList>
+          </Box>
 
-        <Tab.Panels className="mt-6 bg-white rounded-xl shadow-md">
-          <Tab.Panel className="focus:outline-none">
-            <LeaseAgreement leaseDetails={leaseDetails} />
-          </Tab.Panel>
-          <Tab.Panel className="focus:outline-none">
-            <MyTickets />
-          </Tab.Panel>
-          <Tab.Panel className="focus:outline-none">
-            <Payments leaseDetails={leaseDetails} />
-          </Tab.Panel>
-        </Tab.Panels>
-      </Tab.Group>
+          <Box sx={{ flex: 1 }}>
+            <TabPanel value="lease">
+              <LeaseAgreement leaseDetails={leaseDetails} />
+            </TabPanel>
+            <TabPanel value="tickets">
+              <MyTickets propertyId={leaseDetails.property._id} />
+            </TabPanel>
+            <TabPanel value="payments">
+              <Payments leaseDetails={leaseDetails} />
+            </TabPanel>
+          </Box>
+        </Box>
+      </TabContext>
     </div>
   );
 };
