@@ -71,7 +71,9 @@ export default function Profile() {
     name: '',
     email: '',
     phone: '',
+    profilePicture: null
   });
+const [profilePreview, setProfilePreview] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -185,11 +187,22 @@ export default function Profile() {
 
     try {
       const token = localStorage.getItem('token');
+      const formDataToSend = new FormData();
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('phone', formData.phone);
+      if (formData.profilePicture) {
+        formDataToSend.append('profilePicture', formData.profilePicture);
+      }
+
       const response = await axios.put(
         API_ENDPOINTS.UPDATE_PROFILE,
-        formData,
+        formDataToSend,
         {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
         }
       );
 
@@ -324,6 +337,38 @@ export default function Profile() {
         </div>
         <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
           <form onSubmit={handleSubmit} className="space-y-6">
+            {user.role !== 'admin' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Profile Picture</label>
+                <div className="mt-2 flex items-center space-x-4">
+                  <div className="h-24 w-24 overflow-hidden rounded-full bg-gray-100">
+                    {(profilePreview || user.profilePicture) ? (
+                      <img 
+                        src={profilePreview || user.profilePicture} 
+                        alt="Profile" 
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <svg className="h-full w-full text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        setFormData(prev => ({ ...prev, profilePicture: file }));
+                        setProfilePreview(URL.createObjectURL(file));
+                      }
+                    }}
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+                  />
+                </div>
+              </div>
+            )}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
               <input
