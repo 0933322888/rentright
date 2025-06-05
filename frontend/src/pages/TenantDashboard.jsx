@@ -4,6 +4,7 @@ import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api';
 import { useAuth } from '../context/AuthContext';
 import { Card, Container, Row, Col, Button } from 'react-bootstrap';
+import ProfileCompletionModal from '../components/ProfileCompletionModal';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const TenantDashboard = () => {
@@ -11,13 +12,14 @@ const TenantDashboard = () => {
   const [tenantData, setTenantData] = useState(null);
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         const token = localStorage.getItem('token');
         const [profileRes, applicationsRes] = await Promise.all([
-          axios.get(API_ENDPOINTS.TENANT_PROFILE, {
+          axios.get(API_ENDPOINTS.GET_TENANT_PROFILE, {
             headers: { Authorization: `Bearer ${token}` },
           }),
           axios.get(API_ENDPOINTS.APPLICATIONS, {
@@ -27,8 +29,25 @@ const TenantDashboard = () => {
 
         setTenantData(profileRes.data);
         setApplications(applicationsRes.data);
+
+        console.log(profileRes.data);
+
+        // Check if profile is complete
+        const isProfileComplete = profileRes.data && 
+          profileRes.data.proofOfIdentity?.length > 0 &&
+          profileRes.data.proofOfIncome?.length > 0 &&
+          profileRes.data.creditHistory?.length > 0 &&
+          profileRes.data.rentalHistory?.length > 0 &&
+          profileRes.data.hasBeenEvicted !== undefined &&
+          profileRes.data.canPayMoreThanOneMonth !== undefined;
+
+        if (!isProfileComplete) {
+          setShowProfileModal(true);
+        }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
+        // If we can't fetch the profile, assume it's incomplete
+        setShowProfileModal(true);
       } finally {
         setLoading(false);
       }
@@ -47,6 +66,11 @@ const TenantDashboard = () => {
 
   return (
     <Container className="py-4">
+      <ProfileCompletionModal 
+        show={showProfileModal} 
+        onHide={() => setShowProfileModal(false)} 
+      />
+      
       <h1 className="mb-4">Welcome, {user.name}!</h1>
       
       <Row className="mb-4">

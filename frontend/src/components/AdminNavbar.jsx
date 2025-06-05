@@ -64,7 +64,15 @@ export default function AdminNavbar() {
                       <span className="sr-only">Open user menu</span>
                       <div className="flex items-center">
                         <span className="mr-2 text-gray-700">{user?.name}</span>
-                        <UserCircleIcon className="h-8 w-8 text-gray-400" aria-hidden="true" />
+                        {user?.profilePicture ? (
+                          <img
+                            src={`${import.meta.env.VITE_API_URL}${user.profilePicture}`}
+                            alt="Profile"
+                            className="h-8 w-8 rounded-full object-cover"
+                          />
+                        ) : (
+                          <UserCircleIcon className="h-8 w-8 text-gray-400" aria-hidden="true" />
+                        )}
                       </div>
                     </Menu.Button>
                   </div>
@@ -131,7 +139,15 @@ export default function AdminNavbar() {
             <div className="border-t border-gray-200 pb-3 pt-4">
               <div className="flex items-center px-4">
                 <div className="flex-shrink-0">
-                  <UserCircleIcon className="h-8 w-8 text-gray-400" aria-hidden="true" />
+                  {user?.profilePicture ? (
+                    <img
+                      src={`${import.meta.env.VITE_API_URL}${user.profilePicture}`}
+                      alt="Profile"
+                      className="h-8 w-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <UserCircleIcon className="h-8 w-8 text-gray-400" aria-hidden="true" />
+                  )}
                 </div>
                 <div className="ml-3">
                   <div className="text-base font-medium text-gray-800">{user?.name}</div>

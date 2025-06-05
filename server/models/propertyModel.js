@@ -33,7 +33,12 @@ const propertySchema = new mongoose.Schema({
       type: String,
       required: true
     },
-    zipCode: String
+    zipCode: String,
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      index: '2dsphere',
+      default: undefined
+    }
   },
   features: {
     bedrooms: Number,

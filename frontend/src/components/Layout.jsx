@@ -5,11 +5,12 @@ import Footer from './Footer';
 export default function Layout() {
   const location = useLocation();
   const isHomePage = location.pathname === '/';
+  const isPropertiesPage = location.pathname.startsWith('/properties');
   
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <main className={isHomePage ? "w-full" : "max-w-7xl mx-auto py-6 sm:px-6 lg:px-8"}>
+      <main className="w-full px-4 mt-5">
         <Outlet />
       </main>
       <Footer />

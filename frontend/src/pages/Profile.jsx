@@ -55,19 +55,17 @@ function DocumentUpload({ field, documents, previews, onDrop, onDelete }) {
           );
         })}
       </div>
-      <div {...getRootProps()} className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+      <div {...getRootProps()} className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md cursor-pointer">
         <div className="space-y-1 text-center">
           <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
             <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <div className="flex text-sm text-gray-600">
-            <label className="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500">
-              <span>Upload files</span>
-              <input {...getInputProps()} />
-            </label>
+          <div className="flex text-sm text-gray-600 justify-center">
+            <span className="text-primary-600 hover:text-primary-500 font-medium">Upload files</span>
             <p className="pl-1">or drag and drop</p>
           </div>
           <p className="text-xs text-gray-500">PNG, JPG, PDF up to 10MB</p>
+          <input {...getInputProps()} />
         </div>
       </div>
     </div>
@@ -83,10 +81,11 @@ export default function Profile() {
     phone: '',
     profilePicture: null
   });
-const [profilePreview, setProfilePreview] = useState(null);
+  const [profilePreview, setProfilePreview] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const [tenantData, setTenantData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [answers, setAnswers] = useState({
@@ -201,6 +200,7 @@ const [profilePreview, setProfilePreview] = useState(null);
     e.preventDefault();
     setError('');
     setSuccess('');
+    setUploadError('');
     setLoading(true);
 
     try {
@@ -209,7 +209,24 @@ const [profilePreview, setProfilePreview] = useState(null);
       formDataToSend.append('name', formData.name);
       formDataToSend.append('email', formData.email);
       formDataToSend.append('phone', formData.phone);
+      
       if (formData.profilePicture) {
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!allowedTypes.includes(formData.profilePicture.type)) {
+          setUploadError('Invalid file type. Only JPEG, PNG and GIF are allowed.');
+          setLoading(false);
+          return;
+        }
+
+        // Validate file size (max 5MB)
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        if (formData.profilePicture.size > maxSize) {
+          setUploadError('File size too large. Maximum size is 5MB.');
+          setLoading(false);
+          return;
+        }
+
         formDataToSend.append('profilePicture', formData.profilePicture);
       }
 
@@ -227,6 +244,8 @@ const [profilePreview, setProfilePreview] = useState(null);
       if (response.status === 200) {
         updateProfile(response.data);
         setSuccess('Profile updated successfully');
+        // Clear the preview after successful upload
+        setProfilePreview(null);
       }
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -418,7 +437,7 @@ const [profilePreview, setProfilePreview] = useState(null);
                   <div className="h-24 w-24 overflow-hidden rounded-full bg-gray-100">
                     {(profilePreview || user.profilePicture) ? (
                       <img 
-                        src={profilePreview || user.profilePicture} 
+                        src={profilePreview || `${import.meta.env.VITE_API_URL}${user.profilePicture}`} 
                         alt="Profile" 
                         className="h-full w-full object-cover"
                       />
@@ -428,18 +447,27 @@ const [profilePreview, setProfilePreview] = useState(null);
                       </svg>
                     )}
                   </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files[0];
-                      if (file) {
-                        setFormData(prev => ({ ...prev, profilePicture: file }));
-                        setProfilePreview(URL.createObjectURL(file));
-                      }
-                    }}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
-                  />
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/gif"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          setFormData(prev => ({ ...prev, profilePicture: file }));
+                          setProfilePreview(URL.createObjectURL(file));
+                          setUploadError('');
+                        }
+                      }}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+                    />
+                    {uploadError && (
+                      <p className="mt-1 text-sm text-red-600">{uploadError}</p>
+                    )}
+                    <p className="mt-1 text-xs text-gray-500">
+                      PNG, JPG, GIF up to 5MB
+                    </p>
+                  </div>
                 </div>
               </div>
             )}

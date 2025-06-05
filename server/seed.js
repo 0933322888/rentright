@@ -104,7 +104,8 @@ const sampleProperties = [
       street: '123 Main St',
       city: 'New York',
       state: 'NY',
-      zipCode: '10001'
+      zipCode: '10001',
+      coordinates: [-74.005974, 40.712776] // New York City
     },
     amenities: ['Parking', 'Gym', 'Pool'],
     images: ['https://media.istockphoto.com/id/1255835530/photo/modern-custom-suburban-home-exterior.jpg?s=1024x1024&w=is&k=20&c=4TmxYMrPLVb8u09dT5amw1vBsAVbHCxMWZIXqoy-I34=', 'https://media.istockphoto.com/id/520774645/photo/house-exterior-with-curb-appeal.jpg?s=1024x1024&w=is&k=20&c=4rwljqZ3Sd5f2aI3e7um6fKpILko-OrrFiEQCJA38ug=', 'https://media.istockphoto.com/id/590074124/photo/classic-american-house-with-siding-trim-and-red-entry-door.jpg?s=1024x1024&w=is&k=20&c=NXIxkzhayUFnOGqI1hhNFW04ufCpYO_F6KNgNiCHNMo='],
@@ -127,7 +128,8 @@ const sampleProperties = [
       street: '456 Oak Ave',
       city: 'Los Angeles',
       state: 'CA',
-      zipCode: '90001'
+      zipCode: '90001',
+      coordinates: [-118.243683, 34.052235] // Los Angeles
     },
     amenities: ['Backyard', 'Garage', 'Fireplace'],
     images: ['https://media.istockphoto.com/id/520774645/photo/house-exterior-with-curb-appeal.jpg?s=1024x1024&w=is&k=20&c=4rwljqZ3Sd5f2aI3e7um6fKpILko-OrrFiEQCJA38ug=', 'https://media.istockphoto.com/id/590074124/photo/classic-american-house-with-siding-trim-and-red-entry-door.jpg?s=1024x1024&w=is&k=20&c=NXIxkzhayUFnOGqI1hhNFW04ufCpYO_F6KNgNiCHNMo='],
@@ -150,7 +152,8 @@ const sampleProperties = [
       street: '789 Park Blvd',
       city: 'Chicago',
       state: 'IL',
-      zipCode: '60601'
+      zipCode: '60601',
+      coordinates: [-87.623177, 41.885003] // Chicago
     },
     amenities: ['Doorman', 'Concierge', 'Rooftop Deck'],
     images: [

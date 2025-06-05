@@ -1,14 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api';
 import { useAuth } from '../context/AuthContext';
+import 'leaflet/dist/leaflet.css';
+
+// Lazy load the map components
+const MapComponent = lazy(() => import('../components/MapComponent'));
 
 export default function PropertyList() {
   const { user } = useAuth();
   const [properties, setProperties] = useState([]);
+  const [filteredProperties, setFilteredProperties] = useState([]);
   const [appliedProperties, setAppliedProperties] = useState(new Set());
   const [loading, setLoading] = useState(true);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [mapCenter, setMapCenter] = useState([40.7128, -74.0060]); // Default to NYC
+  const [mapZoom, setMapZoom] = useState(13);
+  const [isMapReady, setIsMapReady] = useState(false);
+
   const [filters, setFilters] = useState({
     type: '',
     minPrice: '',
@@ -26,13 +36,46 @@ export default function PropertyList() {
     }
   }, [user]);
 
+  useEffect(() => {
+    // Filter properties based on selected location
+    if (selectedLocation) {
+      const filtered = properties.filter(property => {
+        const propertyLat = property.location?.coordinates?.[1];
+        const propertyLng = property.location?.coordinates?.[0];
+        if (!propertyLat || !propertyLng) return false;
+
+        // Filter properties within approximately 5km of selected location
+        const distance = calculateDistance(
+          selectedLocation.lat,
+          selectedLocation.lng,
+          propertyLat,
+          propertyLng
+        );
+        return distance <= 5;
+      });
+      setFilteredProperties(filtered);
+    } else {
+      setFilteredProperties(properties);
+    }
+  }, [selectedLocation, properties]);
+
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
   const fetchUserApplications = async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(API_ENDPOINTS.APPLICATIONS, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       const appliedPropertyIds = new Set(
         response.data.map(application => application.property._id)
@@ -53,6 +96,12 @@ export default function PropertyList() {
 
       const response = await axios.get(`${API_ENDPOINTS.AVAILABLE_PROPERTIES}?${queryParams}`);
       setProperties(response.data);
+      
+      // If we have properties, center the map on the first one
+      if (response.data.length > 0 && response.data[0].location?.coordinates) {
+        const [lng, lat] = response.data[0].location.coordinates;
+        setMapCenter([lat, lng]);
+      }
     } catch (error) {
       console.error('Error fetching properties:', error);
     } finally {
@@ -68,135 +117,182 @@ export default function PropertyList() {
     }));
   };
 
+  const handleMarkerClick = (property) => {
+    setSelectedLocation({
+      lat: property.location.coordinates[1],
+      lng: property.location.coordinates[0]
+    });
+  };
+
+  // Effect to handle map initialization
+  useEffect(() => {
+    // Check if we're in the browser
+    if (typeof window !== 'undefined') {
+      setIsMapReady(true);
+    }
+  }, []);
+
   return (
-    <div className="bg-white">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl py-16 sm:py-24 lg:max-w-none lg:py-32">
-          <h2 className="text-2xl font-bold text-gray-900">Available Properties</h2>
-
-          {/* Filters */}
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div>
-              <label htmlFor="type" className="block text-sm font-medium text-gray-700">
-                Property Type
-              </label>
-              <select
-                id="type"
-                name="type"
-                value={filters.type}
-                onChange={handleFilterChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-              >
-                <option value="">All Types</option>
-                <option value="apartment">Apartment</option>
-                <option value="house">House</option>
-                <option value="condo">Condo</option>
-                <option value="studio">Studio</option>
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="minPrice" className="block text-sm font-medium text-gray-700">
-                Min Price
-              </label>
-              <input
-                type="number"
-                id="minPrice"
-                name="minPrice"
-                value={filters.minPrice}
-                onChange={handleFilterChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                placeholder="Min price"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="maxPrice" className="block text-sm font-medium text-gray-700">
-                Max Price
-              </label>
-              <input
-                type="number"
-                id="maxPrice"
-                name="maxPrice"
-                value={filters.maxPrice}
-                onChange={handleFilterChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                placeholder="Max price"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="location" className="block text-sm font-medium text-gray-700">
-                Location
-              </label>
-              <input
-                type="text"
-                id="location"
-                name="location"
-                value={filters.location}
-                onChange={handleFilterChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                placeholder="Enter location"
-              />
-            </div>
+    <div className="h-screen flex flex-col w-full">
+      {/* Filters Bar */}
+      <div className="bg-white border-b border-gray-200 w-full py-4">
+        <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label htmlFor="type" className="block text-sm font-medium text-gray-700">
+              Property Type
+            </label>
+            <select
+              id="type"
+              name="type"
+              value={filters.type}
+              onChange={handleFilterChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+            >
+              <option value="">All Types</option>
+              <option value="apartment">Apartment</option>
+              <option value="house">House</option>
+              <option value="condo">Condo</option>
+              <option value="studio">Studio</option>
+            </select>
           </div>
 
-          {/* Property Grid */}
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {loading ? (
-              <div className="col-span-full text-center">Loading...</div>
-            ) : properties.length === 0 ? (
-              <div className="col-span-full text-center">No properties found</div>
-            ) : (
-              properties.map((property) => (
-                <Link 
-                  key={property._id} 
+          <div>
+            <label htmlFor="minPrice" className="block text-sm font-medium text-gray-700">
+              Min Price
+            </label>
+            <input
+              type="number"
+              id="minPrice"
+              name="minPrice"
+              value={filters.minPrice}
+              onChange={handleFilterChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+              placeholder="Min price"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="maxPrice" className="block text-sm font-medium text-gray-700">
+              Max Price
+            </label>
+            <input
+              type="number"
+              id="maxPrice"
+              name="maxPrice"
+              value={filters.maxPrice}
+              onChange={handleFilterChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+              placeholder="Max price"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="location" className="block text-sm font-medium text-gray-700">
+              Location
+            </label>
+            <input
+              type="text"
+              id="location"
+              name="location"
+              value={filters.location}
+              onChange={handleFilterChange}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+              placeholder="Enter location"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Map and Property List Container */}
+      <div className="flex flex-row w-full h-full">
+        {/* Map Section - fills remaining space */}
+        <div className="flex-1 h-full pr-2">
+          {isMapReady ? (
+            <Suspense fallback={
+              <div className="h-full w-full flex items-center justify-center bg-gray-100">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
+                  <p className="mt-2 text-gray-600">Loading map...</p>
+                </div>
+              </div>
+            }>
+              <MapComponent
+                properties={properties}
+                center={mapCenter}
+                zoom={mapZoom}
+                onMarkerClick={handleMarkerClick}
+              />
+            </Suspense>
+          ) : (
+            <div className="h-full w-full flex items-center justify-center bg-gray-100">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
+                <p className="mt-2 text-gray-600">Initializing map...</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Property List Section - fixed width */}
+        <div className="w-[500px] max-w-xl h-full overflow-y-auto bg-gray-50 pl-2">
+          {loading ? (
+            <div className="text-center py-8">Loading...</div>
+          ) : filteredProperties.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              No properties found in this area
+            </div>
+          ) : (
+            <div className="space-y-6 px-2">
+              {filteredProperties.map(property => (
+                <Link
+                  key={property._id}
                   to={`/properties/${property._id}`}
-                  className="block bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200"
+                  className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
                 >
-                  <div className="relative h-48 w-full">
-                    <img
-                      src={property.images && property.images.length > 0 
-                        ? property.images[0].startsWith('http') 
-                          ? property.images[0] 
-                          : `http://localhost:5000/uploads/${property.images[0]}`
-                        : 'https://via.placeholder.com/800x400'}
-                      alt={property.title}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.src = 'https://via.placeholder.com/800x400';
-                      }}
-                    />
-                    {user?.role === 'tenant' && appliedProperties.has(property._id) && (
-                      <div className="absolute top-2 right-2">
-                        <span className="inline-flex items-center rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800">
-                          Applied
-                        </span>
+                  <div className="p-6">
+                    <div className="flex gap-6">
+                      {/* Property Image */}
+                      <div className="w-40 h-40 flex-shrink-0">
+                        {property.images && property.images.length > 0 ? (
+                          <img
+                            src={property.images[0]}
+                            alt={property.title}
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center">
+                            <span className="text-gray-400">No image</span>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <div className="flex justify-between">
-                      <div>
-                        <h3 className="text-lg font-medium text-gray-900">
-                          {property.title}
-                        </h3>
-                        <p className="mt-1 text-sm text-gray-500">
-                          {property.location.street}, {property.location.city}, {property.location.state} {property.location.zipCode}
-                        </p>
+                      {/* Property Details */}
+                      <div className="flex-1 min-w-0 py-2">
+                        <div className="flex flex-col h-full justify-between">
+                          <div>
+                            <h3 className="text-xl font-semibold text-gray-900 truncate mb-2">{property.title}</h3>
+                            <p className="text-base text-gray-600 mb-4">
+                              {property.location.street}, {property.location.city}
+                            </p>
+                            <div className="space-y-2">
+                              <p className="text-lg font-semibold text-gray-900">${property.price}/month</p>
+                              <p className="text-base text-gray-600 capitalize">{property.type}</p>
+                            </div>
+                          </div>
+                          {user?.role === 'tenant' && appliedProperties.has(property._id) && (
+                            <div className="mt-4">
+                              <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
+                                Applied
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <p className="text-lg font-medium text-gray-900">${property.price}/month</p>
-                    </div>
-                    <div className="mt-2">
-                      <span className="inline-flex items-center rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800">
-                        {property.type}
-                      </span>
                     </div>
                   </div>
                 </Link>
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
