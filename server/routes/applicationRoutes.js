@@ -5,7 +5,8 @@ import {
   createApplication,
   updateApplicationStatus,
   deleteApplication,
-  getPropertyApplications
+  getPropertyApplications,
+  updateApplicationViewing
 } from '../controllers/applicationController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -31,5 +32,8 @@ router.patch('/:id/status', updateApplicationStatus);
 
 // Delete application (tenant only)
 router.delete('/:id', deleteApplication);
+
+// Allow tenant to update their own application's viewing date/time
+router.patch('/:id', updateApplicationViewing);
 
 export default router; 

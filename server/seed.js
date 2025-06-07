@@ -133,7 +133,55 @@ const sampleProperties = [
     },
     amenities: ['Backyard', 'Garage', 'Fireplace'],
     images: ['https://media.istockphoto.com/id/520774645/photo/house-exterior-with-curb-appeal.jpg?s=1024x1024&w=is&k=20&c=4rwljqZ3Sd5f2aI3e7um6fKpILko-OrrFiEQCJA38ug=', 'https://media.istockphoto.com/id/590074124/photo/classic-american-house-with-siding-trim-and-red-entry-door.jpg?s=1024x1024&w=is&k=20&c=NXIxkzhayUFnOGqI1hhNFW04ufCpYO_F6KNgNiCHNMo='],
-    status: 'submitted'
+    status: 'active'
+  },
+  {
+    title: 'Cozy Suburban House 2',
+    description: 'Less charming house in a loud neighborhood',
+    type: 'house',
+    price: 1500,
+    features: {
+      bedrooms: 2,
+      bathrooms: 2,
+      squareFootage: 1100,
+      parking: false,
+      furnished: true,
+      petsAllowed: true
+    },
+    location: {
+      street: '406 Oak Ave',
+      city: 'Los Angeles',
+      state: 'CA',
+      zipCode: '90001',
+      coordinates: [-118.243683, 34.082235] // Los Angeles
+    },
+    amenities: ['Backyard', 'Garage', 'Fireplace'],
+    images: ['https://media.istockphoto.com/id/520774645/photo/house-exterior-with-curb-appeal.jpg?s=1024x1024&w=is&k=20&c=4rwljqZ3Sd5f2aI3e7um6fKpILko-OrrFiEQCJA38ug=', 'https://media.istockphoto.com/id/590074124/photo/classic-american-house-with-siding-trim-and-red-entry-door.jpg?s=1024x1024&w=is&k=20&c=NXIxkzhayUFnOGqI1hhNFW04ufCpYO_F6KNgNiCHNMo='],
+    status: 'active'
+  },
+  {
+    title: 'Cozy Suburban House 3',
+    description: "House in a quiet neighborhood",
+    type: 'house',
+    price: 1900,
+    features: {
+      bedrooms: 1,
+      bathrooms: 1,
+      squareFootage: 800,
+      parking: true,
+      furnished: true,
+      petsAllowed: false
+    },
+    location: {
+      street: '206 Oak Ave',
+      city: 'Los Angeles',
+      state: 'CA',
+      zipCode: '90001',
+      coordinates: [-118.256683, 34.022235] // Los Angeles
+    },
+    amenities: ['Backyard', 'Fireplace'],
+    images: ['https://media.istockphoto.com/id/520774645/photo/house-exterior-with-curb-appeal.jpg?s=1024x1024&w=is&k=20&c=4rwljqZ3Sd5f2aI3e7um6fKpILko-OrrFiEQCJA38ug=', 'https://media.istockphoto.com/id/590074124/photo/classic-american-house-with-siding-trim-and-red-entry-door.jpg?s=1024x1024&w=is&k=20&c=NXIxkzhayUFnOGqI1hhNFW04ufCpYO_F6KNgNiCHNMo='],
+    status: 'active'
   },
   {
     title: 'Luxury Condo with View',

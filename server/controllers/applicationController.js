@@ -57,7 +57,7 @@ export const getApplicationById = async (req, res) => {
 // Create a new application
 export const createApplication = async (req, res) => {
   try {
-    const { property } = req.body;
+    const { property, viewingDate, viewingTime } = req.body;
 
     // Check if property exists and is available
     const propertyDoc = await Property.findById(property);
@@ -77,10 +77,17 @@ export const createApplication = async (req, res) => {
       return res.status(400).json({ message: 'You have already applied to this property' });
     }
 
+    // Validate viewing date and time
+    if (!viewingDate || !viewingTime) {
+      return res.status(400).json({ message: 'Viewing date and time are required' });
+    }
+
     const application = new Application({
       property,
       tenant: req.user._id,
-      status: 'pending'
+      status: 'pending',
+      viewingDate,
+      viewingTime
     });
 
     const savedApplication = await application.save();
@@ -88,7 +95,9 @@ export const createApplication = async (req, res) => {
     // Add application to property's applications array
     propertyDoc.applications.push({
       tenant: req.user._id,
-      status: 'pending'
+      status: 'pending',
+      viewingDate,
+      viewingTime
     });
     await propertyDoc.save();
 
@@ -199,5 +208,30 @@ export const getPropertyApplications = async (req, res) => {
     res.json(applicationsWithDocuments);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// Update application viewing date and time (tenant only)
+export const updateApplicationViewing = async (req, res) => {
+  try {
+    const { viewingDate, viewingTime } = req.body;
+    const application = await Application.findById(req.params.id);
+
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    // Only allow tenant to update their own application
+    if (application.tenant.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to update this application' });
+    }
+
+    if (viewingDate) application.viewingDate = viewingDate;
+    if (viewingTime) application.viewingTime = viewingTime;
+    await application.save();
+
+    res.json(application);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
 }; 

@@ -16,6 +16,14 @@ const applicationSchema = new mongoose.Schema({
     enum: ['pending', 'approved', 'declined', 'expired'],
     default: 'pending'
   },
+  viewingDate: {
+    type: Date,
+    required: true
+  },
+  viewingTime: {
+    type: String,
+    required: true
+  },
   createdAt: {
     type: Date,
     default: Date.now

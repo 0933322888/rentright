@@ -10,6 +10,8 @@ import { FaBed, FaBath, FaHome, FaMapMarkerAlt, FaDollarSign, FaTimes, FaChevron
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import ViewingScheduleModal from '../components/ViewingScheduleModal';
+import ApplicationConfirmation from '../components/ApplicationConfirmation';
 
 const PropertyDetails = () => {
   const [property, setProperty] = useState(null);
@@ -23,6 +25,9 @@ const PropertyDetails = () => {
   const [tenantProfile, setTenantProfile] = useState(null);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [showViewingModal, setShowViewingModal] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [viewingDetails, setViewingDetails] = useState(null);
 
   useEffect(() => {
     const fetchPropertyAndApplicationStatus = async () => {
@@ -118,6 +123,10 @@ const PropertyDetails = () => {
       return;
     }
 
+    setShowViewingModal(true);
+  };
+
+  const handleViewingSubmit = async (viewingData) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -128,7 +137,11 @@ const PropertyDetails = () => {
 
       const response = await axios.post(
         API_ENDPOINTS.APPLICATIONS,
-        { property: id },
+        { 
+          property: id,
+          viewingDate: viewingData.viewingDate,
+          viewingTime: viewingData.viewingTime
+        },
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -139,8 +152,9 @@ const PropertyDetails = () => {
 
       if (response.data) {
         setHasApplied(true);
-        toast.success('Application submitted successfully!');
-        navigate('/applications');
+        setViewingDetails(viewingData);
+        setShowViewingModal(false);
+        setShowConfirmation(true);
       }
     } catch (error) {
       console.error('Application submission error:', error);
@@ -151,6 +165,11 @@ const PropertyDetails = () => {
         navigate('/login');
       }
     }
+  };
+
+  const handleConfirmationClose = () => {
+    setShowConfirmation(false);
+    navigate('/dashboard');
   };
 
   if (loading) return (
@@ -181,6 +200,21 @@ const PropertyDetails = () => {
       <ProfileCompletionModal 
         show={showProfileModal} 
         onHide={() => setShowProfileModal(false)} 
+      />
+
+      <ViewingScheduleModal
+        show={showViewingModal}
+        onHide={() => setShowViewingModal(false)}
+        onSubmit={handleViewingSubmit}
+        propertyTitle={property?.title}
+      />
+
+      <ApplicationConfirmation
+        show={showConfirmation}
+        onHide={handleConfirmationClose}
+        propertyTitle={property?.title}
+        viewingDate={viewingDetails?.viewingDate}
+        viewingTime={viewingDetails?.viewingTime}
       />
 
       {/* Main Content: Two Columns (Images Left, Info Right) */}

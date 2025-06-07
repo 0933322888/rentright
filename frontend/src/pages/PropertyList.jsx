@@ -205,8 +205,8 @@ export default function PropertyList() {
 
       {/* Map and Property List Container */}
       <div className="flex flex-row w-full h-full">
-        {/* Map Section - fills remaining space */}
-        <div className="flex-1 h-full pr-2">
+        {/* Map Section - even smaller */}
+        <div className="flex-[2] h-full pr-2">
           {isMapReady ? (
             <Suspense fallback={
               <div className="h-full w-full flex items-center justify-center bg-gray-100">
@@ -233,8 +233,8 @@ export default function PropertyList() {
           )}
         </div>
 
-        {/* Property List Section - fixed width */}
-        <div className="w-[500px] max-w-xl h-full overflow-y-auto bg-gray-50 pl-2">
+        {/* Property List Section - even wider */}
+        <div className="w-[850px] max-w-3xl h-full overflow-y-auto bg-gray-50 pl-2">
           {loading ? (
             <div className="text-center py-8">Loading...</div>
           ) : filteredProperties.length === 0 ? (
@@ -242,17 +242,17 @@ export default function PropertyList() {
               No properties found in this area
             </div>
           ) : (
-            <div className="space-y-6 px-2">
+            <div className="space-y-6 px-0">
               {filteredProperties.map(property => (
                 <Link
                   key={property._id}
                   to={`/properties/${property._id}`}
                   className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
                 >
-                  <div className="p-6">
-                    <div className="flex gap-6">
-                      {/* Property Image */}
-                      <div className="w-40 h-40 flex-shrink-0">
+                  <div className="p-8">
+                    <div className="flex gap-10">
+                      {/* Property Image - wider */}
+                      <div className="w-56 h-56 flex-shrink-0">
                         {property.images && property.images.length > 0 ? (
                           <img
                             src={property.images[0]}
