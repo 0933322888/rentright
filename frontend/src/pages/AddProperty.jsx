@@ -1,59 +1,133 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api';
 import PropertyForm from '../components/PropertyForm';
+import DocumentUpload from '../components/DocumentUpload';
+import PropertySubmissionModal from '../components/PropertySubmissionModal';
+import { 
+  Box, 
+  Typography, 
+  Paper, 
+  Stepper, 
+  Step, 
+  StepLabel, 
+  Alert,
+  Container,
+  Divider,
+  useTheme,
+  useMediaQuery,
+  Button,
+  Grid
+} from '@mui/material';
+import HomeIcon from '@mui/icons-material/Home';
+import DescriptionIcon from '@mui/icons-material/Description';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import UploadIcon from '@mui/icons-material/Upload';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import SaveIcon from '@mui/icons-material/Save';
+import AddHomeIcon from '@mui/icons-material/AddHome';
 
-export default function AddProperty() {
+const steps = [
+  { label: 'Basic Information', icon: <HomeIcon /> },
+  { label: 'Required Documents', icon: <DescriptionIcon /> }
+];
+
+const AddProperty = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [error, setError] = useState('');
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [documents, setDocuments] = useState({
+    proofOfOwnership: [],
+    governmentId: [],
+    condoBoardRules: [],
+    utilityBills: []
+  });
+  const [propertyData, setPropertyData] = useState({});
 
-  const handleSubmit = async (formData) => {
-    setError('');
+  const handleDocumentDrop = (field) => (acceptedFiles) => {
+    setDocuments(prev => ({
+      ...prev,
+      [field]: [...prev[field], ...acceptedFiles]
+    }));
+  };
+
+  const handleDeleteDocument = (field, index) => {
+    setDocuments(prev => ({
+      ...prev,
+      [field]: prev[field].filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleNext = () => {
+    setActiveStep((prevStep) => prevStep + 1);
+  };
+
+  const handleBack = () => {
+    setActiveStep((prevStep) => prevStep - 1);
+  };
+
+  const handlePropertySubmit = (propertyData) => {
+    setPropertyData(propertyData);
+    handleNext();
+  };
+
+  const handleFinalSubmit = async (event) => {
+    event.preventDefault();
     setLoading(true);
-
-    const submitData = new FormData();
-    
-    // Add basic fields
-    submitData.append('title', formData.title);
-    submitData.append('description', formData.description);
-    submitData.append('type', formData.type);
-    submitData.append('price', formData.price);
-    submitData.append('status', 'New');
-
-    // Add location fields
-    submitData.append('location[street]', formData.location.street);
-    submitData.append('location[city]', formData.location.city);
-    submitData.append('location[state]', formData.location.state);
-    submitData.append('location[zipCode]', formData.location.zipCode);
-
-    // Add features fields
-    submitData.append('features[bedrooms]', formData.features.bedrooms);
-    submitData.append('features[bathrooms]', formData.features.bathrooms);
-    submitData.append('features[squareFootage]', formData.features.squareFootage);
-    submitData.append('features[furnished]', formData.features.furnished);
-    submitData.append('features[parking]', formData.features.parking);
-    submitData.append('features[petsAllowed]', formData.features.petsAllowed);
-
-    // Add new images
-    formData.images.forEach(image => {
-      if (image instanceof File) {
-        submitData.append('images', image);
-      }
-    });
+    setError('');
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post(API_ENDPOINTS.PROPERTIES, submitData, {
+      const formData = new FormData();
+
+      // Append property data
+      Object.entries(propertyData).forEach(([key, value]) => {
+        if (key === 'location') {
+          // Handle location fields individually
+          Object.entries(value).forEach(([locKey, locValue]) => {
+            formData.append(`location[${locKey}]`, locValue);
+          });
+        } else if (key === 'features') {
+          formData.append(key, JSON.stringify(value));
+        } else if (key === 'availableFrom') {
+          formData.append(key, value.toISOString());
+        } else if (key !== 'images') {
+          formData.append(key, value);
+        }
+      });
+
+      // Append images
+      if (propertyData.images) {
+        propertyData.images.forEach((image, index) => {
+          if (image instanceof File) {
+            formData.append('images', image);
+          }
+        });
+      }
+
+      // Append documents
+      Object.entries(documents).forEach(([field, files]) => {
+        files.forEach(file => {
+          formData.append(field, file);
+        });
+      });
+
+      // Create property with all data in one request
+      const response = await axios.post(API_ENDPOINTS.PROPERTIES, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       });
-      navigate('/my-properties');
+
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('Error creating property:', error);
       setError(error.response?.data?.message || 'Error creating property');
@@ -62,29 +136,305 @@ export default function AddProperty() {
     }
   };
 
+  const handleModalClose = () => {
+    setShowSuccessModal(false);
+    navigate('/my-properties');
+  };
+
   if (!user || user.role !== 'landlord') {
     return (
-      <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-900">Access Denied</h2>
-        <p className="mt-4 text-gray-600">Only landlords can add properties.</p>
-      </div>
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <Paper sx={{ p: 4, textAlign: 'center' }}>
+          <Typography variant="h4" color="error" gutterBottom>
+            Access Denied
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Only landlords can add properties.
+          </Typography>
+        </Paper>
+      </Container>
     );
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl py-16 sm:py-24 lg:max-w-none lg:py-32">
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-8">Add New Property</h1>
-            <PropertyForm 
-              onSubmit={handleSubmit}
-              loading={loading}
-              error={error}
-            />
-          </div>
-        </div>
-      </div>
-    </div>
+    <Box sx={{ 
+      minHeight: '100vh',
+      py: 4,
+      px: 0,
+      background: 'linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%)'
+    }}>
+      <Paper 
+        elevation={3} 
+        sx={{ 
+          p: { xs: 2, sm: 4 },
+          borderRadius: 2,
+          background: 'rgba(255, 255, 255, 0.9)',
+          backdropFilter: 'blur(10px)',
+          m: 0,
+          width: '100%'
+        }}
+      >
+        <Box sx={{ mb: 4, textAlign: 'center' }}>
+          <Typography 
+            variant="h4" 
+            component="h1" 
+            gutterBottom
+            sx={{ 
+              fontWeight: 600,
+              color: 'primary.main',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 1
+            }}
+          >
+            <AddHomeIcon sx={{ fontSize: 32 }} />
+            Add New Property
+          </Typography>
+          <Typography variant="subtitle1" color="text.secondary">
+            Create a new property listing by filling out the form below
+          </Typography>
+        </Box>
+
+        <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 4 }}>
+          <Step>
+            <StepLabel>Basic Information</StepLabel>
+          </Step>
+          <Step>
+            <StepLabel>Required Documents</StepLabel>
+          </Step>
+        </Stepper>
+
+        {activeStep === 0 ? (
+          <PropertyForm 
+            onSubmit={handlePropertySubmit} 
+            loading={loading}
+            isFirstStep={true}
+            initialData={propertyData}
+            onCancel={() => navigate('/my-properties')}
+          />
+        ) : (
+          <Box component="form" onSubmit={handleFinalSubmit}>
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                p: 3, 
+                mb: 4,
+                bgcolor: 'background.default',
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'divider'
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                <DescriptionIcon sx={{ color: theme.palette.primary.main, mr: 1 }} />
+                <Typography variant="h6" color="primary">
+                  Required Documents
+                </Typography>
+              </Box>
+
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                Please upload the following required documents to verify your property ownership and identity.
+              </Typography>
+
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <Paper 
+                    variant="outlined" 
+                    sx={{ 
+                      p: 3,
+                      border: '2px dashed',
+                      borderColor: 'primary.main',
+                      bgcolor: 'background.paper',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        borderColor: 'primary.dark',
+                        bgcolor: 'action.hover'
+                      }
+                    }}
+                  >
+                    <Box sx={{ textAlign: 'center' }}>
+                      <CloudUploadIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+                      <Typography variant="h6" gutterBottom>
+                        Proof of Ownership
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Upload property deed, title, or ownership certificate
+                      </Typography>
+                      <Button
+                        variant="outlined"
+                        component="label"
+                        startIcon={<UploadIcon />}
+                        sx={{ minWidth: 200 }}
+                      >
+                        Upload Document
+                        <input
+                          type="file"
+                          hidden
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={(e) => handleFileChange(e, 'proofOfOwnership')}
+                        />
+                      </Button>
+                      {documents.proofOfOwnership && (
+                        <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                          <DescriptionIcon color="primary" />
+                          <Typography variant="body2">
+                            {documents.proofOfOwnership.name}
+                          </Typography>
+                        </Box>
+                      )}
+                    </Box>
+                  </Paper>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Paper 
+                    variant="outlined" 
+                    sx={{ 
+                      p: 3,
+                      border: '2px dashed',
+                      borderColor: 'primary.main',
+                      bgcolor: 'background.paper',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        borderColor: 'primary.dark',
+                        bgcolor: 'action.hover'
+                      }
+                    }}
+                  >
+                    <Box sx={{ textAlign: 'center' }}>
+                      <CloudUploadIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+                      <Typography variant="h6" gutterBottom>
+                        Government-Issued ID
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Upload a valid government-issued identification document
+                      </Typography>
+                      <Button
+                        variant="outlined"
+                        component="label"
+                        startIcon={<UploadIcon />}
+                        sx={{ minWidth: 200 }}
+                      >
+                        Upload Document
+                        <input
+                          type="file"
+                          hidden
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={(e) => handleFileChange(e, 'governmentId')}
+                        />
+                      </Button>
+                      {documents.governmentId && (
+                        <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                          <DescriptionIcon color="primary" />
+                          <Typography variant="body2">
+                            {documents.governmentId.name}
+                          </Typography>
+                        </Box>
+                      )}
+                    </Box>
+                  </Paper>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Paper 
+                    variant="outlined" 
+                    sx={{ 
+                      p: 3,
+                      border: '2px dashed',
+                      borderColor: 'primary.main',
+                      bgcolor: 'background.paper',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        borderColor: 'primary.dark',
+                        bgcolor: 'action.hover'
+                      }
+                    }}
+                  >
+                    <Box sx={{ textAlign: 'center' }}>
+                      <CloudUploadIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
+                      <Typography variant="h6" gutterBottom>
+                        Utility Bill (Optional)
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Upload a recent utility bill for additional verification
+                      </Typography>
+                      <Button
+                        variant="outlined"
+                        component="label"
+                        startIcon={<UploadIcon />}
+                        sx={{ minWidth: 200 }}
+                      >
+                        Upload Document
+                        <input
+                          type="file"
+                          hidden
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={(e) => handleFileChange(e, 'utilityBill')}
+                        />
+                      </Button>
+                      {documents.utilityBill && (
+                        <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                          <DescriptionIcon color="primary" />
+                          <Typography variant="body2">
+                            {documents.utilityBill.name}
+                          </Typography>
+                        </Box>
+                      )}
+                    </Box>
+                  </Paper>
+                </Grid>
+              </Grid>
+            </Paper>
+
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2 }}>
+              <Button
+                variant="outlined"
+                color="inherit"
+                onClick={() => navigate('/my-properties')}
+                sx={{ minWidth: 120 }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={handleBack}
+                startIcon={<ArrowBackIcon />}
+                sx={{ minWidth: 120 }}
+              >
+                Back
+              </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                disabled={loading}
+                startIcon={<SaveIcon />}
+                sx={{ minWidth: 200 }}
+              >
+                {loading ? 'Saving...' : 'Save Property'}
+              </Button>
+            </Box>
+          </Box>
+        )}
+
+        {error && (
+          <Alert 
+            severity="error" 
+            sx={{ mt: 2 }}
+            onClose={() => setError(null)}
+          >
+            {error}
+          </Alert>
+        )}
+      </Paper>
+
+      <PropertySubmissionModal 
+        show={showSuccessModal} 
+        onHide={handleModalClose}
+      />
+    </Box>
   );
-} 
+};
+
+export default AddProperty; 

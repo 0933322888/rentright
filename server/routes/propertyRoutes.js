@@ -9,6 +9,11 @@ import {
   updateApplicationStatus,
   getAvailableProperties
 } from '../controllers/propertyController.js';
+import {
+  uploadPropertyDocuments,
+  getPropertyDocuments,
+  deletePropertyDocument
+} from '../controllers/propertyDocumentController.js';
 import { protect, restrictTo } from '../middleware/authMiddleware.js';
 import multer from 'multer';
 import fs from 'fs';
@@ -45,15 +50,37 @@ router.get('/available', getAvailableProperties);
 router.get('/:id', getPropertyById);
 
 // Protected routes
-router.use(protect);
+router.post('/', protect, restrictTo('landlord'), upload.fields([
+  { name: 'images', maxCount: 10 },
+  { name: 'proofOfOwnership', maxCount: 1 },
+  { name: 'governmentId', maxCount: 1 },
+  { name: 'condoBoardRules', maxCount: 1 },
+  { name: 'utilityBills', maxCount: 5 }
+]), createProperty);
 
-// Landlord routes
-router.post('/', restrictTo('landlord'), upload.array('images', 5), createProperty);
-router.put('/:id', restrictTo('landlord'), upload.array('images', 5), updateProperty);
-router.delete('/:id', restrictTo('landlord'), deleteProperty);
-router.put('/:propertyId/applications/:applicationId/status', restrictTo('landlord'), updateApplicationStatus);
+router.put('/:id', protect, restrictTo('landlord'), upload.fields([
+  { name: 'images', maxCount: 10 },
+  { name: 'proofOfOwnership', maxCount: 1 },
+  { name: 'governmentId', maxCount: 1 },
+  { name: 'condoBoardRules', maxCount: 1 },
+  { name: 'utilityBills', maxCount: 5 }
+]), updateProperty);
 
-// Tenant routes
-router.post('/:id/apply', restrictTo('tenant'), applyForProperty);
+router.delete('/:id', protect, restrictTo('landlord'), deleteProperty);
+
+// Application routes
+router.post('/:id/apply', protect, restrictTo('tenant'), applyForProperty);
+router.put('/:propertyId/applications/:applicationId/status', protect, restrictTo('landlord'), updateApplicationStatus);
+
+// Property document routes
+router.post('/:propertyId/documents', protect, restrictTo('landlord'), upload.fields([
+  { name: 'proofOfOwnership', maxCount: 1 },
+  { name: 'governmentId', maxCount: 1 },
+  { name: 'condoBoardRules', maxCount: 1 },
+  { name: 'utilityBills', maxCount: 5 }
+]), uploadPropertyDocuments);
+
+router.get('/:propertyId/documents', protect, getPropertyDocuments);
+router.delete('/:propertyId/documents/:field/:documentId', protect, restrictTo('landlord'), deletePropertyDocument);
 
 export default router; 

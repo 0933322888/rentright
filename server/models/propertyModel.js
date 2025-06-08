@@ -20,6 +20,10 @@ const propertySchema = new mongoose.Schema({
     required: true,
     min: 0
   },
+  availableFrom: {
+    type: Date,
+    required: true
+  },
   amenities: [{
     type: String
   }],

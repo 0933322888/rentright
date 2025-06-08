@@ -1,18 +1,47 @@
 import Property from '../models/propertyModel.js';
 import mongoose from 'mongoose';
 import Application from '../models/applicationModel.js';
+import PropertyDocument from '../models/propertyDocumentModel.js';
 
 export const createProperty = async (req, res) => {
   try {
+    // Handle images
+    const images = req.files?.images ? req.files.images.map(file => file.path.replace(/\\/g, '/').split('uploads/')[1]) : [];
+
+    // Create property with images
     const property = new Property({
       ...req.body,
       landlord: req.user._id,
-      images: req.files ? req.files.map(file => file.path.replace(/\\/g, '/').split('uploads/')[1]) : []
+      images: images
     });
 
     const createdProperty = await property.save();
+
+    // Handle documents if any were uploaded
+    if (req.files && Object.keys(req.files).some(key => key !== 'images')) {
+      const propertyDocument = new PropertyDocument({
+        property: createdProperty._id
+      });
+
+      // Process each document type
+      ['proofOfOwnership', 'governmentId', 'condoBoardRules', 'utilityBills'].forEach(field => {
+        if (req.files[field]) {
+          const files = Array.isArray(req.files[field]) ? req.files[field] : [req.files[field]];
+          propertyDocument[field] = files.map(file => ({
+            path: file.path,
+            filename: file.filename,
+            uploadedAt: new Date(),
+            mimeType: file.mimetype
+          }));
+        }
+      });
+
+      await propertyDocument.save();
+    }
+
     res.status(201).json(createdProperty);
   } catch (error) {
+    console.error('Error creating property:', error);
     res.status(400).json({ message: error.message });
   }
 };

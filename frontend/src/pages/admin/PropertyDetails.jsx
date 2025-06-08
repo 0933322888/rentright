@@ -60,8 +60,8 @@ export default function AdminPropertyDetails() {
                     {property.status}
                   </span>
                 </p>
-                <p><span className="font-medium">Bedrooms:</span> {property.features.bedrooms}</p>
-                <p><span className="font-medium">Bathrooms:</span> {property.features.bathrooms}</p>
+                <p><span className="font-medium">Bedrooms:</span> {property.features?.bedrooms || 'N/A'}</p>
+                <p><span className="font-medium">Bathrooms:</span> {property.features?.bathrooms || 'N/A'}</p>
               </div>
             </div>
             

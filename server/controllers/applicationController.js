@@ -1,6 +1,7 @@
 import Application from '../models/applicationModel.js';
 import Property from '../models/propertyModel.js';
 import TenantDocument from '../models/tenantDocumentModel.js';
+import User from '../models/userModel.js';
 
 // Get all applications (filtered by user role)
 export const getApplications = async (req, res) => {
@@ -82,12 +83,17 @@ export const createApplication = async (req, res) => {
       return res.status(400).json({ message: 'Viewing date and time are required' });
     }
 
+    // Get tenant's scoring
+    const tenant = await User.findById(req.user._id);
+    const tenantScoring = tenant.tenantScoring || Math.floor(Math.random() * 100); // For now, use random number if not set
+
     const application = new Application({
       property,
       tenant: req.user._id,
       status: 'pending',
       viewingDate,
-      viewingTime
+      viewingTime,
+      tenantScoring
     });
 
     const savedApplication = await application.save();
@@ -97,7 +103,8 @@ export const createApplication = async (req, res) => {
       tenant: req.user._id,
       status: 'pending',
       viewingDate,
-      viewingTime
+      viewingTime,
+      tenantScoring
     });
     await propertyDoc.save();
 
@@ -171,7 +178,7 @@ export const getPropertyApplications = async (req, res) => {
     }
 
     const applications = await Application.find({ property: propertyId })
-      .populate('tenant', 'name email phone')
+      .populate('tenant', 'name email phone tenantScoring')
       .sort('-createdAt');
 
     // Get tenant documents for each application
@@ -198,10 +205,7 @@ export const getPropertyApplications = async (req, res) => {
             tenantDocument: formattedDocument
           };
         }
-        return {
-          ...application.toObject(),
-          tenantDocument: null
-        };
+        return application;
       })
     );
 

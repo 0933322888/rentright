@@ -14,11 +14,13 @@ export const API_ENDPOINTS = {
   
   // Property endpoints
   PROPERTIES: `${BASE_URL}/api/properties`,
+  PROPERTY: (id) => `${BASE_URL}/api/properties/${id}`,
   AVAILABLE_PROPERTIES: `${BASE_URL}/api/properties/available`,
   
   // Application endpoints
   APPLICATIONS: `${BASE_URL}/api/applications`,
-  PROPERTY_APPLICATIONS: (propertyId) => `${BASE_URL}/api/applications/property/${propertyId}`,
+  PROPERTY_APPLICATIONS: (propertyId) => `${BASE_URL}/api/properties/${propertyId}/applications`,
+  PROPERTY_DOCUMENTS: (propertyId) => `${BASE_URL}/api/properties/${propertyId}/documents`,
   
   // Admin endpoints
   ADMIN_PROPERTIES: `${BASE_URL}/api/admin/properties`,

@@ -35,6 +35,12 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 5
   },
+  tenantScoring: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100
+  },
   createdAt: {
     type: Date,
     default: Date.now

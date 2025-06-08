@@ -1,44 +1,63 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { 
+  TextField, 
+  Button, 
+  Grid, 
+  MenuItem, 
+  FormControlLabel, 
+  Switch, 
+  Box,
+  Paper,
+  Typography,
+  Divider,
+  useTheme,
+  IconButton
+} from '@mui/material';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import HomeIcon from '@mui/icons-material/Home';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import InfoIcon from '@mui/icons-material/Info';
+import ImageIcon from '@mui/icons-material/Image';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
-export default function PropertyForm({ 
-  initialData = {
-    title: '',
-    description: '',
-    type: '',
-    price: '',
+const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true, onCancel }) => {
+  const theme = useTheme();
+  const [formData, setFormData] = useState({
+    title: initialData.title || '',
+    description: initialData.description || '',
+    type: initialData.type || 'apartment',
+    price: initialData.price || '',
+    availableFrom: initialData.availableFrom ? new Date(initialData.availableFrom) : new Date(),
     location: {
-      street: '',
-      city: '',
-      state: '',
-      zipCode: ''
+      street: initialData.location?.street || '',
+      city: initialData.location?.city || '',
+      state: initialData.location?.state || '',
+      zipCode: initialData.location?.zipCode || ''
     },
     features: {
-      bedrooms: '',
-      bathrooms: '',
-      squareFootage: '',
-      furnished: false,
-      parking: false,
-      petsAllowed: false
+      bedrooms: initialData.features?.bedrooms || '',
+      bathrooms: initialData.features?.bathrooms || '',
+      squareFootage: initialData.features?.squareFootage || '',
+      furnished: initialData.features?.furnished || false,
+      parking: initialData.features?.parking || false,
+      petsAllowed: initialData.features?.petsAllowed || false
     },
-    images: []
-  },
-  onSubmit,
-  loading = false,
-  error = '',
-  isEdit = false
-}) {
-  const [formData, setFormData] = useState(initialData);
+    images: initialData.images || []
+  });
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    
+    const { name, value, checked } = e.target;
     if (name.includes('.')) {
       const [parent, child] = name.split('.');
       setFormData(prev => ({
         ...prev,
         [parent]: {
           ...prev[parent],
-          [child]: type === 'checkbox' ? checked : value
+          [child]: value
         }
       }));
     } else {
@@ -49,11 +68,44 @@ export default function PropertyForm({
     }
   };
 
+  const handleSwitchChange = (e) => {
+    const { name, checked } = e.target;
+    if (name.includes('.')) {
+      const [parent, child] = name.split('.');
+      setFormData(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: checked
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: checked
+      }));
+    }
+  };
+
+  const handleDateChange = (date) => {
+    setFormData(prev => ({
+      ...prev,
+      availableFrom: date
+    }));
+  };
+
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     setFormData(prev => ({
       ...prev,
       images: [...prev.images, ...files]
+    }));
+  };
+
+  const handleDeleteImage = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
     }));
   };
 
@@ -63,376 +115,435 @@ export default function PropertyForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Basic Information */}
-      <div className="space-y-6 bg-gray-50 p-6 rounded-lg">
-        <h2 className="text-xl font-semibold text-gray-900">Basic Information</h2>
-        
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-            Property Title
-          </label>
-          <input
-            type="text"
-            id="title"
-            name="title"
-            required
-            value={formData.title}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-md focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors duration-200 hover:border-gray-400 bg-white py-3 px-4"
-            placeholder="Enter property title"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-            Description
-          </label>
-          <textarea
-            id="description"
-            name="description"
-            rows={4}
-            required
-            value={formData.description}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-md focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors duration-200 hover:border-gray-400 bg-white py-3 px-4 resize-none"
-            placeholder="Describe your property in detail"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <div>
-            <label htmlFor="type" className="block text-sm font-medium text-gray-700">
-              Property Type
-            </label>
-            <select
-              id="type"
-              name="type"
-              required
-              value={formData.type}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-md focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors duration-200 hover:border-gray-400 bg-white py-3 px-4"
-            >
-              <option value="">Select property type</option>
-              <option value="apartment">Apartment</option>
-              <option value="house">House</option>
-              <option value="condo">Condo</option>
-              <option value="townhouse">Townhouse</option>
-              <option value="commercial">Commercial</option>
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-              Price (per month)
-            </label>
-            <div className="mt-1 relative rounded-md shadow-md">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="text-gray-500 sm:text-sm">$</span>
-              </div>
-              <input
-                type="number"
-                id="price"
-                name="price"
+    <form onSubmit={handleSubmit}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {/* Basic Information Section */}
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            p: 3, 
+            bgcolor: 'background.default',
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider'
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+            <HomeIcon sx={{ color: theme.palette.primary.main, mr: 1 }} />
+            <Typography variant="h6" color="primary">
+              Basic Information
+            </Typography>
+          </Box>
+          {/* Row: Title, Property Type, Price, Available From */}
+          <Grid container spacing={3} alignItems="center" wrap="nowrap">
+            <Grid item sx={{ flex: 1 }}>
+              <TextField
                 required
-                min="0"
+                fullWidth
+                label="Title"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                variant="outlined"
+                size="medium"
+              />
+            </Grid>
+            <Grid item sx={{ minWidth: 250 }}>
+              <TextField
+                required
+                fullWidth
+                select
+                label="Property Type"
+                name="type"
+                value={formData.type}
+                onChange={handleChange}
+                variant="outlined"
+                size="medium"
+              >
+                <MenuItem value="apartment">Apartment</MenuItem>
+                <MenuItem value="house">House</MenuItem>
+                <MenuItem value="condo">Condo</MenuItem>
+                <MenuItem value="townhouse">Townhouse</MenuItem>
+                <MenuItem value="commercial">Commercial</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item sx={{ minWidth: 250 }}>
+              <TextField
+                required
+                fullWidth
+                type="number"
+                label="Price per month"
+                name="price"
                 value={formData.price}
                 onChange={handleChange}
-                className="block w-full pl-7 pr-12 rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors duration-200 hover:border-gray-400 bg-white py-3 px-4"
-                placeholder="0.00"
+                variant="outlined"
+                size="medium"
+                InputProps={{
+                  startAdornment: <span>$</span>
+                }}
               />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Location Information */}
-      <div className="space-y-6 bg-gray-50 p-6 rounded-lg">
-        <h2 className="text-xl font-semibold text-gray-900">Location Information</h2>
-        
-        <div>
-          <label htmlFor="location.street" className="block text-sm font-medium text-gray-700">
-            Street Address
-          </label>
-          <input
-            type="text"
-            id="location.street"
-            name="location.street"
-            value={formData.location.street}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-md focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors duration-200 hover:border-gray-400 bg-white py-3 px-4"
-            placeholder="Enter street address"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <div>
-            <label htmlFor="location.city" className="block text-sm font-medium text-gray-700">
-              City
-            </label>
-            <input
-              type="text"
-              id="location.city"
-              name="location.city"
-              required
-              value={formData.location.city}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-md focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors duration-200 hover:border-gray-400 bg-white py-3 px-4"
-              placeholder="Enter city"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="location.state" className="block text-sm font-medium text-gray-700">
-              State
-            </label>
-            <input
-              type="text"
-              id="location.state"
-              name="location.state"
-              required
-              value={formData.location.state}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-md focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors duration-200 hover:border-gray-400 bg-white py-3 px-4"
-              placeholder="Enter state"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="location.zipCode" className="block text-sm font-medium text-gray-700">
-            ZIP Code
-          </label>
-          <input
-            type="text"
-            id="location.zipCode"
-            name="location.zipCode"
-            value={formData.location.zipCode}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-md focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors duration-200 hover:border-gray-400 bg-white py-3 px-4"
-            placeholder="Enter ZIP code"
-          />
-        </div>
-      </div>
-
-      {/* Features */}
-      <div className="space-y-6 bg-gray-50 p-6 rounded-lg">
-        <h2 className="text-xl font-semibold text-gray-900">Features</h2>
-        
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <div>
-            <label htmlFor="features.bedrooms" className="block text-sm font-medium text-gray-700">
-              Number of Bedrooms
-            </label>
-            <input
-              type="number"
-              id="features.bedrooms"
-              name="features.bedrooms"
-              min="0"
-              value={formData.features.bedrooms}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-md focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors duration-200 hover:border-gray-400 bg-white py-3 px-4"
-              placeholder="Enter number of bedrooms"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="features.bathrooms" className="block text-sm font-medium text-gray-700">
-              Number of Bathrooms
-            </label>
-            <input
-              type="number"
-              id="features.bathrooms"
-              name="features.bathrooms"
-              min="0"
-              step="0.5"
-              value={formData.features.bathrooms}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-md focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors duration-200 hover:border-gray-400 bg-white py-3 px-4"
-              placeholder="Enter number of bathrooms"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="features.squareFootage" className="block text-sm font-medium text-gray-700">
-            Square Footage
-          </label>
-          <input
-            type="number"
-            id="features.squareFootage"
-            name="features.squareFootage"
-            min="0"
-            value={formData.features.squareFootage}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-md focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm transition-colors duration-200 hover:border-gray-400 bg-white py-3 px-4"
-            placeholder="Enter square footage"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="features.furnished"
-              name="features.furnished"
-              checked={formData.features.furnished}
-              onChange={handleChange}
-              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-            />
-            <label htmlFor="features.furnished" className="ml-2 block text-sm text-gray-900">
-              Furnished
-            </label>
-          </div>
-
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="features.parking"
-              name="features.parking"
-              checked={formData.features.parking}
-              onChange={handleChange}
-              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-            />
-            <label htmlFor="features.parking" className="ml-2 block text-sm text-gray-900">
-              Parking Available
-            </label>
-          </div>
-
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="features.petsAllowed"
-              name="features.petsAllowed"
-              checked={formData.features.petsAllowed}
-              onChange={handleChange}
-              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-            />
-            <label htmlFor="features.petsAllowed" className="ml-2 block text-sm text-gray-900">
-              Pets Allowed
-            </label>
-          </div>
-        </div>
-      </div>
-
-      {/* Images */}
-      <div className="space-y-6 bg-gray-50 p-6 rounded-lg">
-        <h2 className="text-xl font-semibold text-gray-900">Images</h2>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Upload Images
-          </label>
-          <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-            <div className="space-y-1 text-center">
-              <svg
-                className="mx-auto h-12 w-12 text-gray-400"
-                stroke="currentColor"
-                fill="none"
-                viewBox="0 0 48 48"
-                aria-hidden="true"
-              >
-                <path
-                  d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <div className="flex text-sm text-gray-600">
-                <label
-                  htmlFor="images"
-                  className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500"
-                >
-                  <span>Upload files</span>
-                  <input
-                    id="images"
-                    name="images"
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="sr-only"
-                  />
-                </label>
-                <p className="pl-1">or drag and drop</p>
-              </div>
-              <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-            </div>
-          </div>
-        </div>
-
-        {formData.images.length > 0 && (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {formData.images.map((image, index) => (
-              <div key={index} className="relative">
-                {typeof image === 'string' ? (
-                  <img
-                    src={image.startsWith('http') ? image : `http://localhost:5000/uploads/${image}`}
-                    alt={`Property image ${index + 1}`}
-                    className="w-full h-32 object-cover rounded-lg"
-                  />
-                ) : (
-                  <img
-                    src={URL.createObjectURL(image)}
-                    alt={`New image ${index + 1}`}
-                    className="w-full h-32 object-cover rounded-lg"
-                  />
-                )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormData(prev => ({
-                      ...prev,
-                      images: prev.images.filter((_, i) => i !== index)
-                    }));
+            </Grid>
+            <Grid item sx={{ minWidth: 250 }}>
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  label="Available From"
+                  value={formData.availableFrom}
+                  onChange={handleDateChange}
+                  slotProps={{ 
+                    textField: { 
+                      fullWidth: true, 
+                      required: true,
+                      variant: "outlined",
+                      size: "medium"
+                    } 
                   }}
-                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+                  minDate={new Date()}
+                />
+              </LocalizationProvider>
+            </Grid>
+          </Grid>
+          {/* Description field - full width */}
+          <Box sx={{ mx: 'auto', mt: 6 }}>
+            <TextField
+              required
+              fullWidth
+              multiline
+              rows={6}
+              label="Description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              variant="outlined"
+              size="medium"
+              sx={{
+                backgroundColor: 'rgba(0,0,0,0.03)',
+                borderRadius: 2
+              }}
+            />
+          </Box>
+        </Paper>
 
-      {error && (
-        <div className="rounded-md bg-red-50 p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">{error}</h3>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-3 px-6 text-sm font-medium text-white shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 transition-colors duration-200"
+        {/* Location Section */}
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            p: 3, 
+            bgcolor: 'background.default',
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider'
+          }}
         >
-          {loading ? (
-            <>
-              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              {isEdit ? 'Updating Property...' : 'Creating Property...'}
-            </>
-          ) : (
-            isEdit ? 'Update Property' : 'Create Property'
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+            <LocationOnIcon sx={{ color: theme.palette.primary.main, mr: 1 }} />
+            <Typography variant="h6" color="primary">
+              Location Information
+            </Typography>
+          </Box>
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <TextField
+                required
+                fullWidth
+                label="Street Address"
+                name="location.street"
+                value={formData.location.street}
+                onChange={handleChange}
+                variant="outlined"
+                size="medium"
+              />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                required
+                fullWidth
+                label="City"
+                name="location.city"
+                value={formData.location.city}
+                onChange={handleChange}
+                variant="outlined"
+                size="medium"
+              />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                required
+                fullWidth
+                label="State"
+                name="location.state"
+                value={formData.location.state}
+                onChange={handleChange}
+                variant="outlined"
+                size="medium"
+              />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                fullWidth
+                label="ZIP Code"
+                name="location.zipCode"
+                value={formData.location.zipCode}
+                onChange={handleChange}
+                variant="outlined"
+                size="medium"
+              />
+            </Grid>
+          </Grid>
+        </Paper>
+
+        {/* Features Section */}
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            p: 3, 
+            bgcolor: 'background.default',
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider'
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+            <InfoIcon sx={{ color: theme.palette.primary.main, mr: 1 }} />
+            <Typography variant="h6" color="primary">
+              Property Features
+            </Typography>
+          </Box>
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                required
+                fullWidth
+                type="number"
+                label="Bedrooms"
+                name="features.bedrooms"
+                value={formData.features.bedrooms}
+                onChange={handleChange}
+                variant="outlined"
+                size="medium"
+              />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                required
+                fullWidth
+                type="number"
+                label="Bathrooms"
+                name="features.bathrooms"
+                value={formData.features.bathrooms}
+                onChange={handleChange}
+                variant="outlined"
+                size="medium"
+              />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <TextField
+                required
+                fullWidth
+                type="number"
+                label="Square Footage"
+                name="features.squareFootage"
+                value={formData.features.squareFootage}
+                onChange={handleChange}
+                variant="outlined"
+                size="medium"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Box sx={{ 
+                display: 'flex', 
+                gap: 3, 
+                flexWrap: 'wrap',
+                p: 2,
+                bgcolor: 'background.paper',
+                borderRadius: 1
+              }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={formData.features.furnished}
+                      onChange={handleSwitchChange}
+                      name="features.furnished"
+                      color="primary"
+                    />
+                  }
+                  label="Furnished"
+                />
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={formData.features.parking}
+                      onChange={handleSwitchChange}
+                      name="features.parking"
+                      color="primary"
+                    />
+                  }
+                  label="Parking Available"
+                />
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={formData.features.petsAllowed}
+                      onChange={handleSwitchChange}
+                      name="features.petsAllowed"
+                      color="primary"
+                    />
+                  }
+                  label="Pets Allowed"
+                />
+              </Box>
+            </Grid>
+          </Grid>
+        </Paper>
+
+        {/* Images Section */}
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            p: 3, 
+            bgcolor: 'background.default',
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider'
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+            <ImageIcon sx={{ color: theme.palette.primary.main, mr: 1 }} />
+            <Typography variant="h6" color="primary">
+              Property Images
+            </Typography>
+          </Box>
+          
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Upload high-quality images of your property. You can upload up to 10 images.
+            </Typography>
+            
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                gap: 2,
+                mb: 2
+              }}
+            >
+              {formData.images.map((image, index) => (
+                <Box
+                  key={index}
+                  sx={{
+                    position: 'relative',
+                    paddingTop: '75%',
+                    borderRadius: 1,
+                    overflow: 'hidden',
+                    border: '1px solid',
+                    borderColor: 'divider'
+                  }}
+                >
+                  <img
+                    src={typeof image === 'string' ? image : URL.createObjectURL(image)}
+                    alt={`Property image ${index + 1}`}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover'
+                    }}
+                  />
+                  <IconButton
+                    size="small"
+                    onClick={() => handleDeleteImage(index)}
+                    sx={{
+                      position: 'absolute',
+                      top: 8,
+                      right: 8,
+                      bgcolor: 'rgba(255, 255, 255, 0.8)',
+                      '&:hover': {
+                        bgcolor: 'rgba(255, 255, 255, 0.9)'
+                      }
+                    }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Box>
+              ))}
+              
+              {formData.images.length < 10 && (
+                <Box
+                  component="label"
+                  sx={{
+                    position: 'relative',
+                    paddingTop: '75%',
+                    borderRadius: 1,
+                    border: '2px dashed',
+                    borderColor: 'primary.main',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    '&:hover': {
+                      borderColor: 'primary.dark',
+                      bgcolor: 'action.hover'
+                    }
+                  }}
+                >
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageChange}
+                  />
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      textAlign: 'center'
+                    }}
+                  >
+                    <CloudUploadIcon sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
+                    <Typography variant="body2" color="text.secondary">
+                      Upload Images
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+            </Box>
+          </Box>
+        </Paper>
+
+        {/* Next Button */}
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+          {isFirstStep && onCancel && (
+            <Button
+              variant="outlined"
+              color="inherit"
+              onClick={onCancel}
+              sx={{ minWidth: 120 }}
+            >
+              Cancel
+            </Button>
           )}
-        </button>
-      </div>
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            size="large"
+            disabled={loading}
+            endIcon={isFirstStep ? <ArrowForwardIcon /> : null}
+            sx={{ 
+              minWidth: 200,
+              py: 1.5
+            }}
+          >
+            {loading ? 'Saving...' : isFirstStep ? 'Next' : 'Save Property'}
+          </Button>
+        </Box>
+      </Box>
     </form>
   );
-} 
+};
+
+export default PropertyForm; 
