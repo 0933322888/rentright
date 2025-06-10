@@ -9,10 +9,17 @@ import {
   deleteTenant,
   deleteApplication,
   getTenantById,
-  updateTenant
+  updateTenant,
+  rejectProperty,
+  addViewingDates,
+  updateViewingDate,
+  deleteViewingDate,
+  submitForReview,
+  getPropertyForReview
 } from '../controllers/adminController.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, restrictTo } from '../middleware/authMiddleware.js';
 import { isAdmin } from '../middleware/adminMiddleware.js';
+import { loadProperty } from '../middleware/propertyMiddleware.js';
 
 const router = express.Router();
 
@@ -22,8 +29,13 @@ router.use(isAdmin);
 
 // Property routes
 router.get('/properties', getAllProperties);
-router.patch('/properties/:id/approve', approveProperty);
-router.delete('/properties/:id', deleteProperty);
+router.get('/properties/:id/review', loadProperty, getPropertyForReview);
+router.post('/properties/:id/viewing-dates', loadProperty, addViewingDates);
+router.patch('/properties/:id/viewing-dates/:dateId', loadProperty, updateViewingDate);
+router.delete('/properties/:id/viewing-dates/:dateId', loadProperty, deleteViewingDate);
+router.patch('/properties/:id/approve', loadProperty, approveProperty);
+router.patch('/properties/:id/reject', loadProperty, rejectProperty);
+router.delete('/properties/:id', loadProperty, deleteProperty);
 
 // Landlord routes
 router.get('/landlords', getAllLandlords);

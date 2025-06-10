@@ -19,7 +19,7 @@ export const API_ENDPOINTS = {
   
   // Application endpoints
   APPLICATIONS: `${BASE_URL}/api/applications`,
-  PROPERTY_APPLICATIONS: (propertyId) => `${BASE_URL}/api/properties/${propertyId}/applications`,
+  PROPERTY_APPLICATIONS: (propertyId) => `${BASE_URL}/api/applications/property/${propertyId}`,
   PROPERTY_DOCUMENTS: (propertyId) => `${BASE_URL}/api/properties/${propertyId}/documents`,
   
   // Admin endpoints
@@ -27,6 +27,8 @@ export const API_ENDPOINTS = {
   ADMIN_LANDLORDS: `${BASE_URL}/api/admin/landlords`,
   ADMIN_TENANTS: `${BASE_URL}/api/admin/tenants`,
   ADMIN_APPLICATIONS: `${BASE_URL}/api/admin/applications`,
+  ADMIN_PROPERTY_VIEWING_DATES: (propertyId, dateId) => 
+    `${BASE_URL}/api/admin/properties/${propertyId}/viewing-dates/${dateId}`,
 
   // Ticket endpoints
   TICKETS: `${BASE_URL}/api/tickets`,

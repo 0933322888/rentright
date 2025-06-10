@@ -19,7 +19,8 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  LinearProgress
+  LinearProgress,
+  IconButton
 } from '@mui/material';
 import TabPanel from '@mui/lab/TabPanel';
 import TabContext from '@mui/lab/TabContext';
@@ -39,6 +40,8 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import PersonIcon from '@mui/icons-material/Person';
 import ErrorIcon from '@mui/icons-material/Error';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 
 export default function MyProperties() {
   const { user } = useAuth();
@@ -56,6 +59,7 @@ export default function MyProperties() {
   const [ticketsLoading, setTicketsLoading] = useState(false);
   const [ticketsError, setTicketsError] = useState('');
   const [clickedButton, setClickedButton] = useState(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     fetchProperties();
@@ -161,7 +165,7 @@ export default function MyProperties() {
       submitData.append('description', property.description);
       submitData.append('type', property.type);
       submitData.append('price', property.price);
-      submitData.append('status', 'Submitted');
+      submitData.append('status', 'submitted');
 
       // Add location fields
       submitData.append('location[street]', property.location.street);
@@ -179,9 +183,7 @@ export default function MyProperties() {
 
       // Add existing images
       if (property.images && property.images.length > 0) {
-        property.images.forEach(image => {
-          submitData.append('existingImages', image);
-        });
+        submitData.append('existingImages', JSON.stringify(property.images));
       }
 
       await axios.put(`${API_ENDPOINTS.PROPERTIES}/${propertyId}`, submitData, {
@@ -278,6 +280,29 @@ export default function MyProperties() {
       toast.error('Failed to update ticket status');
     }
   };
+
+  const handleNextImage = () => {
+    const property = properties[selectedPropertyIndex];
+    if (property.images && property.images.length > 0) {
+      setCurrentImageIndex((prevIndex) => 
+        prevIndex === property.images.length - 1 ? 0 : prevIndex + 1
+      );
+    }
+  };
+
+  const handlePrevImage = () => {
+    const property = properties[selectedPropertyIndex];
+    if (property.images && property.images.length > 0) {
+      setCurrentImageIndex((prevIndex) => 
+        prevIndex === 0 ? property.images.length - 1 : prevIndex - 1
+      );
+    }
+  };
+
+  // Reset currentImageIndex when property changes
+  useEffect(() => {
+    setCurrentImageIndex(0);
+  }, [selectedPropertyIndex]);
 
   if (isLoading) {
     return (
@@ -394,10 +419,13 @@ export default function MyProperties() {
                     label={
                       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 1 }}>
                         <img
-                          src={property.images && property.images.length > 0 
-                            ? property.images[0].startsWith('http') 
-                              ? property.images[0] 
-                              : `http://localhost:5000/uploads/${property.images[0]}`
+                          src={property.images && 
+                                property.images.length > 0 && 
+                                property.images[currentImageIndex] ? 
+                            (typeof property.images[currentImageIndex] === 'string' && 
+                             property.images[currentImageIndex].startsWith('http') 
+                              ? property.images[currentImageIndex] 
+                              : `http://localhost:5000/uploads/${property.images[currentImageIndex]}`)
                             : 'https://via.placeholder.com/400x300'}
                           alt={property.title}
                           className="w-24 h-24 object-cover rounded-lg mb-2"
@@ -594,24 +622,98 @@ export default function MyProperties() {
                                 boxShadow: '0 8px 24px rgba(25,118,210,0.18)'
                               }
                             }}>
-                              <CardMedia
-                                component="img"
-                                height="300"
-                                image={property.images && property.images.length > 0 
-                                  ? property.images[0].startsWith('http') 
-                                    ? property.images[0] 
-                                    : `http://localhost:5000/uploads/${property.images[0]}`
-                                  : 'https://via.placeholder.com/400x300'}
-                                alt={property.title}
-                                sx={{
-                                  position: 'relative',
-                                  borderRadius: 3,
-                                  transition: 'transform 0.4s cubic-bezier(0.4,0,0.2,1)',
-                                  '&:hover': {
-                                    transform: 'scale(1.04)'
-                                  }
-                                }}
-                              />
+                              <Box sx={{ position: 'relative' }}>
+                                <CardMedia
+                                  component="img"
+                                  height="800"
+                                  image={property.images && 
+                                        property.images.length > 0 && 
+                                        property.images[currentImageIndex] ? 
+                                    (typeof property.images[currentImageIndex] === 'string' && 
+                                     property.images[currentImageIndex].startsWith('http') 
+                                      ? property.images[currentImageIndex] 
+                                      : `http://localhost:5000/uploads/${property.images[currentImageIndex]}`)
+                                    : 'https://via.placeholder.com/400x300'}
+                                  alt={property.title}
+                                  sx={{
+                                    position: 'relative',
+                                    borderRadius: 3,
+                                    height: '800px !important',
+                                    width: '100% !important',
+                                    objectFit: 'cover',
+                                    objectPosition: 'center',
+                                    transition: 'transform 0.4s cubic-bezier(0.4,0,0.2,1)',
+                                    '&:hover': {
+                                      transform: 'scale(1.04)'
+                                    }
+                                  }}
+                                />
+                                {property.images && property.images.length > 1 && (
+                                  <>
+                                    <IconButton
+                                      onClick={handlePrevImage}
+                                      sx={{
+                                        position: 'absolute',
+                                        left: 16,
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        bgcolor: 'rgba(255, 255, 255, 0.8)',
+                                        '&:hover': {
+                                          bgcolor: 'rgba(255, 255, 255, 0.9)',
+                                        },
+                                        zIndex: 1
+                                      }}
+                                    >
+                                      <NavigateBeforeIcon />
+                                    </IconButton>
+                                    <IconButton
+                                      onClick={handleNextImage}
+                                      sx={{
+                                        position: 'absolute',
+                                        right: 16,
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        bgcolor: 'rgba(255, 255, 255, 0.8)',
+                                        '&:hover': {
+                                          bgcolor: 'rgba(255, 255, 255, 0.9)',
+                                        },
+                                        zIndex: 1
+                                      }}
+                                    >
+                                      <NavigateNextIcon />
+                                    </IconButton>
+                                    <Box
+                                      sx={{
+                                        position: 'absolute',
+                                        bottom: 16,
+                                        left: '50%',
+                                        transform: 'translateX(-50%)',
+                                        display: 'flex',
+                                        gap: 1,
+                                        bgcolor: 'rgba(0, 0, 0, 0.5)',
+                                        padding: '4px 8px',
+                                        borderRadius: '16px',
+                                        zIndex: 1
+                                      }}
+                                    >
+                                      {property.images.map((_, index) => (
+                                        <Box
+                                          key={index}
+                                          sx={{
+                                            width: 8,
+                                            height: 8,
+                                            borderRadius: '50%',
+                                            bgcolor: index === currentImageIndex ? 'white' : 'rgba(255, 255, 255, 0.5)',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s'
+                                          }}
+                                          onClick={() => setCurrentImageIndex(index)}
+                                        />
+                                      ))}
+                                    </Box>
+                                  </>
+                                )}
+                              </Box>
                               <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                                   <Typography gutterBottom variant="h5" component="div" sx={{ fontWeight: 'bold', fontSize: '2rem', color: 'text.primary' }}>
@@ -693,7 +795,7 @@ export default function MyProperties() {
                                   >
                                     Edit
                                   </Button>
-                                  {property.status === 'New' && (
+                                  {property.status === 'new' && (
                                     <Button
                                       variant="contained"
                                       color="success"
@@ -795,10 +897,10 @@ export default function MyProperties() {
                                         </Typography>
                                         <Chip
                                           label={application.status.charAt(0).toUpperCase() + application.status.slice(1)}
-                                          size="small"
                                           color={
                                             application.status === 'approved' ? 'success' :
-                                            application.status === 'declined' ? 'error' :
+                                            application.status === 'rejected' ? 'error' :
+                                            application.status === 'viewing' ? 'info' :
                                             'warning'
                                           }
                                           sx={{ mt: 0.5 }}
@@ -826,13 +928,50 @@ export default function MyProperties() {
                                       label={application.status.charAt(0).toUpperCase() + application.status.slice(1)}
                                       color={
                                         application.status === 'approved' ? 'success' :
-                                        application.status === 'declined' ? 'error' :
+                                        application.status === 'rejected' ? 'error' :
+                                        application.status === 'viewing' ? 'info' :
                                         'warning'
                                       }
                                       sx={{ ml: 2 }}
                                     />
                                   </Box>
 
+                                  {/* Application Actions */}
+                                  {application.status === 'pending' && (
+                                    <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
+                                      <Button
+                                        variant="contained"
+                                        color="success"
+                                        onClick={() => handleApplicationAction(application._id, 'approve')}
+                                      >
+                                        Approve
+                                      </Button>
+                                      <Button
+                                        variant="contained"
+                                        color="error"
+                                        onClick={() => handleApplicationAction(application._id, 'reject')}
+                                      >
+                                        Reject
+                                      </Button>
+                                    </Box>
+                                  )}
+
+                                  {application.status === 'viewing' && (
+                                    <Box sx={{ mt: 2, p: 2, bgcolor: 'info.light', borderRadius: 1 }}>
+                                      <Typography variant="body2" color="info.contrastText">
+                                        This application is pending a property viewing. You can review the application after the viewing is completed.
+                                      </Typography>
+                                      {application.viewingDate && (
+                                        <Box sx={{ mt: 1 }}>
+                                          <Typography variant="body2" color="info.contrastText">
+                                            Scheduled viewing: {new Date(application.viewingDate).toLocaleDateString()} at {application.viewingTime}
+                                          </Typography>
+                                        </Box>
+                                      )}
+                                    </Box>
+                                  )}
+
+                                  {/* Application Details */}
                                   <Grid container spacing={3}>
                                     {/* Tenant Score Section */}
                                     <Grid item xs={12} md={4}>
@@ -1036,55 +1175,66 @@ export default function MyProperties() {
                                   {application.tenantDocument && (
                                     <Paper 
                                       variant="outlined" 
-                                      sx={{ 
-                                        mt: 3,
-                                        p: 3,
-                                        transition: 'all 0.2s',
-                                        '&:hover': {
-                                          boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                                        }
-                                      }}
+                                      sx={{ mt: 3, p: 3, transition: 'all 0.2s', '&:hover': { boxShadow: '0 4px 8px rgba(0,0,0,0.1)' } }}
                                     >
                                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
                                         <PersonIcon color="primary" />
-                                        <Typography variant="h6" fontWeight="bold">
-                                          Tenant Profile
-                                        </Typography>
+                                        <Typography variant="h6" fontWeight="bold">Tenant Profile</Typography>
                                       </Box>
-                                      <Grid container spacing={3}>
-                                        <Grid item xs={12} md={6}>
-                                          <Box sx={{ 
-                                            p: 2, 
-                                            bgcolor: 'grey.50', 
-                                            borderRadius: 2,
-                                            border: '1px solid',
-                                            borderColor: 'divider'
-                                          }}>
-                                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                              Eviction History
-                                            </Typography>
-                                            <Box sx={{ 
-                                              display: 'flex', 
-                                              alignItems: 'center', 
-                                              gap: 1,
-                                              p: 1.5,
-                                              bgcolor: 'white',
-                                              borderRadius: 1
-                                            }}>
-                                              {application.tenantDocument.hasBeenEvicted === 'yes' ? (
-                                                <ErrorIcon color="error" />
-                                              ) : (
-                                                <CheckCircleIcon color="success" />
-                                              )}
-                                              <Typography variant="body1">
-                                                {application.tenantDocument.hasBeenEvicted === 'yes' 
-                                                  ? 'Has been evicted previously' 
-                                                  : 'No previous evictions'}
+
+                                      {/* --- Tenant Profile Summary --- */}
+                                      {(() => {
+                                        // Extract and parse values safely
+                                        const netIncome = Number(application.tenantDocument.monthlyNetIncome) || 0;
+                                        const additionalIncome = application.tenantDocument.hasAdditionalIncome === 'yes' ? (Number(application.tenantDocument.additionalIncomeAmount) || 0) : 0;
+                                        const debt = Number(application.tenantDocument.monthlyDebtRepayment) || 0;
+                                        const currentRent = application.tenantDocument.currentlyPaysRent === 'yes' ? (Number(application.tenantDocument.currentRentAmount) || 0) : 0;
+                                        const totalIncome = netIncome + additionalIncome;
+                                        const totalExpenses = debt + currentRent;
+                                        const netDisposable = totalIncome - totalExpenses;
+                                        const incomeExpenseRatio = totalExpenses > 0 ? totalIncome / totalExpenses : null;
+                                        let riskLevel = 'Low Risk';
+                                        let riskColor = 'success';
+                                        if (incomeExpenseRatio !== null) {
+                                          if (incomeExpenseRatio < 1) { riskLevel = 'High Risk'; riskColor = 'error'; }
+                                          else if (incomeExpenseRatio < 2) { riskLevel = 'Medium Risk'; riskColor = 'warning'; }
+                                        }
+                                        return (
+                                          <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.100', borderRadius: 2, border: '1px solid', borderColor: 'divider', display: 'flex', flexWrap: 'wrap', gap: 3, alignItems: 'center' }}>
+                                            <Box sx={{ minWidth: 180 }}>
+                                              <Typography variant="subtitle2" color="text.secondary">Net Disposable Income</Typography>
+                                              <Typography variant="h6" fontWeight="bold" title="Net Disposable = Income + Additional - Debts - Rent">
+                                                ${netDisposable.toLocaleString()}
                                               </Typography>
                                             </Box>
+                                            <Box sx={{ minWidth: 220 }}>
+                                              <Typography variant="subtitle2" color="text.secondary">Income vs. Expenses Ratio</Typography>
+                                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <Box sx={{ width: 100, mr: 1 }}>
+                                                  <LinearProgress 
+                                                    variant="determinate" 
+                                                    value={incomeExpenseRatio !== null ? Math.min(incomeExpenseRatio * 50, 100) : 0} 
+                                                    color={riskColor}
+                                                    sx={{ height: 10, borderRadius: 5 }}
+                                                  />
+                                                </Box>
+                                                <Typography variant="body1" fontWeight="bold">
+                                                  {incomeExpenseRatio !== null ? incomeExpenseRatio.toFixed(2) : 'N/A'}
+                                                </Typography>
+                                              </Box>
+                                            </Box>
+                                            <Box>
+                                              <Typography variant="subtitle2" color="text.secondary">Risk Level</Typography>
+                                              <Chip label={riskLevel} color={riskColor} sx={{ fontWeight: 'bold', fontSize: 16 }} />
+                                            </Box>
                                           </Box>
-                                        </Grid>
-                                        <Grid item xs={12} md={6}>
+                                        );
+                                      })()}
+                                      {/* --- End Tenant Profile Summary --- */}
+
+                                      <Grid container spacing={3}>
+                                        {/* Employment & Income Section */}
+                                        <Grid item xs={12}>
                                           <Box sx={{ 
                                             p: 2, 
                                             bgcolor: 'grey.50', 
@@ -1092,49 +1242,279 @@ export default function MyProperties() {
                                             border: '1px solid',
                                             borderColor: 'divider'
                                           }}>
-                                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                                              Payment Capability
+                                            <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+                                              Employment & Income
                                             </Typography>
-                                            <Box sx={{ 
-                                              display: 'flex', 
-                                              flexDirection: 'column',
-                                              gap: 1.5
-                                            }}>
-                                              <Box sx={{ 
-                                                display: 'flex', 
-                                                alignItems: 'center', 
-                                                gap: 1,
-                                                p: 1.5,
-                                                bgcolor: 'white',
-                                                borderRadius: 1
-                                              }}>
-                                                {application.tenantDocument.canPayMoreThanOneMonth === 'yes' ? (
-                                                  <CheckCircleIcon color="success" />
-                                                ) : (
-                                                  <InfoIcon color="info" />
-                                                )}
-                                                <Typography variant="body1">
-                                                  {application.tenantDocument.canPayMoreThanOneMonth === 'yes' 
-                                                    ? 'Can pay multiple months in advance' 
-                                                    : 'Can pay one month at a time'}
-                                                </Typography>
-                                              </Box>
-                                              {application.tenantDocument.canPayMoreThanOneMonth === 'yes' && (
+                                            <Grid container spacing={2}>
+                                              <Grid item xs={12} md={6}>
                                                 <Box sx={{ 
-                                                  display: 'flex', 
-                                                  alignItems: 'center', 
-                                                  gap: 1,
                                                   p: 1.5,
                                                   bgcolor: 'white',
                                                   borderRadius: 1
                                                 }}>
-                                                  <AttachMoneyIcon color="success" />
+                                                  <Typography variant="body2" color="text.secondary">
+                                                    Employment Status
+                                                  </Typography>
                                                   <Typography variant="body1">
-                                                    Can pay up to {application.tenantDocument.monthsAheadCanPay} months in advance
+                                                    {application.tenantDocument.isCurrentlyEmployed === 'yes' ? 'Currently Employed' : 'Not Currently Employed'}
                                                   </Typography>
                                                 </Box>
+                                              </Grid>
+                                              {application.tenantDocument.isCurrentlyEmployed === 'yes' && (
+                                                <>
+                                                  <Grid item xs={12} md={6}>
+                                                    <Box sx={{ 
+                                                      p: 1.5,
+                                                      bgcolor: 'white',
+                                                      borderRadius: 1
+                                                    }}>
+                                                      <Typography variant="body2" color="text.secondary">
+                                                        Employment Type
+                                                      </Typography>
+                                                      <Typography variant="body1">
+                                                        {application.tenantDocument.employmentType}
+                                                      </Typography>
+                                                    </Box>
+                                                  </Grid>
+                                                  <Grid item xs={12} md={6}>
+                                                    <Box sx={{ 
+                                                      p: 1.5,
+                                                      bgcolor: 'white',
+                                                      borderRadius: 1
+                                                    }}>
+                                                      <Typography variant="body2" color="text.secondary">
+                                                        Monthly Net Income
+                                                      </Typography>
+                                                      <Typography variant="body1">
+                                                        ${application.tenantDocument.monthlyNetIncome?.toLocaleString()}
+                                                      </Typography>
+                                                    </Box>
+                                                  </Grid>
+                                                </>
                                               )}
-                                            </Box>
+                                              <Grid item xs={12}>
+                                                <Box sx={{ 
+                                                  p: 1.5,
+                                                  bgcolor: 'white',
+                                                  borderRadius: 1
+                                                }}>
+                                                  <Typography variant="body2" color="text.secondary">
+                                                    Additional Income
+                                                  </Typography>
+                                                  <Typography variant="body1">
+                                                    {application.tenantDocument.hasAdditionalIncome === 'yes' 
+                                                      ? `Yes - ${application.tenantDocument.additionalIncomeDescription}`
+                                                      : 'No additional income'}
+                                                  </Typography>
+                                                </Box>
+                                              </Grid>
+                                            </Grid>
+                                          </Box>
+                                        </Grid>
+
+                                        {/* Expenses & Debts Section */}
+                                        <Grid item xs={12}>
+                                          <Box sx={{ 
+                                            p: 2, 
+                                            bgcolor: 'grey.50', 
+                                            borderRadius: 2,
+                                            border: '1px solid',
+                                            borderColor: 'divider'
+                                          }}>
+                                            <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+                                              Expenses & Debts
+                                            </Typography>
+                                            <Grid container spacing={2}>
+                                              <Grid item xs={12} md={6}>
+                                                <Box sx={{ 
+                                                  p: 1.5,
+                                                  bgcolor: 'white',
+                                                  borderRadius: 1
+                                                }}>
+                                                  <Typography variant="body2" color="text.secondary">
+                                                    Monthly Debt Repayment
+                                                  </Typography>
+                                                  <Typography variant="body1">
+                                                    ${application.tenantDocument.monthlyDebtRepayment?.toLocaleString()}
+                                                  </Typography>
+                                                </Box>
+                                              </Grid>
+                                              <Grid item xs={12} md={6}>
+                                                <Box sx={{ 
+                                                  p: 1.5,
+                                                  bgcolor: 'white',
+                                                  borderRadius: 1
+                                                }}>
+                                                  <Typography variant="body2" color="text.secondary">
+                                                    Child/Spousal Support
+                                                  </Typography>
+                                                  <Typography variant="body1">
+                                                    {application.tenantDocument.paysChildSupport === 'yes'
+                                                      ? `Yes - $${application.tenantDocument.childSupportAmount?.toLocaleString()}`
+                                                      : 'No'}
+                                                  </Typography>
+                                                </Box>
+                                              </Grid>
+                                            </Grid>
+                                          </Box>
+                                        </Grid>
+
+                                        {/* Rental History Section */}
+                                        <Grid item xs={12}>
+                                          <Box sx={{ 
+                                            p: 2, 
+                                            bgcolor: 'grey.50', 
+                                            borderRadius: 2,
+                                            border: '1px solid',
+                                            borderColor: 'divider'
+                                          }}>
+                                            <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+                                              Rental History
+                                            </Typography>
+                                            <Grid container spacing={2}>
+                                              <Grid item xs={12} md={6}>
+                                                <Box sx={{ 
+                                                  p: 1.5,
+                                                  bgcolor: 'white',
+                                                  borderRadius: 1
+                                                }}>
+                                                  <Typography variant="body2" color="text.secondary">
+                                                    Eviction History
+                                                  </Typography>
+                                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    {application.tenantDocument.hasBeenEvicted === 'yes' ? (
+                                                      <ErrorIcon color="error" />
+                                                    ) : (
+                                                      <CheckCircleIcon color="success" />
+                                                    )}
+                                                    <Typography variant="body1">
+                                                      {application.tenantDocument.hasBeenEvicted === 'yes' 
+                                                        ? 'Has been evicted previously' 
+                                                        : 'No previous evictions'}
+                                                    </Typography>
+                                                  </Box>
+                                                </Box>
+                                              </Grid>
+                                              <Grid item xs={12} md={6}>
+                                                <Box sx={{ 
+                                                  p: 1.5,
+                                                  bgcolor: 'white',
+                                                  borderRadius: 1
+                                                }}>
+                                                  <Typography variant="body2" color="text.secondary">
+                                                    Current Rent
+                                                  </Typography>
+                                                  <Typography variant="body1">
+                                                    {application.tenantDocument.currentlyPaysRent === 'yes'
+                                                      ? `$${application.tenantDocument.currentRentAmount?.toLocaleString()}`
+                                                      : 'Not currently renting'}
+                                                  </Typography>
+                                                </Box>
+                                              </Grid>
+                                            </Grid>
+                                          </Box>
+                                        </Grid>
+
+                                        {/* Financial Preparedness Section */}
+                                        <Grid item xs={12}>
+                                          <Box sx={{ 
+                                            p: 2, 
+                                            bgcolor: 'grey.50', 
+                                            borderRadius: 2,
+                                            border: '1px solid',
+                                            borderColor: 'divider'
+                                          }}>
+                                            <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+                                              Financial Preparedness
+                                            </Typography>
+                                            <Grid container spacing={2}>
+                                              <Grid item xs={12} md={6}>
+                                                <Box sx={{ 
+                                                  p: 1.5,
+                                                  bgcolor: 'white',
+                                                  borderRadius: 1
+                                                }}>
+                                                  <Typography variant="body2" color="text.secondary">
+                                                    Two Months Rent Savings
+                                                  </Typography>
+                                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    {application.tenantDocument.hasTwoMonthsRentSavings === 'yes' ? (
+                                                      <CheckCircleIcon color="success" />
+                                                    ) : (
+                                                      <InfoIcon color="info" />
+                                                    )}
+                                                    <Typography variant="body1">
+                                                      {application.tenantDocument.hasTwoMonthsRentSavings === 'yes'
+                                                        ? 'Has savings equivalent to two months rent'
+                                                        : 'Does not have two months rent in savings'}
+                                                    </Typography>
+                                                  </Box>
+                                                </Box>
+                                              </Grid>
+                                              <Grid item xs={12} md={6}>
+                                                <Box sx={{ 
+                                                  p: 1.5,
+                                                  bgcolor: 'white',
+                                                  borderRadius: 1
+                                                }}>
+                                                  <Typography variant="body2" color="text.secondary">
+                                                    Financial Documents
+                                                  </Typography>
+                                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    {application.tenantDocument.canShareFinancialDocuments === 'yes' ? (
+                                                      <CheckCircleIcon color="success" />
+                                                    ) : (
+                                                      <InfoIcon color="info" />
+                                                    )}
+                                                    <Typography variant="body1">
+                                                      {application.tenantDocument.canShareFinancialDocuments === 'yes'
+                                                        ? 'Willing to share financial documents'
+                                                        : 'Not willing to share financial documents'}
+                                                    </Typography>
+                                                  </Box>
+                                                </Box>
+                                              </Grid>
+                                            </Grid>
+                                          </Box>
+                                        </Grid>
+
+                                        {/* Payment Capability Section */}
+                                        <Grid item xs={12}>
+                                          <Box sx={{ 
+                                            p: 2, 
+                                            bgcolor: 'grey.50', 
+                                            borderRadius: 2,
+                                            border: '1px solid',
+                                            borderColor: 'divider'
+                                          }}>
+                                            <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+                                              Payment Capability
+                                            </Typography>
+                                            <Grid container spacing={2}>
+                                              <Grid item xs={12}>
+                                                <Box sx={{ 
+                                                  p: 1.5,
+                                                  bgcolor: 'white',
+                                                  borderRadius: 1
+                                                }}>
+                                                  <Typography variant="body2" color="text.secondary">
+                                                    Advance Payment
+                                                  </Typography>
+                                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    {application.tenantDocument.canPayMoreThanOneMonth === 'yes' ? (
+                                                      <CheckCircleIcon color="success" />
+                                                    ) : (
+                                                      <InfoIcon color="info" />
+                                                    )}
+                                                    <Typography variant="body1">
+                                                      {application.tenantDocument.canPayMoreThanOneMonth === 'yes'
+                                                        ? `Can pay up to ${application.tenantDocument.monthsAheadCanPay} months in advance`
+                                                        : 'Can pay one month at a time'}
+                                                    </Typography>
+                                                  </Box>
+                                                </Box>
+                                              </Grid>
+                                            </Grid>
                                           </Box>
                                         </Grid>
                                       </Grid>
@@ -1244,61 +1624,6 @@ export default function MyProperties() {
                                         </Box>
                                       </AccordionDetails>
                                     </Accordion>
-                                  )}
-
-                                  {application.status === 'pending' && (
-                                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 3 }}>
-                                      <Button
-                                        variant="outlined"
-                                        color="error"
-                                        onClick={() => {
-                                          setClickedButton('reject');
-                                          setTimeout(() => setClickedButton(null), 300);
-                                          handleApplicationAction(application._id, 'decline');
-                                        }}
-                                        startIcon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                        </svg>}
-                                        sx={{
-                                          borderRadius: 999,
-                                          boxShadow: '0 2px 8px rgba(211,47,47,0.10)',
-                                          transition: 'all 0.2s, background-color 0.2s',
-                                          fontWeight: 600,
-                                          backgroundColor: clickedButton === 'reject' ? 'rgba(211,47,47,0.15)' : undefined,
-                                          '&:hover': {
-                                            boxShadow: '0 4px 16px rgba(211,47,47,0.18)',
-                                            transform: 'scale(1.03)'
-                                          }
-                                        }}
-                                      >
-                                        Reject Application
-                                      </Button>
-                                      <Button
-                                        variant="contained"
-                                        color="success"
-                                        onClick={() => {
-                                          setClickedButton('approve');
-                                          setTimeout(() => setClickedButton(null), 300);
-                                          handleApplicationAction(application._id, 'approve');
-                                        }}
-                                        startIcon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                        </svg>}
-                                        sx={{
-                                          borderRadius: 999,
-                                          boxShadow: '0 2px 8px rgba(46,125,50,0.10)',
-                                          transition: 'all 0.2s, background-color 0.2s',
-                                          fontWeight: 600,
-                                          backgroundColor: clickedButton === 'approve' ? 'rgba(46,125,50,0.15)' : undefined,
-                                          '&:hover': {
-                                            boxShadow: '0 4px 16px rgba(46,125,50,0.18)',
-                                            transform: 'scale(1.03)'
-                                          }
-                                        }}
-                                      >
-                                        Approve Application
-                                      </Button>
-                                    </Box>
                                   )}
                                 </Paper>
                               </TabPanel>

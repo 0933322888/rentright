@@ -163,7 +163,8 @@ export default function AdminProperties() {
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
             >
               <option value="all">All</option>
-              <option value="pending">Pending</option>
+              <option value="new">New</option>
+              <option value="review">Review</option>
               <option value="active">Active</option>
               <option value="rented">Rented</option>
             </select>

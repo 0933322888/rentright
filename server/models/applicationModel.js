@@ -13,27 +13,39 @@ const applicationSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'approved', 'declined', 'expired'],
+    required: true,
+    enum: ['viewing', 'pending', 'approved', 'rejected', 'cancelled'],
     default: 'pending'
   },
+  wantsViewing: {
+    type: Boolean,
+    required: true,
+    default: false
+  },
   viewingDate: {
-    type: Date,
-    required: true
+    type: Date
   },
   viewingTime: {
-    type: String,
-    required: true
+    type: String
   },
   tenantScoring: {
     type: Number,
-    required: true,
-    min: 0,
-    max: 100
+    default: 0
   },
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
   }
+});
+
+// Update the updatedAt timestamp before saving
+applicationSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  next();
 });
 
 // Index to prevent duplicate applications

@@ -113,22 +113,52 @@ export const updateTenantProfile = async (req, res) => {
             filename: filename,
             uploadedAt: new Date(),
             thumbnailUrl: thumbnailUrl,
-            mimeType: file.mimetype
+            mimeType: file.mimetype,
+            originalName: file.name
           });
         }
       }
     }
 
-    // Update additional fields
-    if (req.body.hasBeenEvicted) {
-      tenantDocument.hasBeenEvicted = req.body.hasBeenEvicted;
-    }
-    if (req.body.canPayMoreThanOneMonth) {
-      tenantDocument.canPayMoreThanOneMonth = req.body.canPayMoreThanOneMonth;
-    }
-    if (req.body.monthsAheadCanPay) {
-      tenantDocument.monthsAheadCanPay = req.body.monthsAheadCanPay;
-    }
+    // Update all profile fields
+    const fieldsToUpdate = {
+      // Employment & Income
+      isCurrentlyEmployed: req.body.isCurrentlyEmployed,
+      employmentType: req.body.employmentType,
+      monthlyNetIncome: req.body.monthlyNetIncome,
+      hasAdditionalIncome: req.body.hasAdditionalIncome,
+      additionalIncomeDescription: req.body.additionalIncomeDescription,
+      
+      // Expenses & Debts
+      monthlyDebtRepayment: req.body.monthlyDebtRepayment,
+      paysChildSupport: req.body.paysChildSupport,
+      childSupportAmount: req.body.childSupportAmount,
+      
+      // Rental History
+      hasBeenEvicted: req.body.hasBeenEvicted,
+      currentlyPaysRent: req.body.currentlyPaysRent,
+      currentRentAmount: req.body.currentRentAmount,
+      
+      // Financial Preparedness
+      hasTwoMonthsRentSavings: req.body.hasTwoMonthsRentSavings,
+      canShareFinancialDocuments: req.body.canShareFinancialDocuments,
+      
+      // Existing fields
+      canPayMoreThanOneMonth: req.body.canPayMoreThanOneMonth,
+      monthsAheadCanPay: req.body.monthsAheadCanPay
+    };
+
+    // Update only the fields that are provided in the request
+    Object.entries(fieldsToUpdate).forEach(([field, value]) => {
+      if (value !== undefined) {
+        // Convert numeric fields
+        if (['monthlyNetIncome', 'monthlyDebtRepayment', 'childSupportAmount', 'currentRentAmount', 'monthsAheadCanPay'].includes(field)) {
+          tenantDocument[field] = Number(value);
+        } else {
+          tenantDocument[field] = value;
+        }
+      }
+    });
 
     const savedDocument = await tenantDocument.save();
     console.log('Saved document:', savedDocument);

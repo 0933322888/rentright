@@ -136,9 +136,9 @@ const PropertyDetails = () => {
       }
 
       const response = await axios.post(
-        API_ENDPOINTS.APPLICATIONS,
+        `${API_ENDPOINTS.PROPERTY(id)}/apply`,
         { 
-          property: id,
+          wantsViewing: true,
           viewingDate: viewingData.viewingDate,
           viewingTime: viewingData.viewingTime
         },
@@ -207,6 +207,7 @@ const PropertyDetails = () => {
         onHide={() => setShowViewingModal(false)}
         onSubmit={handleViewingSubmit}
         propertyTitle={property?.title}
+        propertyId={property?._id}
       />
 
       <ApplicationConfirmation
@@ -272,7 +273,9 @@ const PropertyDetails = () => {
             {/* Status Badge */}
             {property.status && (
               <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ml-auto
-                ${property.status === 'Available' ? 'bg-green-100 text-green-800' : property.status === 'Rented' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}
+                ${property.status === 'active' ? 'bg-green-100 text-green-800' : 
+                  property.status === 'rented' ? 'bg-red-100 text-red-800' : 
+                  'bg-yellow-100 text-yellow-800'}`}
               >
                 {property.status}
               </span>

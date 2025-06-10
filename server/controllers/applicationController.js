@@ -83,14 +83,39 @@ export const createApplication = async (req, res) => {
       return res.status(400).json({ message: 'Viewing date and time are required' });
     }
 
+    // Find the viewing date and time slot in the property
+    const viewingDateObj = new Date(viewingDate);
+    const [startTime] = viewingTime.split('-');
+    
+    const viewingDateEntry = propertyDoc.viewingDates.find(
+      date => date.date.toISOString().split('T')[0] === viewingDateObj.toISOString().split('T')[0]
+    );
+
+    if (!viewingDateEntry) {
+      return res.status(400).json({ message: 'Selected viewing date is not available' });
+    }
+
+    const timeSlot = viewingDateEntry.timeSlots.find(
+      slot => slot.startTime === startTime.trim()
+    );
+
+    if (!timeSlot) {
+      return res.status(400).json({ message: 'Selected time slot is not available' });
+    }
+
+    if (timeSlot.isBooked) {
+      return res.status(400).json({ message: 'This time slot is already booked' });
+    }
+
     // Get tenant's scoring
     const tenant = await User.findById(req.user._id);
-    const tenantScoring = tenant.tenantScoring || Math.floor(Math.random() * 100); // For now, use random number if not set
+    const tenantScoring = tenant.tenantScoring || Math.floor(Math.random() * 100);
 
     const application = new Application({
       property,
       tenant: req.user._id,
-      status: 'pending',
+      status: 'viewing',
+      wantsViewing: true,
       viewingDate,
       viewingTime,
       tenantScoring
@@ -98,10 +123,16 @@ export const createApplication = async (req, res) => {
 
     const savedApplication = await application.save();
 
+    // Mark the time slot as booked
+    timeSlot.isBooked = true;
+    timeSlot.bookedBy = req.user._id;
+    await propertyDoc.save();
+
     // Add application to property's applications array
     propertyDoc.applications.push({
       tenant: req.user._id,
-      status: 'pending',
+      status: 'viewing',
+      wantsViewing: true,
       viewingDate,
       viewingTime,
       tenantScoring
@@ -219,7 +250,8 @@ export const getPropertyApplications = async (req, res) => {
 export const updateApplicationViewing = async (req, res) => {
   try {
     const { viewingDate, viewingTime } = req.body;
-    const application = await Application.findById(req.params.id);
+    const application = await Application.findById(req.params.id)
+      .populate('property', 'viewingDates');
 
     if (!application) {
       return res.status(404).json({ message: 'Application not found' });
@@ -230,12 +262,128 @@ export const updateApplicationViewing = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to update this application' });
     }
 
-    if (viewingDate) application.viewingDate = viewingDate;
-    if (viewingTime) application.viewingTime = viewingTime;
-    await application.save();
+    // If no new viewing details provided, return current application
+    if (!viewingDate && !viewingTime) {
+      return res.json(application);
+    }
+
+    const property = application.property;
+
+    // Unbook the old time slot if it exists
+    if (application.viewingDate && application.viewingTime) {
+      const oldDate = new Date(application.viewingDate);
+      const [oldStartTime] = application.viewingTime.split('-');
+      
+      const oldViewingDateEntry = property.viewingDates.find(
+        date => date.date.toISOString().split('T')[0] === oldDate.toISOString().split('T')[0]
+      );
+
+      if (oldViewingDateEntry) {
+        const oldTimeSlot = oldViewingDateEntry.timeSlots.find(
+          slot => slot.startTime === oldStartTime.trim()
+        );
+
+        if (oldTimeSlot && oldTimeSlot.bookedBy?.toString() === req.user._id.toString()) {
+          oldTimeSlot.isBooked = false;
+          oldTimeSlot.bookedBy = null;
+        }
+      }
+    }
+
+    // Book the new time slot if provided
+    if (viewingDate && viewingTime) {
+      const newDate = new Date(viewingDate);
+      const [newStartTime] = viewingTime.split('-');
+
+      const newViewingDateEntry = property.viewingDates.find(
+        date => date.date.toISOString().split('T')[0] === newDate.toISOString().split('T')[0]
+      );
+
+      if (!newViewingDateEntry) {
+        return res.status(400).json({ message: 'Selected viewing date is not available' });
+      }
+
+      const newTimeSlot = newViewingDateEntry.timeSlots.find(
+        slot => slot.startTime === newStartTime.trim()
+      );
+
+      if (!newTimeSlot) {
+        return res.status(400).json({ message: 'Selected time slot is not available' });
+      }
+
+      if (newTimeSlot.isBooked && newTimeSlot.bookedBy?.toString() !== req.user._id.toString()) {
+        return res.status(400).json({ message: 'This time slot is already booked by another tenant' });
+      }
+
+      // Book the new slot
+      newTimeSlot.isBooked = true;
+      newTimeSlot.bookedBy = req.user._id;
+
+      // Update application with new viewing details
+      application.viewingDate = viewingDate;
+      application.viewingTime = viewingTime;
+    } else if (viewingDate) {
+      application.viewingDate = viewingDate;
+    } else if (viewingTime) {
+      application.viewingTime = viewingTime;
+    }
+
+    // Save both the property (with updated slots) and the application
+    await Promise.all([
+      property.save(),
+      application.save()
+    ]);
 
     res.json(application);
   } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// Promote application from viewing to pending status
+export const promoteApplication = async (req, res) => {
+  try {
+    const application = await Application.findById(req.params.id)
+      .populate('property')
+      .populate('tenant', 'name email');
+
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    // Only allow tenant to promote their own application
+    if (application.tenant._id.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to update this application' });
+    }
+
+    // Only allow promoting from viewing status
+    if (application.status !== 'viewing') {
+      return res.status(400).json({ 
+        message: 'Only applications in viewing status can be promoted to pending' 
+      });
+    }
+
+    // Update application status
+    application.status = 'pending';
+    await application.save();
+
+    // Update property's applications array
+    const property = await Property.findById(application.property._id);
+    const applicationIndex = property.applications.findIndex(
+      app => app.tenant.toString() === application.tenant._id.toString()
+    );
+
+    if (applicationIndex !== -1) {
+      property.applications[applicationIndex].status = 'pending';
+      await property.save();
+    }
+
+    res.json({
+      message: 'Application promoted to pending status successfully',
+      application
+    });
+  } catch (error) {
+    console.error('Error in promoteApplication:', error);
     res.status(400).json({ message: error.message });
   }
 }; 

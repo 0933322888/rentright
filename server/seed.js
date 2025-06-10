@@ -92,6 +92,7 @@ const sampleProperties = [
     description: 'Beautiful modern apartment in the heart of downtown',
     type: 'apartment',
     price: 2500,
+    availableFrom: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
     features: {
       bedrooms: 2,
       bathrooms: 2,
@@ -108,14 +109,50 @@ const sampleProperties = [
       coordinates: [-74.005974, 40.712776] // New York City
     },
     amenities: ['Parking', 'Gym', 'Pool'],
+    viewingDates: [
+      {
+        date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
+        timeSlots: [
+          { startTime: '10:00', endTime: '10:30', isBooked: false },
+          { startTime: '10:30', endTime: '11:00', isBooked: false },
+          { startTime: '11:00', endTime: '11:30', isBooked: false },
+          { startTime: '11:30', endTime: '12:00', isBooked: false },
+          { startTime: '14:00', endTime: '14:30', isBooked: false },
+          { startTime: '14:30', endTime: '15:00', isBooked: false },
+          { startTime: '15:00', endTime: '15:30', isBooked: false },
+          { startTime: '15:30', endTime: '16:00', isBooked: false }
+        ]
+      },
+      {
+        date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days from now
+        timeSlots: [
+          { startTime: '13:00', endTime: '13:30', isBooked: false },
+          { startTime: '13:30', endTime: '14:00', isBooked: false },
+          { startTime: '14:00', endTime: '14:30', isBooked: false },
+          { startTime: '14:30', endTime: '15:00', isBooked: false },
+          { startTime: '15:00', endTime: '15:30', isBooked: false },
+          { startTime: '15:30', endTime: '16:00', isBooked: false }
+        ]
+      },
+      {
+        date: new Date(Date.now() + 9 * 24 * 60 * 60 * 1000), // 9 days from now
+        timeSlots: [
+          { startTime: '16:00', endTime: '16:30', isBooked: false },
+          { startTime: '16:30', endTime: '17:00', isBooked: false },
+          { startTime: '17:00', endTime: '17:30', isBooked: false },
+          { startTime: '17:30', endTime: '18:00', isBooked: false }
+        ]
+      }
+    ],
     images: ['https://media.istockphoto.com/id/1255835530/photo/modern-custom-suburban-home-exterior.jpg?s=1024x1024&w=is&k=20&c=4TmxYMrPLVb8u09dT5amw1vBsAVbHCxMWZIXqoy-I34=', 'https://media.istockphoto.com/id/520774645/photo/house-exterior-with-curb-appeal.jpg?s=1024x1024&w=is&k=20&c=4rwljqZ3Sd5f2aI3e7um6fKpILko-OrrFiEQCJA38ug=', 'https://media.istockphoto.com/id/590074124/photo/classic-american-house-with-siding-trim-and-red-entry-door.jpg?s=1024x1024&w=is&k=20&c=NXIxkzhayUFnOGqI1hhNFW04ufCpYO_F6KNgNiCHNMo='],
-    status: 'active'
+    status: 'review'
   },
   {
     title: 'Cozy Suburban House',
     description: 'Charming house in a quiet neighborhood',
     type: 'house',
     price: 1800,
+    availableFrom: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
     features: {
       bedrooms: 3,
       bathrooms: 2,
@@ -132,6 +169,35 @@ const sampleProperties = [
       coordinates: [-118.243683, 34.052235] // Los Angeles
     },
     amenities: ['Backyard', 'Garage', 'Fireplace'],
+    viewingDates: [
+      {
+        date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
+        timeSlots: [
+          { startTime: '10:00', endTime: '10:30', isBooked: false },
+          { startTime: '10:30', endTime: '11:00', isBooked: false },
+          { startTime: '11:00', endTime: '11:30', isBooked: false },
+          { startTime: '11:30', endTime: '12:00', isBooked: false }
+        ]
+      },
+      {
+        date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        timeSlots: [
+          { startTime: '14:00', endTime: '14:30', isBooked: false },
+          { startTime: '14:30', endTime: '15:00', isBooked: false },
+          { startTime: '15:00', endTime: '15:30', isBooked: false },
+          { startTime: '15:30', endTime: '16:00', isBooked: false }
+        ]
+      },
+      {
+        date: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000), // 12 days from now
+        timeSlots: [
+          { startTime: '13:00', endTime: '13:30', isBooked: false },
+          { startTime: '13:30', endTime: '14:00', isBooked: false },
+          { startTime: '14:00', endTime: '14:30', isBooked: false },
+          { startTime: '14:30', endTime: '15:00', isBooked: false }
+        ]
+      }
+    ],
     images: ['https://media.istockphoto.com/id/520774645/photo/house-exterior-with-curb-appeal.jpg?s=1024x1024&w=is&k=20&c=4rwljqZ3Sd5f2aI3e7um6fKpILko-OrrFiEQCJA38ug=', 'https://media.istockphoto.com/id/590074124/photo/classic-american-house-with-siding-trim-and-red-entry-door.jpg?s=1024x1024&w=is&k=20&c=NXIxkzhayUFnOGqI1hhNFW04ufCpYO_F6KNgNiCHNMo='],
     status: 'active'
   },
@@ -140,6 +206,7 @@ const sampleProperties = [
     description: 'Less charming house in a loud neighborhood',
     type: 'house',
     price: 1500,
+    availableFrom: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
     features: {
       bedrooms: 2,
       bathrooms: 2,
@@ -156,6 +223,35 @@ const sampleProperties = [
       coordinates: [-118.243683, 34.082235] // Los Angeles
     },
     amenities: ['Backyard', 'Garage', 'Fireplace'],
+    viewingDates: [
+      {
+        date: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000), // 4 days from now
+        timeSlots: [
+          { startTime: '09:00', endTime: '09:30', isBooked: false },
+          { startTime: '09:30', endTime: '10:00', isBooked: false },
+          { startTime: '10:00', endTime: '10:30', isBooked: false },
+          { startTime: '10:30', endTime: '11:00', isBooked: false }
+        ]
+      },
+      {
+        date: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000), // 8 days from now
+        timeSlots: [
+          { startTime: '15:00', endTime: '15:30', isBooked: false },
+          { startTime: '15:30', endTime: '16:00', isBooked: false },
+          { startTime: '16:00', endTime: '16:30', isBooked: false },
+          { startTime: '16:30', endTime: '17:00', isBooked: false }
+        ]
+      },
+      {
+        date: new Date(Date.now() + 11 * 24 * 60 * 60 * 1000), // 11 days from now
+        timeSlots: [
+          { startTime: '11:00', endTime: '11:30', isBooked: false },
+          { startTime: '11:30', endTime: '12:00', isBooked: false },
+          { startTime: '12:00', endTime: '12:30', isBooked: false },
+          { startTime: '12:30', endTime: '13:00', isBooked: false }
+        ]
+      }
+    ],
     images: ['https://media.istockphoto.com/id/520774645/photo/house-exterior-with-curb-appeal.jpg?s=1024x1024&w=is&k=20&c=4rwljqZ3Sd5f2aI3e7um6fKpILko-OrrFiEQCJA38ug=', 'https://media.istockphoto.com/id/590074124/photo/classic-american-house-with-siding-trim-and-red-entry-door.jpg?s=1024x1024&w=is&k=20&c=NXIxkzhayUFnOGqI1hhNFW04ufCpYO_F6KNgNiCHNMo='],
     status: 'active'
   },
@@ -164,6 +260,7 @@ const sampleProperties = [
     description: "House in a quiet neighborhood",
     type: 'house',
     price: 1900,
+    availableFrom: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
     features: {
       bedrooms: 1,
       bathrooms: 1,
@@ -180,6 +277,35 @@ const sampleProperties = [
       coordinates: [-118.256683, 34.022235] // Los Angeles
     },
     amenities: ['Backyard', 'Fireplace'],
+    viewingDates: [
+      {
+        date: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), // 1 day from now
+        timeSlots: [
+          { startTime: '10:00', endTime: '10:30', isBooked: false },
+          { startTime: '10:30', endTime: '11:00', isBooked: false },
+          { startTime: '11:00', endTime: '11:30', isBooked: false },
+          { startTime: '11:30', endTime: '12:00', isBooked: false }
+        ]
+      },
+      {
+        date: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000), // 6 days from now
+        timeSlots: [
+          { startTime: '14:00', endTime: '14:30', isBooked: false },
+          { startTime: '14:30', endTime: '15:00', isBooked: false },
+          { startTime: '15:00', endTime: '15:30', isBooked: false },
+          { startTime: '15:30', endTime: '16:00', isBooked: false }
+        ]
+      },
+      {
+        date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), // 10 days from now
+        timeSlots: [
+          { startTime: '16:00', endTime: '16:30', isBooked: false },
+          { startTime: '16:30', endTime: '17:00', isBooked: false },
+          { startTime: '17:00', endTime: '17:30', isBooked: false },
+          { startTime: '17:30', endTime: '18:00', isBooked: false }
+        ]
+      }
+    ],
     images: ['https://media.istockphoto.com/id/520774645/photo/house-exterior-with-curb-appeal.jpg?s=1024x1024&w=is&k=20&c=4rwljqZ3Sd5f2aI3e7um6fKpILko-OrrFiEQCJA38ug=', 'https://media.istockphoto.com/id/590074124/photo/classic-american-house-with-siding-trim-and-red-entry-door.jpg?s=1024x1024&w=is&k=20&c=NXIxkzhayUFnOGqI1hhNFW04ufCpYO_F6KNgNiCHNMo='],
     status: 'active'
   },
@@ -188,6 +314,7 @@ const sampleProperties = [
     description: 'Stunning condo with panoramic city views',
     type: 'condo',
     price: 3500,
+    availableFrom: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
     features: {
       bedrooms: 2,
       bathrooms: 2.5,
@@ -204,6 +331,41 @@ const sampleProperties = [
       coordinates: [-87.623177, 41.885003] // Chicago
     },
     amenities: ['Doorman', 'Concierge', 'Rooftop Deck'],
+    viewingDates: [
+      {
+        date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
+        timeSlots: [
+          { startTime: '10:00', endTime: '10:30', isBooked: false },
+          { startTime: '10:30', endTime: '11:00', isBooked: false },
+          { startTime: '11:00', endTime: '11:30', isBooked: false },
+          { startTime: '11:30', endTime: '12:00', isBooked: false },
+          { startTime: '14:00', endTime: '14:30', isBooked: false },
+          { startTime: '14:30', endTime: '15:00', isBooked: false },
+          { startTime: '15:00', endTime: '15:30', isBooked: false },
+          { startTime: '15:30', endTime: '16:00', isBooked: false }
+        ]
+      },
+      {
+        date: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000), // 6 days from now
+        timeSlots: [
+          { startTime: '13:00', endTime: '13:30', isBooked: false },
+          { startTime: '13:30', endTime: '14:00', isBooked: false },
+          { startTime: '14:00', endTime: '14:30', isBooked: false },
+          { startTime: '14:30', endTime: '15:00', isBooked: false },
+          { startTime: '15:00', endTime: '15:30', isBooked: false },
+          { startTime: '15:30', endTime: '16:00', isBooked: false }
+        ]
+      },
+      {
+        date: new Date(Date.now() + 13 * 24 * 60 * 60 * 1000), // 13 days from now
+        timeSlots: [
+          { startTime: '16:00', endTime: '16:30', isBooked: false },
+          { startTime: '16:30', endTime: '17:00', isBooked: false },
+          { startTime: '17:00', endTime: '17:30', isBooked: false },
+          { startTime: '17:30', endTime: '18:00', isBooked: false }
+        ]
+      }
+    ],
     images: [
       'https://media.istockphoto.com/id/520774645/photo/house-exterior-with-curb-appeal.jpg?s=1024x1024&w=is&k=20&c=4rwljqZ3Sd5f2aI3e7um6fKpILko-OrrFiEQCJA38ug=', 
       'https://media.istockphoto.com/id/590074124/photo/classic-american-house-with-siding-trim-and-red-entry-door.jpg?s=1024x1024&w=is&k=20&c=NXIxkzhayUFnOGqI1hhNFW04ufCpYO_F6KNgNiCHNMo=', 

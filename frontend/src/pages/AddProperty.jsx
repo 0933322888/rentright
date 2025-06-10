@@ -19,7 +19,12 @@ import {
   useTheme,
   useMediaQuery,
   Button,
-  Grid
+  Grid,
+  IconButton,
+  Card,
+  CardMedia,
+  CardContent,
+  CardActions
 } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import DescriptionIcon from '@mui/icons-material/Description';
@@ -28,11 +33,70 @@ import UploadIcon from '@mui/icons-material/Upload';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SaveIcon from '@mui/icons-material/Save';
 import AddHomeIcon from '@mui/icons-material/AddHome';
+import DeleteIcon from '@mui/icons-material/Delete';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import ImageIcon from '@mui/icons-material/Image';
 
 const steps = [
   { label: 'Basic Information', icon: <HomeIcon /> },
   { label: 'Required Documents', icon: <DescriptionIcon /> }
 ];
+
+const DocumentPreview = ({ file, onDelete }) => {
+  const isImage = file.type.startsWith('image/');
+  const isPDF = file.type === 'application/pdf';
+  const previewUrl = URL.createObjectURL(file);
+
+  return (
+    <Card sx={{ maxWidth: 200, position: 'relative', m: 1 }}>
+      {isImage ? (
+        <CardMedia
+          component="img"
+          sx={{
+            height: 140,
+            objectFit: 'cover'
+          }}
+          image={previewUrl}
+          alt={file.name}
+        />
+      ) : (
+        <Box
+          sx={{
+            height: 140,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: 'grey.100'
+          }}
+        >
+          {isPDF ? (
+            <PictureAsPdfIcon sx={{ fontSize: 48, color: 'error.main' }} />
+          ) : (
+            <ImageIcon sx={{ fontSize: 48, color: 'primary.main' }} />
+          )}
+        </Box>
+      )}
+      <CardContent sx={{ p: 1 }}>
+        <Typography variant="body2" noWrap title={file.name}>
+          {file.name}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {(file.size / 1024).toFixed(1)} KB
+        </Typography>
+      </CardContent>
+      <CardActions sx={{ p: 0, justifyContent: 'center' }}>
+        <IconButton 
+          size="small" 
+          color="error" 
+          onClick={onDelete}
+          sx={{ position: 'absolute', top: 4, right: 4, bgcolor: 'rgba(255,255,255,0.8)' }}
+        >
+          <DeleteIcon />
+        </IconButton>
+      </CardActions>
+    </Card>
+  );
+};
 
 const AddProperty = () => {
   const navigate = useNavigate();
@@ -52,17 +116,30 @@ const AddProperty = () => {
   const [propertyData, setPropertyData] = useState({});
 
   const handleDocumentDrop = (field) => (acceptedFiles) => {
+    if (!Array.isArray(acceptedFiles)) {
+      acceptedFiles = [acceptedFiles];
+    }
     setDocuments(prev => ({
       ...prev,
-      [field]: [...prev[field], ...acceptedFiles]
+      [field]: [...(Array.isArray(prev[field]) ? prev[field] : []), ...acceptedFiles]
     }));
   };
 
   const handleDeleteDocument = (field, index) => {
     setDocuments(prev => ({
       ...prev,
-      [field]: prev[field].filter((_, i) => i !== index)
+      [field]: (Array.isArray(prev[field]) ? prev[field] : []).filter((_, i) => i !== index)
     }));
+  };
+
+  const handleFileChange = (event, field) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length > 0) {
+      setDocuments(prev => ({
+        ...prev,
+        [field]: [...(Array.isArray(prev[field]) ? prev[field] : []), ...files]
+      }));
+    }
   };
 
   const handleNext = () => {
@@ -102,6 +179,9 @@ const AddProperty = () => {
           formData.append(key, value);
         }
       });
+
+      // Set review to 'submitted' for new properties
+      formData.append('status', 'review');
 
       // Append images
       if (propertyData.images) {
@@ -275,12 +355,15 @@ const AddProperty = () => {
                           onChange={(e) => handleFileChange(e, 'proofOfOwnership')}
                         />
                       </Button>
-                      {documents.proofOfOwnership && (
-                        <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                          <DescriptionIcon color="primary" />
-                          <Typography variant="body2">
-                            {documents.proofOfOwnership.name}
-                          </Typography>
+                      {documents.proofOfOwnership.length > 0 && (
+                        <Box sx={{ mt: 3, display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center' }}>
+                          {documents.proofOfOwnership.map((file, index) => (
+                            <DocumentPreview
+                              key={`${file.name}-${index}`}
+                              file={file}
+                              onDelete={() => handleDeleteDocument('proofOfOwnership', index)}
+                            />
+                          ))}
                         </Box>
                       )}
                     </Box>
@@ -324,12 +407,15 @@ const AddProperty = () => {
                           onChange={(e) => handleFileChange(e, 'governmentId')}
                         />
                       </Button>
-                      {documents.governmentId && (
-                        <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                          <DescriptionIcon color="primary" />
-                          <Typography variant="body2">
-                            {documents.governmentId.name}
-                          </Typography>
+                      {documents.governmentId.length > 0 && (
+                        <Box sx={{ mt: 3, display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center' }}>
+                          {documents.governmentId.map((file, index) => (
+                            <DocumentPreview
+                              key={`${file.name}-${index}`}
+                              file={file}
+                              onDelete={() => handleDeleteDocument('governmentId', index)}
+                            />
+                          ))}
                         </Box>
                       )}
                     </Box>
@@ -370,15 +456,18 @@ const AddProperty = () => {
                           type="file"
                           hidden
                           accept=".pdf,.jpg,.jpeg,.png"
-                          onChange={(e) => handleFileChange(e, 'utilityBill')}
+                          onChange={(e) => handleFileChange(e, 'utilityBills')}
                         />
                       </Button>
-                      {documents.utilityBill && (
-                        <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                          <DescriptionIcon color="primary" />
-                          <Typography variant="body2">
-                            {documents.utilityBill.name}
-                          </Typography>
+                      {documents.utilityBills.length > 0 && (
+                        <Box sx={{ mt: 3, display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center' }}>
+                          {documents.utilityBills.map((file, index) => (
+                            <DocumentPreview
+                              key={`${file.name}-${index}`}
+                              file={file}
+                              onDelete={() => handleDeleteDocument('utilityBills', index)}
+                            />
+                          ))}
                         </Box>
                       )}
                     </Box>

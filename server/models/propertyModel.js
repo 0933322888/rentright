@@ -65,6 +65,34 @@ const propertySchema = new mongoose.Schema({
     enum: ['new', 'review', 'submitted', 'rented', 'active'],
     default: 'new'
   },
+  adminComments: {
+    type: String,
+    default: ''
+  },
+  viewingDates: [{
+    date: {
+      type: Date,
+      required: true
+    },
+    timeSlots: [{
+      startTime: {
+        type: String,
+        required: true
+      },
+      endTime: {
+        type: String,
+        required: true
+      },
+      isBooked: {
+        type: Boolean,
+        default: false
+      },
+      bookedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      }
+    }]
+  }],
   tenant: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
@@ -82,9 +110,23 @@ const propertySchema = new mongoose.Schema({
     },
     status: {
       type: String,
-      enum: ['pending', 'approved', 'declined'],
+      enum: ['viewing', 'pending', 'approved', 'rejected', 'cancelled'],
       default: 'pending'
     },
+    wantsViewing: {
+      type: Boolean,
+      default: false
+    },
+    viewingDate: {
+      type: Date
+    },
+    viewingTime: {
+      type: String
+    },
+    tenantScoring: {
+      type: Number,
+      default: 0
+    }
   }],
   available: {
     type: Boolean,

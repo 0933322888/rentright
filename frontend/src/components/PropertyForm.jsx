@@ -11,7 +11,8 @@ import {
   Typography,
   Divider,
   useTheme,
-  IconButton
+  IconButton,
+  CircularProgress
 } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -23,6 +24,8 @@ import InfoIcon from '@mui/icons-material/Info';
 import ImageIcon from '@mui/icons-material/Image';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { API_ENDPOINTS } from '../config/api';
 
 const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true, onCancel }) => {
   const theme = useTheme();
@@ -48,6 +51,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
     },
     images: initialData.images || []
   });
+  const [generating, setGenerating] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, checked } = e.target;
@@ -109,6 +113,48 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
     }));
   };
 
+  const handleGenerateListing = async () => {
+    setGenerating(true);
+    try {
+      // Prepare the data for AI generation
+      const propertyInfo = {
+        type: formData.type,
+        price: formData.price,
+        location: formData.location,
+        features: formData.features,
+        availableFrom: formData.availableFrom
+      };
+
+      const response = await fetch(`${API_ENDPOINTS.PROPERTIES}/generate-listing`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(propertyInfo),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to generate listing');
+      }
+
+      const { title, description } = await response.json();
+      
+      setFormData(prev => ({
+        ...prev,
+        title,
+        description
+      }));
+    } catch (error) {
+      console.error('Error generating listing:', error);
+      // TODO: Add proper error notification
+      alert(error.message || 'Failed to generate listing. Please try again.');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit(formData);
@@ -117,7 +163,126 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
   return (
     <form onSubmit={handleSubmit}>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        {/* Basic Information Section */}
+        {/* Property Images Section - Now First */}
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            p: 3, 
+            bgcolor: 'background.default',
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider'
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+            <ImageIcon sx={{ color: theme.palette.primary.main, mr: 1 }} />
+            <Typography variant="h6" color="primary">
+              Property Images
+            </Typography>
+          </Box>
+          
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Upload high-quality images of your property. You can upload up to 10 images.
+            </Typography>
+            
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                gap: 2,
+                mb: 2
+              }}
+            >
+              {formData.images.map((image, index) => (
+                <Box
+                  key={index}
+                  sx={{
+                    position: 'relative',
+                    paddingTop: '75%',
+                    borderRadius: 1,
+                    overflow: 'hidden',
+                    border: '1px solid',
+                    borderColor: 'divider'
+                  }}
+                >
+                  <img
+                    src={typeof image === 'string' ? image : URL.createObjectURL(image)}
+                    alt={`Property image ${index + 1}`}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover'
+                    }}
+                  />
+                  <IconButton
+                    size="small"
+                    onClick={() => handleDeleteImage(index)}
+                    sx={{
+                      position: 'absolute',
+                      top: 8,
+                      right: 8,
+                      bgcolor: 'rgba(255, 255, 255, 0.8)',
+                      '&:hover': {
+                        bgcolor: 'rgba(255, 255, 255, 0.9)'
+                      }
+                    }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Box>
+              ))}
+              
+              {formData.images.length < 10 && (
+                <Box
+                  component="label"
+                  sx={{
+                    position: 'relative',
+                    paddingTop: '75%',
+                    borderRadius: 1,
+                    border: '2px dashed',
+                    borderColor: 'primary.main',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    '&:hover': {
+                      borderColor: 'primary.dark',
+                      bgcolor: 'action.hover'
+                    }
+                  }}
+                >
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageChange}
+                  />
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      textAlign: 'center'
+                    }}
+                  >
+                    <CloudUploadIcon sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
+                    <Typography variant="body2" color="text.secondary">
+                      Upload Images
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+            </Box>
+          </Box>
+        </Paper>
+
+        {/* Basic Information Section - Removed Title and Description */}
         <Paper 
           elevation={0} 
           sx={{ 
@@ -134,20 +299,8 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
               Basic Information
             </Typography>
           </Box>
-          {/* Row: Title, Property Type, Price, Available From */}
+          {/* Row: Property Type, Price, Available From */}
           <Grid container spacing={3} alignItems="center" wrap="nowrap">
-            <Grid item sx={{ flex: 1 }}>
-              <TextField
-                required
-                fullWidth
-                label="Title"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                variant="outlined"
-                size="medium"
-              />
-            </Grid>
             <Grid item sx={{ minWidth: 250 }}>
               <TextField
                 required
@@ -202,25 +355,6 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
               </LocalizationProvider>
             </Grid>
           </Grid>
-          {/* Description field - full width */}
-          <Box sx={{ mx: 'auto', mt: 6 }}>
-            <TextField
-              required
-              fullWidth
-              multiline
-              rows={6}
-              label="Description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              variant="outlined"
-              size="medium"
-              sx={{
-                backgroundColor: 'rgba(0,0,0,0.03)',
-                borderRadius: 2
-              }}
-            />
-          </Box>
         </Paper>
 
         {/* Location Section */}
@@ -395,7 +529,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
           </Grid>
         </Paper>
 
-        {/* Images Section */}
+        {/* Title and Description Section - New Section at the End */}
         <Paper 
           elevation={0} 
           sx={{ 
@@ -406,110 +540,57 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
             borderColor: 'divider'
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-            <ImageIcon sx={{ color: theme.palette.primary.main, mr: 1 }} />
-            <Typography variant="h6" color="primary">
-              Property Images
-            </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <InfoIcon sx={{ color: theme.palette.primary.main, mr: 1 }} />
+              <Typography variant="h6" color="primary">
+                Listing Details
+              </Typography>
+            </Box>
+            <Button
+              variant="outlined"
+              color="primary"
+              startIcon={generating ? <CircularProgress size={20} /> : <AutoAwesomeIcon />}
+              onClick={handleGenerateListing}
+              disabled={generating || loading}
+              sx={{ minWidth: 150 }}
+            >
+              {generating ? 'Generating...' : 'Generate with AI'}
+            </Button>
           </Box>
           
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Upload high-quality images of your property. You can upload up to 10 images.
-            </Typography>
-            
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                gap: 2,
-                mb: 2
-              }}
-            >
-              {formData.images.map((image, index) => (
-                <Box
-                  key={index}
-                  sx={{
-                    position: 'relative',
-                    paddingTop: '75%',
-                    borderRadius: 1,
-                    overflow: 'hidden',
-                    border: '1px solid',
-                    borderColor: 'divider'
-                  }}
-                >
-                  <img
-                    src={typeof image === 'string' ? image : URL.createObjectURL(image)}
-                    alt={`Property image ${index + 1}`}
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover'
-                    }}
-                  />
-                  <IconButton
-                    size="small"
-                    onClick={() => handleDeleteImage(index)}
-                    sx={{
-                      position: 'absolute',
-                      top: 8,
-                      right: 8,
-                      bgcolor: 'rgba(255, 255, 255, 0.8)',
-                      '&:hover': {
-                        bgcolor: 'rgba(255, 255, 255, 0.9)'
-                      }
-                    }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              ))}
-              
-              {formData.images.length < 10 && (
-                <Box
-                  component="label"
-                  sx={{
-                    position: 'relative',
-                    paddingTop: '75%',
-                    borderRadius: 1,
-                    border: '2px dashed',
-                    borderColor: 'primary.main',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    '&:hover': {
-                      borderColor: 'primary.dark',
-                      bgcolor: 'action.hover'
-                    }
-                  }}
-                >
-                  <input
-                    type="file"
-                    hidden
-                    accept="image/*"
-                    multiple
-                    onChange={handleImageChange}
-                  />
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      textAlign: 'center'
-                    }}
-                  >
-                    <CloudUploadIcon sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
-                    <Typography variant="body2" color="text.secondary">
-                      Upload Images
-                    </Typography>
-                  </Box>
-                </Box>
-              )}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <TextField
+              required
+              fullWidth
+              label="Title"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              variant="outlined"
+              size="medium"
+              placeholder="Enter a compelling title for your property listing"
+              disabled={generating}
+            />
+            <Box sx={{ mx: 'auto', width: '100%' }}>
+              <TextField
+                required
+                fullWidth
+                multiline
+                rows={6}
+                label="Description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                variant="outlined"
+                size="medium"
+                placeholder="Describe your property in detail. You can use AI to generate this text later."
+                disabled={generating}
+                sx={{
+                  backgroundColor: 'rgba(0,0,0,0.03)',
+                  borderRadius: 2
+                }}
+              />
             </Box>
           </Box>
         </Paper>

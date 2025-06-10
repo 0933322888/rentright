@@ -2,8 +2,9 @@ import Property from '../models/propertyModel.js';
 import mongoose from 'mongoose';
 import Application from '../models/applicationModel.js';
 import PropertyDocument from '../models/propertyDocumentModel.js';
+import User from '../models/userModel.js';
 
-export const createProperty = async (req, res) => {
+const createProperty = async (req, res) => {
   try {
     // Handle images
     const images = req.files?.images ? req.files.images.map(file => file.path.replace(/\\/g, '/').split('uploads/')[1]) : [];
@@ -46,7 +47,7 @@ export const createProperty = async (req, res) => {
   }
 };
 
-export const getProperties = async (req, res) => {
+const getProperties = async (req, res) => {
   try {
     const { 
       type, 
@@ -84,7 +85,7 @@ export const getProperties = async (req, res) => {
   }
 };
 
-export const getPropertyById = async (req, res) => {
+const getPropertyById = async (req, res) => {
   try {
     // Check if the ID is a valid MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -107,7 +108,7 @@ export const getPropertyById = async (req, res) => {
   }
 };
 
-export const updateProperty = async (req, res) => {
+const updateProperty = async (req, res) => {
   try {
     const property = await Property.findById(req.params.id);
 
@@ -133,7 +134,10 @@ export const updateProperty = async (req, res) => {
     }
 
     // Handle new images
-    const newImages = req.files ? req.files.map(file => file.path.replace(/\\/g, '/').split('uploads/')[1]) : [];
+    const newImages = req.files?.images ? 
+      (Array.isArray(req.files.images) ? req.files.images : [req.files.images])
+        .map(file => file.path.replace(/\\/g, '/').split('uploads/')[1]) 
+      : [];
 
     // Combine existing and new images
     const updatedImages = [...existingImages, ...newImages];
@@ -154,7 +158,7 @@ export const updateProperty = async (req, res) => {
   }
 };
 
-export const deleteProperty = async (req, res) => {
+const deleteProperty = async (req, res) => {
   try {
     const property = await Property.findById(req.params.id);
 
@@ -173,7 +177,7 @@ export const deleteProperty = async (req, res) => {
   }
 };
 
-export const applyForProperty = async (req, res) => {
+const applyForProperty = async (req, res) => {
   try {
     const property = await Property.findById(req.params.id);
 
@@ -193,33 +197,89 @@ export const applyForProperty = async (req, res) => {
       return res.status(400).json({ message: 'Already applied to this property' });
     }
 
+    const { wantsViewing, viewingDate, viewingTime } = req.body;
+
+    // Validate viewing details if tenant wants to view the property
+    if (wantsViewing) {
+      if (!viewingDate || !viewingTime) {
+        return res.status(400).json({ 
+          message: 'Viewing date and time are required when requesting a viewing' 
+        });
+      }
+
+      // Find the viewing date and time slot in the property
+      const viewingDateObj = new Date(viewingDate);
+      const [startTime] = viewingTime.split('-');
+      
+      const viewingDateEntry = property.viewingDates.find(
+        date => date.date.toISOString().split('T')[0] === viewingDateObj.toISOString().split('T')[0]
+      );
+
+      if (!viewingDateEntry) {
+        return res.status(400).json({ message: 'Selected viewing date is not available' });
+      }
+
+      const timeSlot = viewingDateEntry.timeSlots.find(
+        slot => slot.startTime === startTime.trim()
+      );
+
+      if (!timeSlot) {
+        return res.status(400).json({ message: 'Selected time slot is not available' });
+      }
+
+      if (timeSlot.isBooked) {
+        return res.status(400).json({ message: 'This time slot is already booked' });
+      }
+
+      // Mark the time slot as booked
+      timeSlot.isBooked = true;
+      timeSlot.bookedBy = req.user._id;
+    }
+
+    // Get tenant's scoring
+    const tenant = await User.findById(req.user._id);
+    const tenantScoring = tenant.tenantScoring || Math.floor(Math.random() * 100);
+
     // Create application document
     const application = new Application({
       property: property._id,
       tenant: req.user._id,
-      moveInDate: req.body.moveInDate,
-      message: req.body.message,
-      status: 'pending'
+      status: wantsViewing ? 'viewing' : 'pending',
+      wantsViewing,
+      viewingDate: wantsViewing ? viewingDate : undefined,
+      viewingTime: wantsViewing ? viewingTime : undefined,
+      tenantScoring
     });
-
-    await application.save();
 
     // Update property's applications array
     property.applications.push({
       tenant: req.user._id,
-      status: 'pending',
-      moveInDate: req.body.moveInDate,
-      message: req.body.message
+      status: wantsViewing ? 'viewing' : 'pending',
+      wantsViewing,
+      viewingDate: wantsViewing ? viewingDate : undefined,
+      viewingTime: wantsViewing ? viewingTime : undefined,
+      tenantScoring
     });
 
-    await property.save();
-    res.status(201).json({ message: 'Application submitted successfully' });
+    // Save both the application and the updated property
+    await Promise.all([
+      application.save(),
+      property.save()
+    ]);
+
+    res.status(201).json({ 
+      message: wantsViewing 
+        ? 'Application submitted with viewing request' 
+        : 'Application submitted successfully',
+      application
+    });
   } catch (error) {
+    console.error('Error in applyForProperty:', error);
     res.status(400).json({ message: error.message });
   }
 };
 
-export const updateApplicationStatus = async (req, res) => {
+const updateApplicationStatus = async (req, res) => {
   try {
     const { status } = req.body;
     const property = await Property.findById(req.params.propertyId);
@@ -294,7 +354,7 @@ export const updateApplicationStatus = async (req, res) => {
   }
 };
 
-export const getAvailableProperties = async (req, res) => {
+const getAvailableProperties = async (req, res) => {
   try {
     const { 
       type, 
@@ -308,7 +368,7 @@ export const getAvailableProperties = async (req, res) => {
 
     const filter = {
       available: true,
-      status: { $ne: 'Rented' }
+      status: { $ne: 'rented' }
     };
 
     if (type) filter.type = type;
@@ -332,4 +392,152 @@ export const getAvailableProperties = async (req, res) => {
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
+};
+
+// Mock AI generation function - replace with actual AI service later
+const generateListingText = (propertyInfo) => {
+  const {
+    type,
+    price,
+    location,
+    features,
+    availableFrom
+  } = propertyInfo;
+
+  // Format the date
+  const availableDate = new Date(availableFrom).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
+
+  // Generate a title
+  const title = `${features.bedrooms} Bedroom ${type.charAt(0).toUpperCase() + type.slice(1)} in ${location.city}`;
+
+  // Generate a description
+  const description = `Welcome to this beautiful ${features.bedrooms}-bedroom, ${features.bathrooms}-bathroom ${type} located in the heart of ${location.city}, ${location.state}. This ${features.squareFootage} sq ft property offers a perfect blend of comfort and convenience.
+
+Key Features:
+• ${features.bedrooms} spacious bedrooms
+• ${features.bathrooms} modern bathrooms
+• ${features.squareFootage} square feet of living space
+• ${features.furnished ? 'Fully furnished' : 'Unfurnished'}
+• ${features.parking ? 'Parking available' : 'Street parking'}
+• ${features.petsAllowed ? 'Pet-friendly' : 'No pets allowed'}
+
+Location:
+Situated in ${location.city}, ${location.state}, this property is perfectly located for easy access to local amenities, schools, and transportation.
+
+Available from ${availableDate} at $${price}/month.
+
+Don't miss out on this opportunity to make this ${type} your new home!`;
+
+  return { title, description };
+};
+
+// Helper function to simulate delay
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+const generatePropertyListing = async (req, res) => {
+  try {
+    const propertyInfo = req.body;
+
+    // Validate required fields
+    const requiredFields = ['type', 'price', 'location', 'features', 'availableFrom'];
+    const missingFields = requiredFields.filter(field => !propertyInfo[field]);
+    
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        message: `Missing required fields: ${missingFields.join(', ')}`
+      });
+    }
+
+    // Simulate AI processing time 
+    const processingTime = Math.floor(Math.random() * 1000) + 3000; // Random time between 1-3 seconds
+    await delay(processingTime);
+
+    // Generate the listing text
+    const { title, description } = generateListingText(propertyInfo);
+
+    res.json({ title, description });
+  } catch (error) {
+    console.error('Error generating property listing:', error);
+    res.status(500).json({ message: 'Error generating property listing' });
+  }
+};
+
+// Get available viewing slots for a specific date
+export const getViewingSlots = async (req, res) => {
+  try {
+    const { date } = req.query;
+    const property = await Property.findById(req.params.id);
+
+    if (!property) {
+      return res.status(404).json({ message: 'Property not found' });
+    }
+
+    // Find the viewing date entry
+    const viewingDate = property.viewingDates.find(
+      vd => vd.date.toISOString().split('T')[0] === date
+    );
+
+    if (!viewingDate) {
+      return res.json({ timeSlots: [] });
+    }
+
+    // Filter out booked slots
+    const availableSlots = viewingDate.timeSlots.filter(slot => !slot.isBooked);
+
+    res.json({ timeSlots: availableSlots });
+  } catch (error) {
+    console.error('Error in getViewingSlots:', error);
+    res.status(500).json({ 
+      message: 'Error fetching viewing slots',
+      error: error.message 
+    });
+  }
+};
+
+// Get available viewing dates for a property
+export const getViewingDates = async (req, res) => {
+  try {
+    const property = await Property.findById(req.params.id);
+
+    if (!property) {
+      return res.status(404).json({ message: 'Property not found' });
+    }
+
+    // Get all future dates that have at least one available slot
+    const availableDates = property.viewingDates
+      .filter(vd => {
+        const date = new Date(vd.date);
+        const hasAvailableSlots = vd.timeSlots.some(slot => !slot.isBooked);
+        return date >= new Date() && hasAvailableSlots;
+      })
+      .map(vd => ({
+        date: vd.date,
+        availableSlots: vd.timeSlots.filter(slot => !slot.isBooked).length
+      }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    res.json({ dates: availableDates });
+  } catch (error) {
+    console.error('Error in getViewingDates:', error);
+    res.status(500).json({ 
+      message: 'Error fetching viewing dates',
+      error: error.message 
+    });
+  }
+};
+
+export {
+  createProperty,
+  getProperties,
+  getPropertyById,
+  updateProperty,
+  deleteProperty,
+  applyForProperty,
+  updateApplicationStatus,
+  getAvailableProperties,
+  generatePropertyListing
 }; 

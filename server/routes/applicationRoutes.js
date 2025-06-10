@@ -1,39 +1,25 @@
 import express from 'express';
 import {
-  getApplications,
-  getApplicationById,
   createApplication,
+  getApplications,
   updateApplicationStatus,
+  promoteApplication,
   deleteApplication,
-  getPropertyApplications,
   updateApplicationViewing
 } from '../controllers/applicationController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// All routes require authentication
+// Protected routes
 router.use(protect);
 
-// Get all applications (filtered by user role)
-router.get('/', getApplications);
-
-// Get applications for a specific property
-router.get('/property/:propertyId', getPropertyApplications);
-
-// Get a single application
-router.get('/:id', getApplicationById);
-
-// Create a new application
+// Application routes
 router.post('/', createApplication);
-
-// Update application status (landlord only)
+router.get('/', getApplications);
 router.patch('/:id/status', updateApplicationStatus);
-
-// Delete application (tenant only)
+router.patch('/:id/promote', promoteApplication);
 router.delete('/:id', deleteApplication);
-
-// Allow tenant to update their own application's viewing date/time
-router.patch('/:id', updateApplicationViewing);
+router.patch('/:id/reschedule', updateApplicationViewing);
 
 export default router; 

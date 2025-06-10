@@ -89,7 +89,28 @@ export default function Profile() {
   const [tenantData, setTenantData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [answers, setAnswers] = useState({
+    // Employment & Income
+    isCurrentlyEmployed: '',
+    employmentType: '',
+    monthlyNetIncome: '',
+    hasAdditionalIncome: '',
+    additionalIncomeDescription: '',
+    
+    // Expenses & Debts
+    monthlyDebtRepayment: '',
+    paysChildSupport: '',
+    childSupportAmount: '',
+    
+    // Rental History
     hasBeenEvicted: '',
+    currentlyPaysRent: '',
+    currentRentAmount: '',
+    
+    // Financial Preparedness
+    hasTwoMonthsRentSavings: '',
+    canShareFinancialDocuments: '',
+    
+    // Existing fields
     canPayMoreThanOneMonth: '',
     monthsAheadCanPay: ''
   });
@@ -130,7 +151,28 @@ export default function Profile() {
 
               if (data) {
                 const newAnswers = {
+                  // Employment & Income
+                  isCurrentlyEmployed: data.isCurrentlyEmployed === 'yes' ? 'true' : 'false',
+                  employmentType: data.employmentType || '',
+                  monthlyNetIncome: data.monthlyNetIncome || '',
+                  hasAdditionalIncome: data.hasAdditionalIncome === 'yes' ? 'true' : 'false',
+                  additionalIncomeDescription: data.additionalIncomeDescription || '',
+                  
+                  // Expenses & Debts
+                  monthlyDebtRepayment: data.monthlyDebtRepayment || '',
+                  paysChildSupport: data.paysChildSupport === 'yes' ? 'true' : 'false',
+                  childSupportAmount: data.childSupportAmount || '',
+                  
+                  // Rental History
                   hasBeenEvicted: data.hasBeenEvicted === 'yes' ? 'true' : 'false',
+                  currentlyPaysRent: data.currentlyPaysRent === 'yes' ? 'true' : 'false',
+                  currentRentAmount: data.currentRentAmount || '',
+                  
+                  // Financial Preparedness
+                  hasTwoMonthsRentSavings: data.hasTwoMonthsRentSavings === 'yes' ? 'true' : 'false',
+                  canShareFinancialDocuments: data.canShareFinancialDocuments === 'yes' ? 'true' : 'false',
+                  
+                  // Existing fields
                   canPayMoreThanOneMonth: data.canPayMoreThanOneMonth === 'yes' ? 'true' : 'false',
                   monthsAheadCanPay: data.monthsAheadCanPay || ''
                 };
@@ -265,9 +307,10 @@ export default function Profile() {
       const token = localStorage.getItem('token');
       const formData = new FormData();
 
-      // Add answers to form data with proper type conversion
+      // Add all answers to form data with proper type conversion
       Object.entries(answers).forEach(([key, value]) => {
-        if (key === 'hasBeenEvicted' || key === 'canPayMoreThanOneMonth') {
+        // Convert boolean radio values to 'yes'/'no' strings
+        if (typeof value === 'string' && (value === 'true' || value === 'false')) {
           formData.append(key, value === 'true' ? 'yes' : 'no');
         } else {
           formData.append(key, value);
@@ -298,7 +341,28 @@ export default function Profile() {
         
         // Update the answers state with the new values from the server
         const updatedAnswers = {
+          // Employment & Income
+          isCurrentlyEmployed: data.isCurrentlyEmployed === 'yes' ? 'true' : 'false',
+          employmentType: data.employmentType || '',
+          monthlyNetIncome: data.monthlyNetIncome || '',
+          hasAdditionalIncome: data.hasAdditionalIncome === 'yes' ? 'true' : 'false',
+          additionalIncomeDescription: data.additionalIncomeDescription || '',
+          
+          // Expenses & Debts
+          monthlyDebtRepayment: data.monthlyDebtRepayment || '',
+          paysChildSupport: data.paysChildSupport === 'yes' ? 'true' : 'false',
+          childSupportAmount: data.childSupportAmount || '',
+          
+          // Rental History
           hasBeenEvicted: data.hasBeenEvicted === 'yes' ? 'true' : 'false',
+          currentlyPaysRent: data.currentlyPaysRent === 'yes' ? 'true' : 'false',
+          currentRentAmount: data.currentRentAmount || '',
+          
+          // Financial Preparedness
+          hasTwoMonthsRentSavings: data.hasTwoMonthsRentSavings === 'yes' ? 'true' : 'false',
+          canShareFinancialDocuments: data.canShareFinancialDocuments === 'yes' ? 'true' : 'false',
+          
+          // Existing fields
           canPayMoreThanOneMonth: data.canPayMoreThanOneMonth === 'yes' ? 'true' : 'false',
           monthsAheadCanPay: data.monthsAheadCanPay || ''
         };
@@ -526,75 +590,404 @@ export default function Profile() {
             </p>
           </div>
           <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
-            <form onSubmit={handleTenantSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Have you ever been evicted?</label>
-                <div className="mt-2 space-x-4">
-                  <label className="inline-flex items-center">
-                    <input
-                      type="radio"
-                      name="hasBeenEvicted"
-                      value="true"
-                      checked={answers.hasBeenEvicted === 'true'}
-                      onChange={handleAnswerChange}
-                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Yes</span>
-                  </label>
-                  <label className="inline-flex items-center">
-                    <input
-                      type="radio"
-                      name="hasBeenEvicted"
-                      value="false"
-                      checked={answers.hasBeenEvicted === 'false'}
-                      onChange={handleAnswerChange}
-                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">No</span>
-                  </label>
+            <form onSubmit={handleTenantSubmit} className="space-y-8">
+              {/* Section 1: Employment & Income */}
+              <div className="bg-white shadow sm:rounded-lg">
+                <div className="px-4 py-5 sm:p-6">
+                  <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Employment & Income</h3>
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Are you currently employed?</label>
+                      <div className="mt-2 space-x-4">
+                        <label className="inline-flex items-center">
+                          <input
+                            type="radio"
+                            name="isCurrentlyEmployed"
+                            value="true"
+                            checked={answers.isCurrentlyEmployed === 'true'}
+                            onChange={handleAnswerChange}
+                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">Yes</span>
+                        </label>
+                        <label className="inline-flex items-center">
+                          <input
+                            type="radio"
+                            name="isCurrentlyEmployed"
+                            value="false"
+                            checked={answers.isCurrentlyEmployed === 'false'}
+                            onChange={handleAnswerChange}
+                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">No</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label htmlFor="employmentType" className="block text-sm font-medium text-gray-700">What is your employment type?</label>
+                      <select
+                        id="employmentType"
+                        name="employmentType"
+                        value={answers.employmentType}
+                        onChange={handleAnswerChange}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                      >
+                        <option value="">Select employment type</option>
+                        <option value="full-time">Full-time</option>
+                        <option value="part-time">Part-time</option>
+                        <option value="self-employed">Self-employed</option>
+                        <option value="contractor">Contractor</option>
+                        <option value="student">Student</option>
+                        <option value="unemployed">Unemployed</option>
+                        <option value="retired">Retired</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label htmlFor="monthlyNetIncome" className="block text-sm font-medium text-gray-700">What is your current monthly net income (after taxes)?</label>
+                      <div className="mt-1 relative rounded-md shadow-sm">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <span className="text-gray-500 sm:text-sm">$</span>
+                        </div>
+                        <input
+                          type="number"
+                          name="monthlyNetIncome"
+                          id="monthlyNetIncome"
+                          value={answers.monthlyNetIncome}
+                          onChange={handleAnswerChange}
+                          className="pl-7 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                          placeholder="0.00"
+                          min="0"
+                          step="0.01"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Do you have any additional sources of income?</label>
+                      <div className="mt-2 space-x-4">
+                        <label className="inline-flex items-center">
+                          <input
+                            type="radio"
+                            name="hasAdditionalIncome"
+                            value="true"
+                            checked={answers.hasAdditionalIncome === 'true'}
+                            onChange={handleAnswerChange}
+                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">Yes</span>
+                        </label>
+                        <label className="inline-flex items-center">
+                          <input
+                            type="radio"
+                            name="hasAdditionalIncome"
+                            value="false"
+                            checked={answers.hasAdditionalIncome === 'false'}
+                            onChange={handleAnswerChange}
+                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">No</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {answers.hasAdditionalIncome === 'true' && (
+                      <div>
+                        <label htmlFor="additionalIncomeDescription" className="block text-sm font-medium text-gray-700">Please describe your additional income sources:</label>
+                        <textarea
+                          id="additionalIncomeDescription"
+                          name="additionalIncomeDescription"
+                          rows={3}
+                          value={answers.additionalIncomeDescription}
+                          onChange={handleAnswerChange}
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                          placeholder="Describe your additional income sources..."
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Can you pay more than one month's rent at a time?</label>
-                <div className="mt-2 space-x-4">
-                  <label className="inline-flex items-center">
-                    <input
-                      type="radio"
-                      name="canPayMoreThanOneMonth"
-                      value="true"
-                      checked={answers.canPayMoreThanOneMonth === 'true'}
-                      onChange={handleAnswerChange}
-                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Yes</span>
-                  </label>
-                  <label className="inline-flex items-center">
-                    <input
-                      type="radio"
-                      name="canPayMoreThanOneMonth"
-                      value="false"
-                      checked={answers.canPayMoreThanOneMonth === 'false'}
-                      onChange={handleAnswerChange}
-                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">No</span>
-                  </label>
+
+              {/* Section 2: Expenses & Debts */}
+              <div className="bg-white shadow sm:rounded-lg">
+                <div className="px-4 py-5 sm:p-6">
+                  <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Expenses & Debts</h3>
+                  <div className="space-y-6">
+                    <div>
+                      <label htmlFor="monthlyDebtRepayment" className="block text-sm font-medium text-gray-700">What is your approximate monthly debt repayment amount (credit cards, loans, etc.)?</label>
+                      <div className="mt-1 relative rounded-md shadow-sm">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <span className="text-gray-500 sm:text-sm">$</span>
+                        </div>
+                        <input
+                          type="number"
+                          name="monthlyDebtRepayment"
+                          id="monthlyDebtRepayment"
+                          value={answers.monthlyDebtRepayment}
+                          onChange={handleAnswerChange}
+                          className="pl-7 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                          placeholder="0.00"
+                          min="0"
+                          step="0.01"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Do you pay any regular child or spousal support?</label>
+                      <div className="mt-2 space-x-4">
+                        <label className="inline-flex items-center">
+                          <input
+                            type="radio"
+                            name="paysChildSupport"
+                            value="true"
+                            checked={answers.paysChildSupport === 'true'}
+                            onChange={handleAnswerChange}
+                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">Yes</span>
+                        </label>
+                        <label className="inline-flex items-center">
+                          <input
+                            type="radio"
+                            name="paysChildSupport"
+                            value="false"
+                            checked={answers.paysChildSupport === 'false'}
+                            onChange={handleAnswerChange}
+                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">No</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {answers.paysChildSupport === 'true' && (
+                      <div>
+                        <label htmlFor="childSupportAmount" className="block text-sm font-medium text-gray-700">How much do you pay per month?</label>
+                        <div className="mt-1 relative rounded-md shadow-sm">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span className="text-gray-500 sm:text-sm">$</span>
+                          </div>
+                          <input
+                            type="number"
+                            name="childSupportAmount"
+                            id="childSupportAmount"
+                            value={answers.childSupportAmount}
+                            onChange={handleAnswerChange}
+                            className="pl-7 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                            placeholder="0.00"
+                            min="0"
+                            step="0.01"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-              {answers.canPayMoreThanOneMonth === 'true' && (
-                <div>
-                  <label htmlFor="monthsAheadCanPay" className="block text-sm font-medium text-gray-700">How many months ahead can you pay?</label>
-                  <input
-                    type="number"
-                    name="monthsAheadCanPay"
-                    id="monthsAheadCanPay"
-                    value={answers.monthsAheadCanPay}
-                    onChange={handleAnswerChange}
-                    min="1"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                  />
+
+              {/* Section 3: Rental History */}
+              <div className="bg-white shadow sm:rounded-lg">
+                <div className="px-4 py-5 sm:p-6">
+                  <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Rental History</h3>
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Have you ever been evicted?</label>
+                      <div className="mt-2 space-x-4">
+                        <label className="inline-flex items-center">
+                          <input
+                            type="radio"
+                            name="hasBeenEvicted"
+                            value="true"
+                            checked={answers.hasBeenEvicted === 'true'}
+                            onChange={handleAnswerChange}
+                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">Yes</span>
+                        </label>
+                        <label className="inline-flex items-center">
+                          <input
+                            type="radio"
+                            name="hasBeenEvicted"
+                            value="false"
+                            checked={answers.hasBeenEvicted === 'false'}
+                            onChange={handleAnswerChange}
+                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">No</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Do you currently pay rent?</label>
+                      <div className="mt-2 space-x-4">
+                        <label className="inline-flex items-center">
+                          <input
+                            type="radio"
+                            name="currentlyPaysRent"
+                            value="true"
+                            checked={answers.currentlyPaysRent === 'true'}
+                            onChange={handleAnswerChange}
+                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">Yes</span>
+                        </label>
+                        <label className="inline-flex items-center">
+                          <input
+                            type="radio"
+                            name="currentlyPaysRent"
+                            value="false"
+                            checked={answers.currentlyPaysRent === 'false'}
+                            onChange={handleAnswerChange}
+                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">No</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {answers.currentlyPaysRent === 'true' && (
+                      <div>
+                        <label htmlFor="currentRentAmount" className="block text-sm font-medium text-gray-700">How much is your current rent?</label>
+                        <div className="mt-1 relative rounded-md shadow-sm">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span className="text-gray-500 sm:text-sm">$</span>
+                          </div>
+                          <input
+                            type="number"
+                            name="currentRentAmount"
+                            id="currentRentAmount"
+                            value={answers.currentRentAmount}
+                            onChange={handleAnswerChange}
+                            className="pl-7 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                            placeholder="0.00"
+                            min="0"
+                            step="0.01"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
+              </div>
+
+              {/* Section 4: Financial Preparedness */}
+              <div className="bg-white shadow sm:rounded-lg">
+                <div className="px-4 py-5 sm:p-6">
+                  <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Financial Preparedness</h3>
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Do you have savings equivalent to at least 2 months of rent?</label>
+                      <div className="mt-2 space-x-4">
+                        <label className="inline-flex items-center">
+                          <input
+                            type="radio"
+                            name="hasTwoMonthsRentSavings"
+                            value="true"
+                            checked={answers.hasTwoMonthsRentSavings === 'true'}
+                            onChange={handleAnswerChange}
+                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">Yes</span>
+                        </label>
+                        <label className="inline-flex items-center">
+                          <input
+                            type="radio"
+                            name="hasTwoMonthsRentSavings"
+                            value="false"
+                            checked={answers.hasTwoMonthsRentSavings === 'false'}
+                            onChange={handleAnswerChange}
+                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">No</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Would you be comfortable sharing proof of income or financial statements to support your application?</label>
+                      <div className="mt-2 space-x-4">
+                        <label className="inline-flex items-center">
+                          <input
+                            type="radio"
+                            name="canShareFinancialDocuments"
+                            value="true"
+                            checked={answers.canShareFinancialDocuments === 'true'}
+                            onChange={handleAnswerChange}
+                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">Yes</span>
+                        </label>
+                        <label className="inline-flex items-center">
+                          <input
+                            type="radio"
+                            name="canShareFinancialDocuments"
+                            value="false"
+                            checked={answers.canShareFinancialDocuments === 'false'}
+                            onChange={handleAnswerChange}
+                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">No</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Existing fields */}
+              <div className="bg-white shadow sm:rounded-lg">
+                <div className="px-4 py-5 sm:p-6">
+                  <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Additional Information</h3>
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Can you pay more than one month's rent at a time?</label>
+                      <div className="mt-2 space-x-4">
+                        <label className="inline-flex items-center">
+                          <input
+                            type="radio"
+                            name="canPayMoreThanOneMonth"
+                            value="true"
+                            checked={answers.canPayMoreThanOneMonth === 'true'}
+                            onChange={handleAnswerChange}
+                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">Yes</span>
+                        </label>
+                        <label className="inline-flex items-center">
+                          <input
+                            type="radio"
+                            name="canPayMoreThanOneMonth"
+                            value="false"
+                            checked={answers.canPayMoreThanOneMonth === 'false'}
+                            onChange={handleAnswerChange}
+                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">No</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {answers.canPayMoreThanOneMonth === 'true' && (
+                      <div>
+                        <label htmlFor="monthsAheadCanPay" className="block text-sm font-medium text-gray-700">How many months ahead can you pay?</label>
+                        <input
+                          type="number"
+                          name="monthsAheadCanPay"
+                          id="monthsAheadCanPay"
+                          value={answers.monthsAheadCanPay}
+                          onChange={handleAnswerChange}
+                          min="1"
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
 
               {/* Document Upload Sections */}
               {['proofOfIdentity', 'proofOfIncome', 'creditHistory', 'rentalHistory', 'additionalDocuments'].map((field) => (
@@ -612,7 +1005,7 @@ export default function Profile() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="inline-flex justify-center rounded-md border border-transparent bg-primary-600 py-2 px-4 text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                  className="inline-flex justify-center rounded-md border border-transparent bg-primary-600 py-2 px-4 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                 >
                   {loading ? 'Updating...' : 'Update Tenant Profile'}
                 </button>

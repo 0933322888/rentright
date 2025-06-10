@@ -5,7 +5,7 @@ import { API_ENDPOINTS } from '../config/api';
 import { useAuth } from '../context/AuthContext';
 import { Card, Container, Row, Col, Button, Badge, Modal } from 'react-bootstrap';
 import ProfileCompletionModal from '../components/ProfileCompletionModal';
-import { FaUser, FaHome, FaCalendarAlt, FaClock, FaMapMarkerAlt, FaBuilding, FaCheckCircle, FaHourglassHalf, FaTimesCircle } from 'react-icons/fa';
+import { FaUser, FaHome, FaCalendarAlt, FaClock, FaMapMarkerAlt, FaBuilding, FaCheckCircle, FaHourglassHalf, FaTimesCircle, FaCheck, FaTimes, FaEye } from 'react-icons/fa';
 import ViewingScheduleModal from '../components/ViewingScheduleModal';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import toast from 'react-hot-toast';
@@ -73,26 +73,50 @@ const TenantDashboard = () => {
     ['pending', 'approved'].includes(app.status)
   );
 
-  const getStatusBadge = (status) => {
-    const variants = {
-      pending: 'warning',
-      approved: 'success',
-      declined: 'danger',
-      expired: 'secondary'
-    };
-    return <Badge bg={variants[status] || 'secondary'}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
+  const handlePromoteApplication = async (applicationId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(
+        `${API_ENDPOINTS.APPLICATIONS}/${applicationId}/promote`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      toast.success('Application promoted to pending status');
+      fetchDashboardData();
+    } catch (error) {
+      console.error('Error promoting application:', error);
+      toast.error(error.response?.data?.message || 'Failed to promote application');
+    }
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
       case 'approved':
-        return <FaCheckCircle className="text-success" />;
-      case 'pending':
-        return <FaHourglassHalf className="text-warning" />;
-      case 'declined':
-        return <FaTimesCircle className="text-danger" />;
+        return <FaCheck className="text-success" />;
+      case 'rejected':
+        return <FaTimes className="text-danger" />;
+      case 'viewing':
+        return <FaEye className="text-info" />;
       default:
         return null;
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    const baseClasses = "badge rounded-pill px-3 py-2";
+    switch (status) {
+      case 'approved':
+        return <span className={`${baseClasses} bg-success text-white`}>Approved</span>;
+      case 'rejected':
+        return <span className={`${baseClasses} bg-danger text-white`}>Rejected</span>;
+      case 'viewing':
+        return <span className={`${baseClasses} bg-info text-white`}>Viewing Scheduled</span>;
+      case 'pending':
+        return <span className={`${baseClasses} bg-warning text-dark`}>Pending</span>;
+      default:
+        return <span className={`${baseClasses} bg-secondary text-white`}>{status}</span>;
     }
   };
 
@@ -196,7 +220,7 @@ const TenantDashboard = () => {
                     <FaCalendarAlt className="text-primary me-2" size={24} />
                     <Card.Title className="mb-0">Upcoming Viewings</Card.Title>
                   </div>
-                  {applications.filter(app => app.status === 'pending' && app.viewingDate).length > 0 ? (
+                  {applications.filter(app => (app.status === 'pending' || app.status === 'viewing') && app.viewingDate).length > 0 ? (
                     <div className="table-responsive">
                       <table className="table table-hover">
                         <thead>
@@ -210,7 +234,7 @@ const TenantDashboard = () => {
                         </thead>
                         <tbody>
                           {applications
-                            .filter(app => app.status === 'pending' && app.viewingDate)
+                            .filter(app => (app.status === 'pending' || app.status === 'viewing') && app.viewingDate)
                             .map(app => (
                               <tr key={app._id}>
                                 <td>
@@ -220,12 +244,33 @@ const TenantDashboard = () => {
                                 </td>
                                 <td>{new Date(app.viewingDate).toLocaleDateString()}</td>
                                 <td>{app.viewingTime}</td>
-                                <td>{getStatusIcon(app.status)} {getStatusBadge(app.status)}</td>
                                 <td>
-                                  <Button variant="outline-secondary" size="sm" className="me-2" onClick={() => handleReschedule(app)}>
+                                  {getStatusBadge(app.status)}
+                                </td>
+                                <td>
+                                  {app.status === 'viewing' && (
+                                    <Button
+                                      variant="outline-primary"
+                                      size="sm"
+                                      className="me-2"
+                                      onClick={() => handlePromoteApplication(app._id)}
+                                    >
+                                      Apply for tenancy
+                                    </Button>
+                                  )}
+                                  <Button
+                                    variant="outline-secondary"
+                                    size="sm"
+                                    className="me-2"
+                                    onClick={() => handleReschedule(app)}
+                                  >
                                     Reschedule
                                   </Button>
-                                  <Button variant="outline-danger" size="sm" onClick={() => handleCancel(app)}>
+                                  <Button
+                                    variant="outline-danger"
+                                    size="sm"
+                                    onClick={() => handleCancel(app)}
+                                  >
                                     Cancel
                                   </Button>
                                 </td>
@@ -283,6 +328,7 @@ const TenantDashboard = () => {
           }
         }}
         propertyTitle={selectedApplication?.property?.title}
+        propertyId={selectedApplication?.property?._id}
       />
 
       {/* Cancel Confirmation Modal */}

@@ -7,7 +7,10 @@ import {
   deleteProperty,
   applyForProperty,
   updateApplicationStatus,
-  getAvailableProperties
+  getAvailableProperties,
+  generatePropertyListing,
+  getViewingSlots,
+  getViewingDates
 } from '../controllers/propertyController.js';
 import {
   uploadPropertyDocuments,
@@ -48,6 +51,8 @@ const upload = multer({ storage: storage });
 router.get('/', getProperties);
 router.get('/available', getAvailableProperties);
 router.get('/:id', getPropertyById);
+router.get('/:id/viewing-dates', getViewingDates);
+router.get('/:id/viewing-slots', getViewingSlots);
 
 // Protected routes
 router.post('/', protect, restrictTo('landlord'), upload.fields([
@@ -82,5 +87,8 @@ router.post('/:propertyId/documents', protect, restrictTo('landlord'), upload.fi
 
 router.get('/:propertyId/documents', protect, getPropertyDocuments);
 router.delete('/:propertyId/documents/:field/:documentId', protect, restrictTo('landlord'), deletePropertyDocument);
+
+// AI Generation route
+router.post('/generate-listing', protect, restrictTo('landlord'), generatePropertyListing);
 
 export default router; 
