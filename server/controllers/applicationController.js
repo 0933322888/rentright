@@ -185,6 +185,19 @@ export const deleteApplication = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to delete this application' });
     }
 
+    // Remove application from the property's applications array
+    await Property.findByIdAndUpdate(
+      application.property._id,
+      {
+        $pull: {
+          applications: {
+            tenant: application.tenant._id
+          }
+        }
+      }
+    );
+
+    // Delete the application document
     await Application.findByIdAndDelete(req.params.id);
     res.json({ message: 'Application deleted successfully' });
   } catch (error) {
@@ -195,7 +208,7 @@ export const deleteApplication = async (req, res) => {
 // Get applications for a specific property
 export const getPropertyApplications = async (req, res) => {
   try {
-    const { propertyId } = req.params;
+    const propertyId = req.params.id;
     
     // Check if property exists and belongs to the landlord
     const property = await Property.findById(propertyId);

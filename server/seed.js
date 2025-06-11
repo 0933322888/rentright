@@ -5,6 +5,7 @@ import Property from './models/propertyModel.js';
 import TenantDocument from './models/tenantDocumentModel.js';
 import Application from './models/applicationModel.js';
 import Ticket from './models/ticketModel.js';
+import Payment from './models/paymentModel.js';
 import bcrypt from 'bcryptjs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -27,7 +28,7 @@ if (!MONGODB_URI) {
 const sampleLandlords = [
   {
     name: 'John Smith Landlord',
-    email: 'john@example.com',
+    email: 'l1@l1',
     password: '123',
     role: 'landlord',
     isVerified: true,
@@ -35,7 +36,7 @@ const sampleLandlords = [
   },
   {
     name: 'Sarah Johnson Landlord',
-    email: 'sarah@example.com',
+    email: 'l2@l2',
     password: '123',
     role: 'landlord',
     isVerified: true,
@@ -54,7 +55,7 @@ const sampleLandlords = [
 const sampleTenants = [
   {
     name: 'Emily Davis Tenant',
-    email: 'emily@example.com',
+    email: 't2@t2',
     password: '123',
     role: 'tenant',
     hasProfile: true,
@@ -145,7 +146,7 @@ const sampleProperties = [
       }
     ],
     images: ['https://media.istockphoto.com/id/1255835530/photo/modern-custom-suburban-home-exterior.jpg?s=1024x1024&w=is&k=20&c=4TmxYMrPLVb8u09dT5amw1vBsAVbHCxMWZIXqoy-I34=', 'https://media.istockphoto.com/id/520774645/photo/house-exterior-with-curb-appeal.jpg?s=1024x1024&w=is&k=20&c=4rwljqZ3Sd5f2aI3e7um6fKpILko-OrrFiEQCJA38ug=', 'https://media.istockphoto.com/id/590074124/photo/classic-american-house-with-siding-trim-and-red-entry-door.jpg?s=1024x1024&w=is&k=20&c=NXIxkzhayUFnOGqI1hhNFW04ufCpYO_F6KNgNiCHNMo='],
-    status: 'review'
+    status: 'rented'
   },
   {
     title: 'Cozy Suburban House',
@@ -374,6 +375,42 @@ const sampleProperties = [
   }
 ];
 
+// Sample payments data
+const samplePayments = [
+  {
+    amount: 2500,
+    date: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // 90 days ago
+    dueDate: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
+    status: 'paid',
+    paymentMethod: 'credit_card',
+    description: 'Rent for March 2024'
+  },
+  {
+    amount: 2500,
+    date: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000), // 60 days ago
+    dueDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
+    status: 'paid',
+    paymentMethod: 'bank_transfer',
+    description: 'Rent for April 2024'
+  },
+  {
+    amount: 2500,
+    date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+    dueDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+    status: 'paid',
+    paymentMethod: 'debit_card',
+    description: 'Rent for May 2024'
+  },
+  {
+    amount: 2500,
+    date: new Date(), // Current date
+    dueDate: new Date(),
+    status: 'pending',
+    paymentMethod: 'credit_card',
+    description: 'Rent for June 2024'
+  }
+];
+
 const seed = async () => {
   try {
     console.log('Connecting to MongoDB...');
@@ -386,6 +423,7 @@ const seed = async () => {
     await TenantDocument.deleteMany({});
     await Ticket.deleteMany({});
     await Application.deleteMany({});
+    await Payment.deleteMany({});
     console.log('Cleared existing data');
 
     // Hash passwords
@@ -408,6 +446,90 @@ const seed = async () => {
     const createdTenants = await User.insertMany(hashedTenants);
     console.log('Created users');
 
+    // Create tenant documents for specific tenants
+    const tenantDocumentData = {
+      proofOfIdentity: [
+        {
+          path: "/opt/render/project/src/server/uploads/tenant-documents/1749609937102-644975019-secure_payments.jpg",
+          filename: "1749609937102-644975019-secure_payments.jpg",
+          uploadedAt: "2025-06-11T02:45:39.020Z",
+          _id: "6848edd34c55039273589aaf",
+          url: "http://localhost:5000/uploads/tenant-documents/1749609937102-644975019-secure_payments.jpg",
+          thumbnailUrl: "http://localhost:5000/uploads/tenant-documents/1749609937102-644975019-secure_payments.jpg"
+        }
+      ],
+      proofOfIncome: [
+        {
+          path: "/opt/render/project/src/server/uploads/tenant-documents/1749609996587-382554318-legal_compliance.jpg",
+          filename: "1749609996587-382554318-legal_compliance.jpg",
+          uploadedAt: "2025-06-11T02:46:38.090Z",
+          _id: "6848ee0eef1c3cbb2741f8d2",
+          url: "http://localhost:5000/uploads/tenant-documents/1749609996587-382554318-legal_compliance.jpg",
+          thumbnailUrl: "http://localhost:5000/uploads/tenant-documents/1749609996587-382554318-legal_compliance.jpg"
+        }
+      ],
+      creditHistory: [
+        {
+          path: "/opt/render/project/src/server/uploads/tenant-documents/1749609998094-910255049-hero_property.png",
+          filename: "1749609998094-910255049-hero_property.png",
+          uploadedAt: "2025-06-11T02:46:38.489Z",
+          _id: "6848ee0eef1c3cbb2741f8d3",
+          url: "http://localhost:5000/uploads/tenant-documents/1749609998094-910255049-hero_property.png",
+          thumbnailUrl: "http://localhost:5000/uploads/tenant-documents/1749609998094-910255049-hero_property.png"
+        }
+      ],
+      rentalHistory: [
+        {
+          path: "/opt/render/project/src/server/uploads/tenant-documents/1749609998490-834608717-legal_compliance.jpg",
+          filename: "1749609998490-834608717-legal_compliance.jpg",
+          uploadedAt: "2025-06-11T02:46:39.992Z",
+          _id: "6848ee0fef1c3cbb2741f8d4",
+          url: "http://localhost:5000/uploads/tenant-documents/1749609998490-834608717-legal_compliance.jpg",
+          thumbnailUrl: "http://localhost:5000/uploads/tenant-documents/1749609998490-834608717-legal_compliance.jpg"
+        }
+      ],
+      additionalDocuments: [
+        {
+          path: "/opt/render/project/src/server/uploads/tenant-documents/1749609999993-340071967-smart_management.jpg",
+          filename: "1749609999993-340071967-smart_management.jpg",
+          uploadedAt: "2025-06-11T02:46:41.502Z",
+          _id: "6848ee11ef1c3cbb2741f8d5",
+          url: "http://localhost:5000/uploads/tenant-documents/1749609999993-340071967-smart_management.jpg",
+          thumbnailUrl: "http://localhost:5000/uploads/tenant-documents/1749609999993-340071967-smart_management.jpg"
+        }
+      ],
+      isCurrentlyEmployed: "yes",
+      employmentType: "full-time",
+      monthlyNetIncome: 10000,
+      hasAdditionalIncome: "yes",
+      additionalIncomeDescription: "dividends",
+      monthlyDebtRepayment: 2000,
+      paysChildSupport: "no",
+      childSupportAmount: 0,
+      hasBeenEvicted: "no",
+      currentlyPaysRent: "yes",
+      currentRentAmount: 2500,
+      hasTwoMonthsRentSavings: "yes",
+      canShareFinancialDocuments: "yes",
+      canPayMoreThanOneMonth: "yes",
+      monthsAheadCanPay: 3
+    };
+
+    // Create tenant documents for sampleTenants[0] and sampleTenants[2]
+    const tenantDocuments = [
+      {
+        ...tenantDocumentData,
+        tenant: createdTenants[0]._id // sampleTenants[0]
+      },
+      {
+        ...tenantDocumentData,
+        tenant: createdTenants[2]._id // sampleTenants[2]
+      }
+    ];
+
+    await TenantDocument.insertMany(tenantDocuments);
+    console.log('Created tenant documents');
+
     // Assign landlords to properties
     const propertiesWithLandlords = sampleProperties.map((property, index) => ({
       ...property,
@@ -415,8 +537,31 @@ const seed = async () => {
     }));
 
     // Create properties
-    await Property.insertMany(propertiesWithLandlords);
+    const createdProperties = await Property.insertMany(propertiesWithLandlords);
     console.log('Created properties');
+
+    // Create an approved application for the first property
+    const approvedApplication = new Application({
+      tenant: createdTenants[0]._id, // Emily Davis Tenant
+      property: createdProperties[0]._id, // Modern Downtown Apartment
+      status: 'approved',
+      tenantDocument: (await TenantDocument.findOne({ tenant: createdTenants[0]._id }))._id,
+      viewingDate: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000), // 120 days ago
+      viewingTime: '10:00',
+      notes: 'Approved tenant with good credit history'
+    });
+    await approvedApplication.save();
+    console.log('Created approved application');
+
+    // Create payments for the approved tenant
+    const paymentsWithReferences = samplePayments.map(payment => ({
+      ...payment,
+      tenant: createdTenants[0]._id, // Emily Davis Tenant
+      property: createdProperties[0]._id // Modern Downtown Apartment
+    }));
+
+    await Payment.insertMany(paymentsWithReferences);
+    console.log('Created sample payments');
 
     console.log('Database seeded successfully');
     process.exit(0);

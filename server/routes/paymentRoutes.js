@@ -4,7 +4,8 @@ import {
   createPayment,
   getPaymentById,
   updatePaymentStatus,
-  generateMonthlyPayment
+  generateMonthlyPayment,
+  getPropertyPayments
 } from '../controllers/paymentController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -15,6 +16,9 @@ router.use(protect);
 
 // Get tenant's payment history
 router.get('/tenant/:id', getTenantPayments);
+
+// Get property's payment history (for landlords)
+router.get('/property/:propertyId', getPropertyPayments);
 
 // Create a new payment
 router.post('/', createPayment);

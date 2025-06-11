@@ -1,5 +1,6 @@
 import Payment from '../models/paymentModel.js';
 import Application from '../models/applicationModel.js';
+import Property from '../models/propertyModel.js';
 
 // Get tenant's payment history
 export const getTenantPayments = async (req, res) => {
@@ -128,4 +129,33 @@ export const generateMonthlyPayment = async (req, res) => {
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
-}; 
+};
+
+// Get payments by property ID (for landlords)
+const getPropertyPayments = async (req, res) => {
+  try {
+    const { propertyId } = req.params;
+
+    // Check if the property exists and belongs to the landlord
+    const property = await Property.findById(propertyId);
+    if (!property) {
+      return res.status(404).json({ message: 'Property not found' });
+    }
+
+    // Check if the user is the landlord of this property
+    if (property.landlord.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to view payments for this property' });
+    }
+
+    const payments = await Payment.find({ property: propertyId })
+      .populate('tenant', 'name email')
+      .populate('property', 'title location')
+      .sort('-date');
+
+    res.json(payments);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export { getPropertyPayments }; 
