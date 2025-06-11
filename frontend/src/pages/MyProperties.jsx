@@ -42,6 +42,8 @@ import ErrorIcon from '@mui/icons-material/Error';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
+import LeaseAgreement from '../components/lease/LeaseAgreement';
+import Payments from '../components/lease/Payments';
 
 export default function MyProperties() {
   const { user } = useAuth();
@@ -60,6 +62,7 @@ export default function MyProperties() {
   const [ticketsError, setTicketsError] = useState('');
   const [clickedButton, setClickedButton] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [failedImages, setFailedImages] = useState(new Set());
 
   useEffect(() => {
     fetchProperties();
@@ -100,6 +103,7 @@ export default function MyProperties() {
 
   const fetchProperties = async () => {
     try {
+      console.log('Fetching properties for user:', user._id);
       const response = await axios.get(API_ENDPOINTS.PROPERTIES, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -108,6 +112,7 @@ export default function MyProperties() {
           landlord: user._id
         }
       });
+      console.log('Fetched properties:', response.data);
       setProperties(response.data);
     } catch (error) {
       setError('Error fetching properties');
@@ -118,21 +123,42 @@ export default function MyProperties() {
   };
 
   const fetchApplications = async () => {
+    if (!properties[selectedPropertyIndex]) return;
+    
     try {
-      const property = properties[selectedPropertyIndex];
-      const response = await axios.get(API_ENDPOINTS.PROPERTY_APPLICATIONS(property._id), {
+      const response = await axios.get(`${API_ENDPOINTS.APPLICATIONS}/property/${properties[selectedPropertyIndex]._id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
       });
-      setApplications(response.data);
-      if (response.data.length === 0) {
+      
+      // Populate property data for each application
+      const populatedApplications = await Promise.all(
+        response.data.map(async (app) => {
+          if (app.property) {
+            const propertyResponse = await axios.get(`${API_ENDPOINTS.PROPERTIES}/${app.property}`, {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`
+              }
+            });
+            return {
+              ...app,
+              property: propertyResponse.data
+            };
+          }
+          return app;
+        })
+      );
+      
+      setApplications(populatedApplications);
+      if (populatedApplications.length === 0) {
         setSelectedTenantIndex('0');
-      } else if (parseInt(selectedTenantIndex) >= response.data.length) {
-        setSelectedTenantIndex((response.data.length - 1).toString());
+      } else if (parseInt(selectedTenantIndex) >= populatedApplications.length) {
+        setSelectedTenantIndex((populatedApplications.length - 1).toString());
       }
-    } catch (error) {
-      console.error('Error fetching applications:', error);
+    } catch (err) {
+      console.error('Error fetching applications:', err);
+      toast.error('Failed to fetch applications');
     }
   };
 
@@ -303,6 +329,13 @@ export default function MyProperties() {
   useEffect(() => {
     setCurrentImageIndex(0);
   }, [selectedPropertyIndex]);
+
+  const handleImageError = (docId, e) => {
+    if (!failedImages.has(docId)) {
+      setFailedImages(prev => new Set([...prev, docId]));
+      e.target.src = 'https://via.placeholder.com/400x300';
+    }
+  };
 
   if (isLoading) {
     return (
@@ -510,7 +543,7 @@ export default function MyProperties() {
                       <Tab
                         label={
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                            {properties[selectedPropertyIndex]?.status === 'active' ? (
+                            {property.status === 'active' ? (
                               <CheckCircleIcon color="primary" sx={{ fontSize: 28 }} />
                             ) : (
                               <HourglassEmptyIcon color="warning" sx={{ fontSize: 28 }} />
@@ -938,11 +971,32 @@ export default function MyProperties() {
 
                                   {/* Application Actions */}
                                   {application.status === 'pending' && (
-                                    <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
+                                    <Box sx={{ 
+                                      mt: 3, 
+                                      p: 2, 
+                                      bgcolor: 'background.paper',
+                                      borderRadius: 1,
+                                      border: '1px solid',
+                                      borderColor: 'divider',
+                                      display: 'flex',
+                                      justifyContent: 'flex-end',
+                                      gap: 2
+                                    }}>
                                       <Button
                                         variant="contained"
                                         color="success"
                                         onClick={() => handleApplicationAction(application._id, 'approve')}
+                                        startIcon={<CheckCircleIcon />}
+                                        sx={{
+                                          minWidth: 120,
+                                          borderRadius: 2,
+                                          textTransform: 'none',
+                                          fontWeight: 600,
+                                          boxShadow: '0 2px 4px rgba(46,125,50,0.2)',
+                                          '&:hover': {
+                                            boxShadow: '0 4px 8px rgba(46,125,50,0.3)',
+                                          }
+                                        }}
                                       >
                                         Approve
                                       </Button>
@@ -950,6 +1004,17 @@ export default function MyProperties() {
                                         variant="contained"
                                         color="error"
                                         onClick={() => handleApplicationAction(application._id, 'reject')}
+                                        startIcon={<ErrorIcon />}
+                                        sx={{
+                                          minWidth: 120,
+                                          borderRadius: 2,
+                                          textTransform: 'none',
+                                          fontWeight: 600,
+                                          boxShadow: '0 2px 4px rgba(211,47,47,0.2)',
+                                          '&:hover': {
+                                            boxShadow: '0 4px 8px rgba(211,47,47,0.3)',
+                                          }
+                                        }}
                                       >
                                         Reject
                                       </Button>
@@ -1568,14 +1633,14 @@ export default function MyProperties() {
                                                       }}>
                                                         {doc.thumbnailUrl ? (
                                                           <img
-                                                            src={doc.thumbnailUrl.startsWith('http') 
-                                                              ? doc.thumbnailUrl 
-                                                              : `${import.meta.env.VITE_API_URL}${doc.thumbnailUrl}`}
+                                                            src={failedImages.has(doc._id) 
+                                                              ? 'https://via.placeholder.com/400x300'
+                                                              : doc.thumbnailUrl.startsWith('http') 
+                                                                ? doc.thumbnailUrl 
+                                                                : `${import.meta.env.VITE_API_URL}${doc.thumbnailUrl}`}
                                                             alt={`${field} ${docIndex + 1}`}
                                                             style={{ width: '100%', height: '200px', objectFit: 'cover' }}
-                                                            onError={(e) => {
-                                                              e.target.src = 'https://via.placeholder.com/400x300';
-                                                            }}
+                                                            onError={(e) => handleImageError(doc._id, e)}
                                                           />
                                                         ) : (
                                                           <Box sx={{ 
@@ -1632,32 +1697,64 @@ export default function MyProperties() {
                         )}
                       </TabPanel>
                       <TabPanel value="lease">
-                        <Paper sx={{ p: 3, textAlign: 'center' }}>
-                          <Typography variant="h6" gutterBottom>
-                            Lease Agreement
-                          </Typography>
-                          <Typography variant="body1" color="text.secondary">
-                            {applications.length > 0 && applications.some(app => app.status === 'approved') ? (
-                              "View and manage lease agreements for approved applications."
-                            ) : (
-                              "No approved applications yet. Lease agreements will be available once an application is approved."
-                            )}
-                          </Typography>
-                        </Paper>
+                        {applications.length > 0 && applications.some(app => app.status === 'approved') ? (
+                          <Box sx={{ p: 2 }}>
+                            <LeaseAgreement 
+                              leaseDetails={applications.find(app => app.status === 'approved')} 
+                            />
+                          </Box>
+                        ) : (
+                          <Paper sx={{ p: 3, textAlign: 'center' }}>
+                            <Typography variant="h6" gutterBottom>
+                              Lease Agreement
+                            </Typography>
+                            <Typography variant="body1" color="text.secondary">
+                              No approved applications yet. Lease agreements will be available once an application is approved.
+                            </Typography>
+                          </Paper>
+                        )}
                       </TabPanel>
                       <TabPanel value="payments">
-                        <Paper sx={{ p: 3, textAlign: 'center' }}>
-                          <Typography variant="h6" gutterBottom>
-                            Payment History
-                          </Typography>
-                          <Typography variant="body1" color="text.secondary">
-                            {applications.length > 0 && applications.some(app => app.status === 'approved') ? (
-                              "View and manage payment history for this property."
-                            ) : (
-                              "No approved applications yet. Payment history will be available once an application is approved."
-                            )}
-                          </Typography>
-                        </Paper>
+                        {applications.length > 0 && applications.some(app => app.status === 'approved') ? (
+                          <Box sx={{ p: 2 }}>
+                            {(() => {
+                              const approvedApp = applications.find(app => app.status === 'approved');
+                              // Ensure property data is populated
+                              if (!approvedApp.property || typeof approvedApp.property === 'string') {
+                                return (
+                                  <Paper sx={{ p: 3, textAlign: 'center' }}>
+                                    <Typography variant="h6" gutterBottom>
+                                      Loading Payment History
+                                    </Typography>
+                                    <Typography variant="body1" color="text.secondary">
+                                      Please wait while we load the property details...
+                                    </Typography>
+                                  </Paper>
+                                );
+                              }
+                              return (
+                                <Payments 
+                                  leaseDetails={{
+                                    ...approvedApp,
+                                    property: {
+                                      ...approvedApp.property,
+                                      _id: approvedApp.property._id || approvedApp.property
+                                    }
+                                  }} 
+                                />
+                              );
+                            })()}
+                          </Box>
+                        ) : (
+                          <Paper sx={{ p: 3, textAlign: 'center' }}>
+                            <Typography variant="h6" gutterBottom>
+                              Payment History
+                            </Typography>
+                            <Typography variant="body1" color="text.secondary">
+                              No approved applications yet. Payment history will be available once an application is approved.
+                            </Typography>
+                          </Paper>
+                        )}
                       </TabPanel>
                       <TabPanel value="tickets">
                         {ticketsLoading ? (

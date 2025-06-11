@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: Number(process.env.PORT) || 10000,
+    port: Number(process.env.FRONT_ENV === 'production' ? process.env.PROD_FRONTEND_PORT : process.env.DEV_FRONTEND_PORT),
     host: '0.0.0.0',
     allowedHosts: ['rentright-m1md.onrender.com', 'localhost']
   },

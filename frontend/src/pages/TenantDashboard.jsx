@@ -20,42 +20,42 @@ const TenantDashboard = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const [profileRes, applicationsRes] = await Promise.all([
-          axios.get(API_ENDPOINTS.GET_TENANT_PROFILE, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get(API_ENDPOINTS.APPLICATIONS, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
+  const fetchDashboardData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const [profileRes, applicationsRes] = await Promise.all([
+        axios.get(API_ENDPOINTS.GET_TENANT_PROFILE, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        axios.get(API_ENDPOINTS.APPLICATIONS, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
 
-        setTenantData(profileRes.data);
-        setApplications(applicationsRes.data);
+      setTenantData(profileRes.data);
+      setApplications(applicationsRes.data);
 
-        // Check if profile is complete
-        const isProfileComplete = profileRes.data && 
-          profileRes.data.proofOfIdentity?.length > 0 &&
-          profileRes.data.proofOfIncome?.length > 0 &&
-          profileRes.data.creditHistory?.length > 0 &&
-          profileRes.data.rentalHistory?.length > 0 &&
-          profileRes.data.hasBeenEvicted !== undefined &&
-          profileRes.data.canPayMoreThanOneMonth !== undefined;
+      // Check if profile is complete
+      const isProfileComplete = profileRes.data && 
+        profileRes.data.proofOfIdentity?.length > 0 &&
+        profileRes.data.proofOfIncome?.length > 0 &&
+        profileRes.data.creditHistory?.length > 0 &&
+        profileRes.data.rentalHistory?.length > 0 &&
+        profileRes.data.hasBeenEvicted !== undefined &&
+        profileRes.data.canPayMoreThanOneMonth !== undefined;
 
-        if (!isProfileComplete) {
-          setShowProfileModal(true);
-        }
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
+      if (!isProfileComplete) {
         setShowProfileModal(true);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      setShowProfileModal(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchDashboardData();
   }, [user]);
 

@@ -17,6 +17,9 @@ export const API_ENDPOINTS = {
   PROPERTY: (id) => `${BASE_URL}/api/properties/${id}`,
   AVAILABLE_PROPERTIES: `${BASE_URL}/api/properties/available`,
   
+  // Payment endpoints
+  PAYMENTS: `${BASE_URL}/api/payments`,
+  
   // Application endpoints
   APPLICATIONS: `${BASE_URL}/api/applications`,
   PROPERTY_APPLICATIONS: (propertyId) => `${BASE_URL}/api/applications/property/${propertyId}`,
@@ -35,4 +38,7 @@ export const API_ENDPOINTS = {
   MY_TICKETS: `${BASE_URL}/api/tickets/my-tickets`,
   ADMIN_TICKETS: `${BASE_URL}/api/tickets`,
   PROPERTY_TICKETS: (propertyId) => `${BASE_URL}/api/tickets/property/${propertyId}`,
+
+  // Escalation endpoints
+  ESCALATIONS: `${BASE_URL}/api/escalations`,
 }; 

@@ -20,6 +20,7 @@ import AdminTickets from './pages/admin/Tickets';
 import AdminLandlords from './pages/admin/Landlords';
 import AdminTenants from './pages/admin/Tenants';
 import AdminTenantProfile from './pages/admin/AdminTenantProfile';
+import Escalations from './pages/Escalations';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import Layout from './components/Layout';
@@ -55,7 +56,16 @@ function HomeRedirect() {
 
 // Separate component for routes that need auth context
 function AppRoutes() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  // Show loading state while auth is being checked
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
 
   return (
     <ThemeProvider theme={theme}>
@@ -102,6 +112,7 @@ function AppRoutes() {
             <Route path="admin/properties/:id" element={<AdminPropertyDetails />} />
             <Route path="admin/applications" element={<AdminApplications />} />
             <Route path="admin/tickets" element={<AdminTickets />} />
+            <Route path="admin/escalations" element={<Escalations />} />
             <Route path="admin/landlords" element={<AdminLandlords />} />
             <Route path="admin/tenants" element={<AdminTenants />} />
             <Route path="admin/tenants/:id/profile" element={<AdminTenantProfile />} />

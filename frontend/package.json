@@ -23,6 +23,7 @@
     "axios": "^1.6.8",
     "bootstrap": "^5.3.5",
     "date-fns": "^4.1.0",
+    "docusign-esign": "^8.2.0",
     "leaflet": "^1.9.4",
     "react": "^18.2.0",
     "react-bootstrap": "^2.10.9",
