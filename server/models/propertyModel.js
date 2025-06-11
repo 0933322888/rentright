@@ -102,6 +102,17 @@ const propertySchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  leaseStartDate: {
+    type: Date
+  },
+  leaseEndDate: {
+    type: Date
+  },
+  commissionStatus: {
+    type: String,
+    enum: ['pending', 'received', 'not_applicable'],
+    default: 'not_applicable'
+  },
   applications: [{
     tenant: {
       type: mongoose.Schema.Types.ObjectId,

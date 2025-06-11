@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../config/api';
 import { toast } from 'react-hot-toast';
+import { Menu, Transition } from '@headlessui/react';
+import { Fragment } from 'react';
+import { ChevronDownIcon } from '@heroicons/react/20/solid';
 
 export default function AdminProperties() {
   const [properties, setProperties] = useState([]);
@@ -112,6 +115,23 @@ export default function AdminProperties() {
     } catch (err) {
       toast.error('Failed to delete property');
       console.error('Error deleting property:', err);
+    }
+  };
+
+  const handleUpdateCommissionStatus = async (propertyId, status) => {
+    try {
+      await axios.patch(
+        `${API_ENDPOINTS.ADMIN_PROPERTIES}/${propertyId}/commission`,
+        { commissionStatus: status },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        }
+      );
+      toast.success('Commission status updated successfully');
+      fetchProperties();
+    } catch (err) {
+      toast.error('Failed to update commission status');
+      console.error('Error updating commission status:', err);
     }
   };
 
@@ -225,6 +245,12 @@ export default function AdminProperties() {
                     Tenant
                   </th>
                   <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                    Lease Period
+                  </th>
+                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                    Commission
+                  </th>
+                  <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                     Price
                   </th>
                   <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
@@ -266,6 +292,79 @@ export default function AdminProperties() {
                           {property.tenant.email}
                         </>
                       ) : '-'}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                      {property.leaseStartDate ? (
+                        <>
+                          {new Date(property.leaseStartDate).toLocaleDateString()}
+                          {property.leaseEndDate && (
+                            <> - {new Date(property.leaseEndDate).toLocaleDateString()}</>
+                          )}
+                        </>
+                      ) : '-'}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                      <Menu as="div" className="relative inline-block text-left">
+                        <Menu.Button className="inline-flex items-center rounded-md px-2 py-1 text-sm font-medium ring-1 ring-inset focus:outline-none focus:ring-2 focus:ring-offset-2
+                          ${property.commissionStatus === 'received' ? 'bg-green-50 text-green-700 ring-green-600/20' :
+                            property.commissionStatus === 'pending' ? 'bg-yellow-50 text-yellow-700 ring-yellow-600/20' :
+                            'bg-gray-50 text-gray-700 ring-gray-600/20'}">
+                          {property.commissionStatus === 'received' ? 'Received' :
+                           property.commissionStatus === 'pending' ? 'Pending' :
+                           'Not Applicable'}
+                          <ChevronDownIcon className="ml-1 h-4 w-4" aria-hidden="true" />
+                        </Menu.Button>
+                        <Transition
+                          as={Fragment}
+                          enter="transition ease-out duration-100"
+                          enterFrom="transform opacity-0 scale-95"
+                          enterTo="transform opacity-100 scale-100"
+                          leave="transition ease-in duration-75"
+                          leaveFrom="transform opacity-100 scale-100"
+                          leaveTo="transform opacity-0 scale-95"
+                        >
+                          <Menu.Items className="absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                            <div className="py-1">
+                              <Menu.Item>
+                                {({ active }) => (
+                                  <button
+                                    onClick={() => handleUpdateCommissionStatus(property._id, 'received')}
+                                    className={`${
+                                      active ? 'bg-gray-100' : ''
+                                    } block w-full px-4 py-2 text-left text-sm text-gray-700`}
+                                  >
+                                    Mark as Received
+                                  </button>
+                                )}
+                              </Menu.Item>
+                              <Menu.Item>
+                                {({ active }) => (
+                                  <button
+                                    onClick={() => handleUpdateCommissionStatus(property._id, 'pending')}
+                                    className={`${
+                                      active ? 'bg-gray-100' : ''
+                                    } block w-full px-4 py-2 text-left text-sm text-gray-700`}
+                                  >
+                                    Mark as Pending
+                                  </button>
+                                )}
+                              </Menu.Item>
+                              <Menu.Item>
+                                {({ active }) => (
+                                  <button
+                                    onClick={() => handleUpdateCommissionStatus(property._id, 'not_applicable')}
+                                    className={`${
+                                      active ? 'bg-gray-100' : ''
+                                    } block w-full px-4 py-2 text-left text-sm text-gray-700`}
+                                  >
+                                    Mark as Not Applicable
+                                  </button>
+                                )}
+                              </Menu.Item>
+                            </div>
+                          </Menu.Items>
+                        </Transition>
+                      </Menu>
                     </td>
                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                       ${property.price}

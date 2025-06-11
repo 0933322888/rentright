@@ -267,9 +267,9 @@ const EscalationModal = ({ open, onClose, onConfirm, property, tenant }) => {
   );
 };
 
-const RecordPaymentModal = ({ open, onClose, onConfirm, propertyPrice }) => {
-  const [amount, setAmount] = useState(propertyPrice?.toString() || '');
-  const [description, setDescription] = useState('Monthly Rent');
+const RecordPaymentModal = ({ open, onClose, onConfirm, propertyPrice, isCommission = false }) => {
+  const [amount, setAmount] = useState(isCommission ? '500' : (propertyPrice?.toString() || ''));
+  const [description, setDescription] = useState(isCommission ? 'Commission Payment' : 'Monthly Rent');
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [error, setError] = useState('');
 
@@ -282,7 +282,8 @@ const RecordPaymentModal = ({ open, onClose, onConfirm, propertyPrice }) => {
       amount: parseFloat(amount),
       description,
       paymentMethod,
-      status: 'completed'
+      status: 'completed',
+      paymentType: isCommission ? 'commission' : 'rent'
     });
   };
 
@@ -293,79 +294,49 @@ const RecordPaymentModal = ({ open, onClose, onConfirm, propertyPrice }) => {
       maxWidth="sm"
       fullWidth
     >
-      <DialogTitle sx={{ 
-        bgcolor: 'primary.main', 
-        color: 'white',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1
-      }}>
-        <AddIcon /> Record Manual Payment
+      <DialogTitle>
+        {isCommission ? 'Record Commission Payment' : 'Record Payment'}
       </DialogTitle>
-      <DialogContent sx={{ mt: 2 }}>
-        <Typography variant="body2" color="text.secondary" gutterBottom>
-          Use this form to record a payment that was made outside the system (e.g., cash payment).
-        </Typography>
-
-        <TextField
-          fullWidth
-          label="Payment Amount"
-          value={amount}
-          onChange={(e) => {
-            setAmount(e.target.value);
-            setError('');
-          }}
-          error={!!error}
-          helperText={error}
-          type="number"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <AttachMoneyIcon />
-              </InputAdornment>
-            ),
-          }}
-          sx={{ mt: 2 }}
-        />
-
-        <TextField
-          fullWidth
-          label="Payment Description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          sx={{ mt: 2 }}
-        />
-
-        <FormControl fullWidth sx={{ mt: 2 }}>
-          <InputLabel>Payment Method</InputLabel>
-          <Select
-            value={paymentMethod}
-            label="Payment Method"
-            onChange={(e) => setPaymentMethod(e.target.value)}
-          >
-            <MenuItem value="cash">Cash</MenuItem>
-            <MenuItem value="bank_transfer">Bank Transfer</MenuItem>
-            <MenuItem value="check">Check</MenuItem>
-            <MenuItem value="other">Other</MenuItem>
-          </Select>
-        </FormControl>
-
-        {propertyPrice && (
-          <Alert severity="info" sx={{ mt: 2 }}>
-            Suggested amount: ${propertyPrice}
-          </Alert>
-        )}
+      <DialogContent>
+        <Box sx={{ mt: 2 }}>
+          <TextField
+            fullWidth
+            label="Amount"
+            type="number"
+            value={amount}
+            onChange={(e) => {
+              setAmount(e.target.value);
+              setError('');
+            }}
+            error={!!error}
+            helperText={error}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label="Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+          <FormControl fullWidth>
+            <InputLabel>Payment Method</InputLabel>
+            <Select
+              value={paymentMethod}
+              label="Payment Method"
+              onChange={(e) => setPaymentMethod(e.target.value)}
+            >
+              <MenuItem value="credit_card">Credit Card</MenuItem>
+              <MenuItem value="debit_card">Debit Card</MenuItem>
+              <MenuItem value="bank_transfer">Bank Transfer</MenuItem>
+              <MenuItem value="cash">Cash</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
       </DialogContent>
-      <DialogActions sx={{ p: 2, bgcolor: 'grey.50' }}>
-        <Button onClick={onClose} color="inherit">
-          Cancel
-        </Button>
-        <Button 
-          onClick={handleSubmit}
-          variant="contained" 
-          color="primary"
-          startIcon={<AddIcon />}
-        >
+      <DialogActions>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={handleSubmit} variant="contained" color="primary">
           Record Payment
         </Button>
       </DialogActions>
@@ -490,6 +461,7 @@ const Payments = ({ leaseDetails }) => {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [showEscalationModal, setShowEscalationModal] = useState(false);
   const [showRecordPaymentModal, setShowRecordPaymentModal] = useState(false);
+  const [showCommissionPaymentModal, setShowCommissionPaymentModal] = useState(false);
   const [escalations, setEscalations] = useState([]);
   const [activeEscalation, setActiveEscalation] = useState(null);
   const [showEscalationDetailsModal, setShowEscalationDetailsModal] = useState(false);
@@ -641,6 +613,22 @@ const Payments = ({ leaseDetails }) => {
       setPayments(prev => [response.data, ...prev]);
       toast.success('Payment recorded successfully');
       setShowRecordPaymentModal(false);
+      setShowCommissionPaymentModal(false);
+
+      // If this was a commission payment, update the property's commission status
+      if (paymentData.paymentType === 'commission') {
+        try {
+          await axios.patch(
+            `${API_ENDPOINTS.ADMIN_PROPERTIES}/${leaseDetails.property._id}/commission`,
+            { commissionStatus: 'received' },
+            {
+              headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            }
+          );
+        } catch (err) {
+          console.error('Error updating commission status:', err);
+        }
+      }
     } catch (err) {
       console.error('Error recording payment:', err);
       toast.error('Failed to record payment');
@@ -677,6 +665,10 @@ const Payments = ({ leaseDetails }) => {
       default:
         return 'default';
     }
+  };
+
+  const hasCommissionPayment = () => {
+    return payments.some(payment => payment.paymentType === 'commission' && payment.status === 'paid');
   };
 
   if (loading) {
@@ -801,6 +793,35 @@ const Payments = ({ leaseDetails }) => {
             </div>
           )}
 
+          {/* Commission Payment Section for Landlords */}
+          {user.role === 'landlord' && (
+            <Paper sx={{ p: 3, mb: 4 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6">Commission Payment</Typography>
+                {!hasCommissionPayment() && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={<AttachMoneyIcon />}
+                    onClick={() => setShowCommissionPaymentModal(true)}
+                  >
+                    Pay Commission
+                  </Button>
+                )}
+              </Box>
+              {hasCommissionPayment() ? (
+                <Alert severity="success" sx={{ mt: 2 }}>
+                  Commission payment has been received. Thank you for your business!
+                </Alert>
+              ) : (
+                <Alert severity="info" sx={{ mt: 2 }}>
+                  Please complete the commission payment to finalize the property listing process.
+                  The standard commission rate is $500.
+                </Alert>
+              )}
+            </Paper>
+          )}
+
           {/* Payments Section */}
           <div className="bg-white shadow rounded-lg p-6">
             <div className="flex justify-between items-center mb-4">
@@ -832,6 +853,7 @@ const Payments = ({ leaseDetails }) => {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tenant</th>
                       )}
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
@@ -850,6 +872,13 @@ const Payments = ({ leaseDetails }) => {
                         )}
                         <td className="px-6 py-4 whitespace-nowrap">
                           ${payment.amount}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            payment.paymentType === 'commission' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {payment.paymentType === 'commission' ? 'Commission' : 'Rent'}
+                          </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <StatusBadge status={payment.status} />
@@ -881,6 +910,13 @@ const Payments = ({ leaseDetails }) => {
             onClose={() => setShowRecordPaymentModal(false)}
             onConfirm={handleRecordPayment}
             propertyPrice={leaseDetails?.property?.price}
+          />
+
+          <RecordPaymentModal
+            open={showCommissionPaymentModal}
+            onClose={() => setShowCommissionPaymentModal(false)}
+            onConfirm={handleRecordPayment}
+            isCommission={true}
           />
 
           <EscalationDetailsModal

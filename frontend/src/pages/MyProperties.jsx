@@ -27,19 +27,26 @@ import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import theme from '../theme';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
-import InfoIcon from '@mui/icons-material/Info';
+import HomeIcon from '@mui/icons-material/Home';
+import DescriptionIcon from '@mui/icons-material/Description';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import ReceiptIcon from '@mui/icons-material/Receipt';
+import BuildIcon from '@mui/icons-material/Build';
 import { toast } from 'react-hot-toast';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ScoreIcon from '@mui/icons-material/Score';
 import ContactMailIcon from '@mui/icons-material/ContactMail';
 import EmailIcon from '@mui/icons-material/Email';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import CancelIcon from '@mui/icons-material/Cancel';
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import PhoneIcon from '@mui/icons-material/Phone';
 import PersonIcon from '@mui/icons-material/Person';
 import ErrorIcon from '@mui/icons-material/Error';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import AttachMoneyOutlinedIcon from '@mui/icons-material/AttachMoneyOutlined';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import LeaseAgreement from '../components/lease/LeaseAgreement';
@@ -524,30 +531,40 @@ export default function MyProperties() {
                           borderRadius: '8px',
                           marginBottom: 1,
                           transition: 'all 0.2s',
+                          backgroundColor: '#f5f5f5',
+                          color: '#666',
+                          border: '1px solid #e0e0e0',
                           '&:hover': {
-                            backgroundColor: 'rgba(25, 118, 210, 0.04)',
+                            backgroundColor: '#eeeeee',
                           },
                           '&.Mui-selected': {
-                            backgroundColor: 'rgba(25, 118, 210, 0.12)',
+                            backgroundColor: '#e3f2fd',
+                            color: '#1976d2',
+                            border: '2px solid #1976d2',
                             '& .MuiTypography-root': {
-                              color: 'primary.main',
-                              fontWeight: 'bold',
+                              color: '#1976d2',
+                              fontWeight: 600,
+                            },
+                            '& .MuiTypography-caption': {
+                              color: '#1976d2',
                             },
                             '& .MuiSvgIcon-root': {
-                              color: 'primary.main',
+                              color: '#1976d2',
+                            },
+                            '&:hover': {
+                              backgroundColor: '#e3f2fd',
                             },
                           },
+                        },
+                        '& .MuiTabs-indicator': {
+                          display: 'none',
                         },
                       }}
                     >
                       <Tab
                         label={
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                            {property.status === 'active' ? (
-                              <CheckCircleIcon color="primary" sx={{ fontSize: 28 }} />
-                            ) : (
-                              <HourglassEmptyIcon color="warning" sx={{ fontSize: 28 }} />
-                            )}
+                            <HomeIcon sx={{ fontSize: 28 }} />
                             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                               <Typography>Details</Typography>
                               <Typography variant="caption" color="text.secondary">
@@ -561,11 +578,7 @@ export default function MyProperties() {
                       <Tab
                         label={
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                            {applications.length > 0 && applications.some(app => app.status === 'approved') ? (
-                              <CheckCircleIcon color="primary" sx={{ fontSize: 28 }} />
-                            ) : (
-                              <HourglassEmptyIcon color="warning" sx={{ fontSize: 28 }} />
-                            )}
+                            <AssignmentIcon sx={{ fontSize: 28 }} />
                             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                               <Typography>Applications</Typography>
                               <Typography variant="caption" color="text.secondary">
@@ -579,11 +592,7 @@ export default function MyProperties() {
                       <Tab
                         label={
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                            {applications.length > 0 && applications.some(app => app.status === 'approved') ? (
-                              <CheckCircleIcon color="primary" sx={{ fontSize: 28 }} />
-                            ) : (
-                              <HourglassEmptyIcon color="warning" sx={{ fontSize: 28 }} />
-                            )}
+                            <DescriptionIcon sx={{ fontSize: 28 }} />
                             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                               <Typography>Lease Agreement</Typography>
                               <Typography variant="caption" color="text.secondary">
@@ -597,11 +606,7 @@ export default function MyProperties() {
                       <Tab
                         label={
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                            {applications.length > 0 && applications.some(app => app.status === 'approved') ? (
-                              <CheckCircleIcon color="primary" sx={{ fontSize: 28 }} />
-                            ) : (
-                              <HourglassEmptyIcon color="warning" sx={{ fontSize: 28 }} />
-                            )}
+                            <ReceiptIcon sx={{ fontSize: 28 }} />
                             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                               <Typography>Payments</Typography>
                               <Typography variant="caption" color="text.secondary">
@@ -615,11 +620,7 @@ export default function MyProperties() {
                       <Tab
                         label={
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                            {hasNewTickets ? (
-                              <InfoIcon color="primary" sx={{ fontSize: 28 }} />
-                            ) : (
-                              <CheckCircleIcon color="primary" sx={{ fontSize: 28 }} />
-                            )}
+                            <BuildIcon sx={{ fontSize: 28 }} />
                             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                               <Typography>Tickets</Typography>
                               <Typography variant="caption" color="text.secondary">
@@ -986,7 +987,9 @@ export default function MyProperties() {
                                         variant="contained"
                                         color="success"
                                         onClick={() => handleApplicationAction(application._id, 'approve')}
-                                        startIcon={<CheckCircleIcon />}
+                                        startIcon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>}
                                         sx={{
                                           minWidth: 120,
                                           borderRadius: 2,
@@ -1004,7 +1007,9 @@ export default function MyProperties() {
                                         variant="contained"
                                         color="error"
                                         onClick={() => handleApplicationAction(application._id, 'reject')}
-                                        startIcon={<ErrorIcon />}
+                                        startIcon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>}
                                         sx={{
                                           minWidth: 120,
                                           borderRadius: 2,

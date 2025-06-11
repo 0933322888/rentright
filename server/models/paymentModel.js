@@ -40,6 +40,11 @@ const paymentSchema = new mongoose.Schema({
   description: {
     type: String,
     default: 'Monthly Rent'
+  },
+  paymentType: {
+    type: String,
+    enum: ['rent', 'commission'],
+    default: 'rent'
   }
 }, {
   timestamps: true

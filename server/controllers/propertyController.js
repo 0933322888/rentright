@@ -530,6 +530,30 @@ export const getViewingDates = async (req, res) => {
   }
 };
 
+const updatePropertyCommissionStatus = async (req, res) => {
+  try {
+    const { propertyId } = req.params;
+    const { commissionStatus } = req.body;
+
+    if (!['pending', 'received', 'not_applicable'].includes(commissionStatus)) {
+      return res.status(400).json({ message: 'Invalid commission status' });
+    }
+
+    const property = await Property.findById(propertyId);
+    if (!property) {
+      return res.status(404).json({ message: 'Property not found' });
+    }
+
+    property.commissionStatus = commissionStatus;
+    await property.save();
+
+    res.json(property);
+  } catch (error) {
+    console.error('Error updating property commission status:', error);
+    res.status(400).json({ message: error.message });
+  }
+};
+
 export {
   createProperty,
   getProperties,
@@ -539,5 +563,6 @@ export {
   applyForProperty,
   updateApplicationStatus,
   getAvailableProperties,
-  generatePropertyListing
+  generatePropertyListing,
+  updatePropertyCommissionStatus
 }; 
