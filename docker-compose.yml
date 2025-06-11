@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  server:
+    build: ./server
+    ports:
+      - "5005:5005"
+    environment:
+      - PORT=5005
+      - MONGODB_URI=mongodb://mongo:27017/rentright
+      - JWT_SECRET=your_jwt_secret_key_here
+      - NODE_ENV=development
+    command: sh -c "node seed.js && npm run start"
+    depends_on:
+      - mongo
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:5005
+      - JWT_SECRET=your_jwt_secret_key_here
+    command: npm run dev -- --host
+    depends_on:
+      - server
+
+  mongo:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
