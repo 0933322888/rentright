@@ -146,7 +146,7 @@ const sampleProperties = [
       }
     ],
     images: ['https://media.istockphoto.com/id/1255835530/photo/modern-custom-suburban-home-exterior.jpg?s=1024x1024&w=is&k=20&c=4TmxYMrPLVb8u09dT5amw1vBsAVbHCxMWZIXqoy-I34=', 'https://media.istockphoto.com/id/520774645/photo/house-exterior-with-curb-appeal.jpg?s=1024x1024&w=is&k=20&c=4rwljqZ3Sd5f2aI3e7um6fKpILko-OrrFiEQCJA38ug=', 'https://media.istockphoto.com/id/590074124/photo/classic-american-house-with-siding-trim-and-red-entry-door.jpg?s=1024x1024&w=is&k=20&c=NXIxkzhayUFnOGqI1hhNFW04ufCpYO_F6KNgNiCHNMo='],
-    status: 'rented'
+    status: 'active'
   },
   {
     title: 'Cozy Suburban House',
@@ -541,27 +541,27 @@ const seed = async () => {
     console.log('Created properties');
 
     // Create an approved application for the first property
-    const approvedApplication = new Application({
-      tenant: createdTenants[0]._id, // Emily Davis Tenant
-      property: createdProperties[0]._id, // Modern Downtown Apartment
-      status: 'approved',
-      tenantDocument: (await TenantDocument.findOne({ tenant: createdTenants[0]._id }))._id,
-      viewingDate: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000), // 120 days ago
-      viewingTime: '10:00',
-      notes: 'Approved tenant with good credit history'
-    });
-    await approvedApplication.save();
-    console.log('Created approved application');
+    // const approvedApplication = new Application({
+    //   tenant: createdTenants[0]._id, // Emily Davis Tenant
+    //   property: createdProperties[0]._id, // Modern Downtown Apartment
+    //   status: 'approved',
+    //   tenantDocument: (await TenantDocument.findOne({ tenant: createdTenants[0]._id }))._id,
+    //   viewingDate: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000), // 120 days ago
+    //   viewingTime: '10:00',
+    //   notes: 'Approved tenant with good credit history'
+    // });
+    // await approvedApplication.save();
+    // console.log('Created approved application');
 
-    // Create payments for the approved tenant
-    const paymentsWithReferences = samplePayments.map(payment => ({
-      ...payment,
-      tenant: createdTenants[0]._id, // Emily Davis Tenant
-      property: createdProperties[0]._id // Modern Downtown Apartment
-    }));
+    // // Create payments for the approved tenant
+    // const paymentsWithReferences = samplePayments.map(payment => ({
+    //   ...payment,
+    //   tenant: createdTenants[0]._id, // Emily Davis Tenant
+    //   property: createdProperties[0]._id // Modern Downtown Apartment
+    // }));
 
-    await Payment.insertMany(paymentsWithReferences);
-    console.log('Created sample payments');
+    // await Payment.insertMany(paymentsWithReferences);
+    // console.log('Created sample payments');
 
     console.log('Database seeded successfully');
     process.exit(0);

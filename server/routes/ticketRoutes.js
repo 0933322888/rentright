@@ -8,7 +8,9 @@ import {
   getTicketById,
   updateTicketPriority,
   addComment,
-  getPropertyTickets
+  getPropertyTickets,
+  deleteTicket,
+  updateTenantTicketStatus
 } from '../controllers/ticketController.js';
 import Ticket from '../models/ticketModel.js';
 
@@ -16,6 +18,8 @@ const router = express.Router();
 
 // Tenant routes
 router.post('/', protect, restrictTo('tenant'), createTicket);
+router.delete('/:ticketId', protect, restrictTo('tenant'), deleteTicket);
+router.patch('/:ticketId/tenant-status', protect, restrictTo('tenant'), updateTenantTicketStatus);
 router.get('/my-tickets', protect, restrictTo('tenant'), getTenantTickets);
 router.get('/:ticketId', protect, getTicketById);
 
@@ -27,10 +31,10 @@ router.get('/', protect, restrictTo('admin'), getAllTickets);
 router.patch('/:ticketId/status', protect, restrictTo('admin'), updateTicketStatus);
 router.patch('/:ticketId/priority', protect, restrictTo('admin'), updateTicketPriority);
 
-// Comments route - allow both admins and tenants
+// Comments route - allow admins, tenants, and landlords
 router.post('/:ticketId/comments', protect, async (req, res, next) => {
   try {
-    const ticket = await Ticket.findById(req.params.ticketId);
+    const ticket = await Ticket.findById(req.params.ticketId).populate('property');
     if (!ticket) {
       return res.status(404).json({ message: 'Ticket not found' });
     }
@@ -42,6 +46,11 @@ router.post('/:ticketId/comments', protect, async (req, res, next) => {
 
     // Allow tenants to comment only on their own tickets
     if (ticket.tenant.toString() === req.user._id.toString()) {
+      return next();
+    }
+
+    // Allow landlords to comment on tickets for their properties
+    if (req.user.role === 'landlord' && ticket.property.landlord.toString() === req.user._id.toString()) {
       return next();
     }
 
