@@ -34,24 +34,9 @@ export function useTickets(propertyId) {
     }
   };
 
-  const handleTicketAction = async (ticketId, status) => {
-    try {
-      await axios.patch(
-        `${API_ENDPOINTS.TICKETS}/${ticketId}/status`,
-        { status },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        }
-      );
-      
-      await fetchTickets();
-      toast.success(`Ticket ${status === 'approved' ? 'approved' : 'declined'} successfully`);
-    } catch (error) {
-      console.error('Error updating ticket status:', error);
-      toast.error('Failed to update ticket status');
-    }
+  const handleTicketAction = async (updatedTickets) => {
+    setTickets(updatedTickets);
+    setHasNewTickets(updatedTickets.some(ticket => ticket.status === 'new'));
   };
 
   return {

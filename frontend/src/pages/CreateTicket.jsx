@@ -50,11 +50,21 @@ export default function CreateTicket() {
 
       const propertyData = propertyResponse.data;
       
+      // Check if the property has a tenant and if it matches the current user
       if (!propertyData.tenant || propertyData.tenant._id !== user._id) {
-        console.log('Tenant check failed:', {
-          propertyTenant: propertyData.tenant,
-          currentUser: user._id
-        });
+        // Fallback: allow if approved application exists and matches user
+        if (
+          approvedApplication &&
+          approvedApplication.status === 'approved' &&
+          (
+            (typeof approvedApplication.tenant === 'object' && approvedApplication.tenant._id === user._id) ||
+            (typeof approvedApplication.tenant === 'string' && approvedApplication.tenant === user._id)
+          )
+        ) {
+          console.log('Allowing ticket creation based on approved application fallback');
+          setProperty(propertyData);
+          return;
+        }
         setError('You are not the current tenant of this property. Please contact the landlord.');
         return;
       }

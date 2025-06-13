@@ -35,7 +35,7 @@ export default function MyProperties() {
   const [selectedPropertyIndex, setSelectedPropertyIndex] = useState(0);
   const [innerTabValue, setInnerTabValue] = useState('overview');
   const [clickedButton, setClickedButton] = useState(null);
-  const [failedImages, setFailedImages] = useState([]);
+  const [failedImages, setFailedImages] = useState(new Set());
 
   const {
     properties,
@@ -81,6 +81,11 @@ export default function MyProperties() {
   const handleImageErrorWrapper = (imageUrl) => {
     setFailedImages([...failedImages, imageUrl]);
     handleImageError(imageUrl);
+  };
+
+  const handleLeaseUpdate = async (updatedLease) => {
+    // Refresh the applications list to get the updated lease data
+    await fetchApplications();
   };
 
   if (propertiesLoading) {
@@ -295,6 +300,7 @@ export default function MyProperties() {
                           <Box sx={{ p: 2 }}>
                             <LeaseAgreement 
                               leaseDetails={applications.find(app => app.status === 'approved')} 
+                              onLeaseUpdate={handleLeaseUpdate}
                             />
                           </Box>
                         ) : (

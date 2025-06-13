@@ -12,12 +12,22 @@ const ViewingScheduleModal = ({ show, onHide, onSubmit, propertyTitle, propertyI
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [loading, setLoading] = useState(false);
+  const [timeSlots, setTimeSlots] = useState([]);
 
   useEffect(() => {
     if (show && wantsViewing) {
       fetchViewingDates();
     }
   }, [show, wantsViewing]);
+
+  useEffect(() => {
+    if (selectedDate && wantsViewing) {
+      fetchTimeSlots(selectedDate);
+    } else {
+      setTimeSlots([]);
+      setSelectedTime('');
+    }
+  }, [selectedDate, wantsViewing]);
 
   const fetchViewingDates = async () => {
     try {
@@ -28,6 +38,21 @@ const ViewingScheduleModal = ({ show, onHide, onSubmit, propertyTitle, propertyI
     } catch (error) {
       console.error('Error fetching viewing dates:', error);
       toast.error('Failed to fetch available viewing dates');
+      setLoading(false);
+    }
+  };
+
+  const fetchTimeSlots = async (date) => {
+    try {
+      setLoading(true);
+      const dateStr = new Date(date).toISOString().split('T')[0];
+      const response = await axios.get(`${API_ENDPOINTS.PROPERTIES}/${propertyId}/viewing-slots?date=${dateStr}`);
+      setTimeSlots(response.data.timeSlots || []);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching viewing slots:', error);
+      toast.error('Failed to fetch available timeslots');
+      setTimeSlots([]);
       setLoading(false);
     }
   };
@@ -114,18 +139,18 @@ const ViewingScheduleModal = ({ show, onHide, onSubmit, propertyTitle, propertyI
                       value={selectedTime}
                       onChange={(e) => setSelectedTime(e.target.value)}
                       required={wantsViewing}
-                      disabled={loading}
+                      disabled={loading || timeSlots.length === 0}
                     >
                       <option value="">Choose a time...</option>
-                      {viewingDates
-                        .find((date) => date.date === selectedDate)
-                        ?.timeSlots?.filter(slot => !slot.isBooked)
-                        .map((slot) => (
-                          <option key={slot.startTime} value={slot.startTime}>
-                            {slot.startTime}
-                          </option>
-                        ))}
+                      {timeSlots.filter(slot => !slot.isBooked).map((slot) => (
+                        <option key={slot.startTime} value={slot.startTime}>
+                          {slot.startTime} - {slot.endTime}
+                        </option>
+                      ))}
                     </Form.Select>
+                    {selectedDate && !loading && timeSlots.length === 0 && (
+                      <div className="text-danger mt-2">No available times for this date.</div>
+                    )}
                   </Form.Group>
                 )}
               </>

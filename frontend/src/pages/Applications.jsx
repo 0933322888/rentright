@@ -4,6 +4,30 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { API_ENDPOINTS } from '../config/api';
 import { toast } from 'react-hot-toast';
+import {
+  Box,
+  Typography,
+  Paper,
+  Button,
+  Chip,
+  CircularProgress,
+  IconButton,
+  Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Grid
+} from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 
 export default function Applications() {
   const navigate = useNavigate();
@@ -11,6 +35,8 @@ export default function Applications() {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [applicationToDelete, setApplicationToDelete] = useState(null);
 
   useEffect(() => {
     fetchApplications();
@@ -34,10 +60,6 @@ export default function Applications() {
   };
 
   const handleDelete = async (applicationId) => {
-    if (!window.confirm('Are you sure you want to delete this application?')) {
-      return;
-    }
-
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -58,6 +80,8 @@ export default function Applications() {
 
       toast.success('Application deleted successfully');
       setApplications(applications.filter(app => app._id !== applicationId));
+      setDeleteDialogOpen(false);
+      setApplicationToDelete(null);
     } catch (error) {
       console.error('Error deleting application:', error);
       const errorMessage = error.response?.data?.message || 'Failed to delete application. Please try again.';
@@ -69,91 +93,198 @@ export default function Applications() {
     }
   };
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'approved':
+        return 'success';
+      case 'rejected':
+        return 'error';
+      case 'viewing':
+        return 'info';
+      case 'pending':
+        return 'warning';
+      default:
+        return 'default';
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'approved':
+        return <CheckCircleIcon />;
+      case 'rejected':
+        return <CancelIcon />;
+      case 'viewing':
+        return <VisibilityIcon />;
+      case 'pending':
+        return <HourglassEmptyIcon />;
+      default:
+        return null;
+    }
+  };
+
   if (!user) {
     navigate('/login');
     return null;
   }
 
-  if (loading) return <div className="text-center py-12">Loading...</div>;
-  if (error) return <div className="text-center py-12 text-red-600">{error}</div>;
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ textAlign: 'center', py: 4 }}>
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
+  }
 
   const filteredApplications = applications.filter(app => {
     if (!app || !app.property || !app.tenant || !app.tenant._id || !user || !user._id) return false;
     return app.tenant._id === user._id;
   });
 
-  return (
-    <div className="bg-white">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl py-16 sm:py-24 lg:max-w-none lg:py-32">
-          <h1 className="text-3xl font-bold text-gray-900">My Applications</h1>
+  if (filteredApplications.length === 0) {
+    return (
+      <Box>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h5" component="h1" sx={{ fontWeight: 600 }}>
+            My Applications
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={() => navigate('/properties')}
+          >
+            Find Properties
+          </Button>
+        </Box>
+        <Paper sx={{ p: 4, textAlign: 'center' }}>
+          <Typography variant="h6" gutterBottom>
+            No Applications Yet
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Start your journey by applying for a property.
+          </Typography>
+        </Paper>
+      </Box>
+    );
+  }
 
-          {filteredApplications.length === 0 ? (
-            <div className="mt-8 text-center text-gray-500">
-              No applications found.
-            </div>
-          ) : (
-            <div className="mt-8 space-y-4">
-              {filteredApplications.map((application) => (
-                <div
-                  key={application._id}
-                  className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="h-24 w-32 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
-                      <img
-                        src={application.property.images?.[0] || 'https://via.placeholder.com/400x300'}
-                        alt={application.property.title}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    <div className="flex flex-1 items-start justify-between">
-                      <div>
-                        <h3 className="text-lg font-medium text-gray-900">
-                          {application.property.title}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          {application.property.location.street}, {application.property.location.city}, {application.property.location.state}
-                        </p>
-                        <p className="mt-1 text-sm text-gray-500">
-                          Applied on {new Date(application.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                            application.status === 'pending'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : application.status === 'approved'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
-                        </span>
-                        <button
-                          onClick={() => navigate(`/properties/${application.property._id}`)}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                        >
-                          View Property
-                        </button>
-                        <button
-                          onClick={() => handleDelete(application._id)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+  return (
+    <Box>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h5" component="h1" sx={{ fontWeight: 600 }}>
+          My Applications
+        </Typography>
+        <Button
+          variant="contained"
+          onClick={() => navigate('/properties')}
+        >
+          Find More Properties
+        </Button>
+      </Box>
+
+      <Grid container spacing={2}>
+        {filteredApplications.map((application) => (
+          <Grid item xs={12} key={application._id}>
+            <Paper sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                <Box>
+                  <Typography variant="h6" gutterBottom>
+                    {application.property?.title || 'Property not found'}
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <LocationOnIcon color="action" fontSize="small" />
+                    <Typography variant="body2" color="text.secondary">
+                      {application.property?.location?.street}, {application.property?.location?.city}, {application.property?.location?.state}
+                    </Typography>
+                  </Box>
+                  {application.viewingDate && (
+                    <>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                        <CalendarTodayIcon color="action" fontSize="small" />
+                        <Typography variant="body2" color="text.secondary">
+                          Viewing Date: {new Date(application.viewingDate).toLocaleDateString()}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                        <AccessTimeIcon color="action" fontSize="small" />
+                        <Typography variant="body2" color="text.secondary">
+                          Viewing Time: {application.viewingTime}
+                        </Typography>
+                      </Box>
+                    </>
+                  )}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Applied: {new Date(application.createdAt).toLocaleDateString()}
+                    </Typography>
+                  </Box>
+                </Box>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
+                  <Chip
+                    icon={getStatusIcon(application.status)}
+                    label={application.status.charAt(0).toUpperCase() + application.status.slice(1)}
+                    color={getStatusColor(application.status)}
+                  />
+                  {application.status === 'new' && (
+                    <Tooltip title="Delete Application">
+                      <IconButton
+                        size="small"
+                        onClick={() => {
+                          setApplicationToDelete(application._id);
+                          setDeleteDialogOpen(true);
+                        }}
+                        color="error"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+                </Box>
+              </Box>
+            </Paper>
+          </Grid>
+        ))}
+      </Grid>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setApplicationToDelete(null);
+        }}
+      >
+        <DialogTitle>Delete Application</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this application? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setDeleteDialogOpen(false);
+              setApplicationToDelete(null);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => handleDelete(applicationToDelete)}
+            color="error"
+            variant="contained"
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 }

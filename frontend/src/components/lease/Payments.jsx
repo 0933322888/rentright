@@ -451,7 +451,79 @@ const EscalationDetailsModal = ({ open, onClose, escalation, onStatusUpdate }) =
   );
 };
 
-const Payments = ({ leaseDetails }) => {
+const PaymentForm = ({ onSubmit, propertyPrice, onCancel }) => {
+  const [amount, setAmount] = useState(propertyPrice?.toString() || '');
+  const [paymentMethod, setPaymentMethod] = useState('credit_card');
+  const [description, setDescription] = useState('Monthly Rent');
+  const [error, setError] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+      setError('Please enter a valid amount');
+      return;
+    }
+    onSubmit({
+      amount: parseFloat(amount),
+      paymentMethod,
+      description: description.trim() || 'Monthly Rent'
+    });
+  };
+
+  return (
+    <Paper sx={{ p: 3, mb: 4 }}>
+      <Typography variant="h6" gutterBottom>Make a Payment</Typography>
+      <form onSubmit={handleSubmit}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <TextField
+            fullWidth
+            label="Amount"
+            type="number"
+            value={amount}
+            onChange={(e) => {
+              setAmount(e.target.value);
+              setError('');
+            }}
+            error={!!error}
+            helperText={error}
+            InputProps={{
+              startAdornment: <InputAdornment position="start">$</InputAdornment>,
+            }}
+          />
+          <FormControl fullWidth>
+            <InputLabel>Payment Method</InputLabel>
+            <Select
+              value={paymentMethod}
+              label="Payment Method"
+              onChange={(e) => setPaymentMethod(e.target.value)}
+            >
+              <MenuItem value="credit_card">Credit Card</MenuItem>
+              <MenuItem value="debit_card">Debit Card</MenuItem>
+              <MenuItem value="bank_transfer">Bank Transfer</MenuItem>
+              <MenuItem value="cash">Cash</MenuItem>
+            </Select>
+          </FormControl>
+          <TextField
+            fullWidth
+            label="Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+            <Button onClick={onCancel} color="inherit">
+              Cancel
+            </Button>
+            <Button type="submit" variant="contained" color="primary">
+              Make Payment
+            </Button>
+          </Box>
+        </Box>
+      </form>
+    </Paper>
+  );
+};
+
+const Payments = ({ leaseDetails, onPaymentUpdate }) => {
   const { user } = useAuth();
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -466,6 +538,7 @@ const Payments = ({ leaseDetails }) => {
   const [activeEscalation, setActiveEscalation] = useState(null);
   const [showEscalationDetailsModal, setShowEscalationDetailsModal] = useState(false);
   const [selectedEscalation, setSelectedEscalation] = useState(null);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
 
   useEffect(() => {
     console.log('Payments component received leaseDetails:', leaseDetails);
@@ -545,38 +618,28 @@ const Payments = ({ leaseDetails }) => {
     }
   };
 
-  const handlePayment = async () => {
+  const handlePaymentSubmit = async (paymentData) => {
     try {
       if (!leaseDetails?.property?._id) {
         toast.error('No active lease found');
         return;
       }
 
-      // Validate amount
-      const amount = parseFloat(paymentAmount);
-      if (isNaN(amount) || amount <= 0) {
-        toast.error('Please enter a valid payment amount');
-        return;
-      }
-
-      const paymentData = {
+      const response = await axios.post(API_ENDPOINTS.PAYMENTS, {
         propertyId: leaseDetails.property._id,
-        amount,
-        paymentMethod: selectedPaymentMethod,
-        description: paymentDescription.trim() || 'Monthly Rent'
-      };
-
-      await axios.post(API_ENDPOINTS.PAYMENTS, paymentData, {
+        ...paymentData
+      }, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
       });
 
       toast.success('Payment successful!');
-      // Reset form
-      setPaymentDescription('Monthly Rent');
-      setPaymentAmount(leaseDetails.property.price.toString());
+      setShowPaymentForm(false);
       fetchPayments();
+      if (onPaymentUpdate) {
+        onPaymentUpdate();
+      }
     } catch (err) {
       console.error('Error processing payment:', err);
       toast.error(err.response?.data?.message || 'Failed to process payment');
@@ -701,6 +764,28 @@ const Payments = ({ leaseDetails }) => {
         </div>
       ) : (
         <>
+          {/* Payment Form for Tenants */}
+          {user.role === 'tenant' && !showPaymentForm && (
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<PaymentIcon />}
+                onClick={() => setShowPaymentForm(true)}
+              >
+                Make Payment
+              </Button>
+            </Box>
+          )}
+
+          {user.role === 'tenant' && showPaymentForm && (
+            <PaymentForm
+              onSubmit={handlePaymentSubmit}
+              propertyPrice={leaseDetails?.property?.price}
+              onCancel={() => setShowPaymentForm(false)}
+            />
+          )}
+
           {/* Escalations Section */}
           {user.role === 'landlord' && (
             <div className="bg-white shadow rounded-lg p-6">

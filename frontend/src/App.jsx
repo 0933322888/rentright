@@ -34,6 +34,7 @@ import About from './pages/About';
 import PropertyDetails from './pages/PropertyDetails';
 import MyLease from './pages/MyLease';
 import TenantDashboard from './pages/TenantDashboard';
+import LeaseAgreements from './pages/admin/LeaseAgreements';
 
 // Role-based home redirect component
 function HomeRedirect() {
@@ -116,6 +117,7 @@ function AppRoutes() {
             <Route path="admin/landlords" element={<AdminLandlords />} />
             <Route path="admin/tenants" element={<AdminTenants />} />
             <Route path="admin/tenants/:id/profile" element={<AdminTenantProfile />} />
+            <Route path="admin/lease-agreements" element={<LeaseAgreements />} />
           </Route>
         </Route>
 

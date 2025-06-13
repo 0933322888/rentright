@@ -26,6 +26,7 @@ export const API_ENDPOINTS = {
   PROPERTY_DOCUMENTS: (propertyId) => `${BASE_URL}/api/properties/${propertyId}/documents`,
   
   // Admin endpoints
+  ADMIN: `${BASE_URL}/api/admin`,
   ADMIN_PROPERTIES: `${BASE_URL}/api/admin/properties`,
   ADMIN_LANDLORDS: `${BASE_URL}/api/admin/landlords`,
   ADMIN_TENANTS: `${BASE_URL}/api/admin/tenants`,

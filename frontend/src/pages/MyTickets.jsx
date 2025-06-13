@@ -3,6 +3,28 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api';
 import { toast } from 'react-hot-toast';
+import {
+  Box,
+  Typography,
+  Paper,
+  Button,
+  Chip,
+  CircularProgress,
+  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  Tooltip,
+  DialogContentText
+} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import CommentIcon from '@mui/icons-material/Comment';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 export default function MyTickets() {
   const navigate = useNavigate();
@@ -12,6 +34,8 @@ export default function MyTickets() {
   const [newComment, setNewComment] = useState('');
   const [commentingTicketId, setCommentingTicketId] = useState(null);
   const [expandedComments, setExpandedComments] = useState({});
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [ticketToDelete, setTicketToDelete] = useState(null);
 
   useEffect(() => {
     fetchTickets();
@@ -48,14 +72,12 @@ export default function MyTickets() {
         }
       );
 
-      // Update the ticket in the local state while preserving the property data
       setTickets(tickets.map(ticket => {
         if (ticket._id === ticketId) {
-          // Preserve the existing property data
           const existingTicket = tickets.find(t => t._id === ticketId);
           return {
             ...response.data,
-            property: existingTicket.property // Keep the existing property data
+            property: existingTicket.property
           };
         }
         return ticket;
@@ -76,176 +98,291 @@ export default function MyTickets() {
     }));
   };
 
+  const handleDeleteTicket = async (ticketId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API_ENDPOINTS.TICKETS}/${ticketId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setTickets(tickets.filter(ticket => ticket._id !== ticketId));
+      setDeleteDialogOpen(false);
+      setTicketToDelete(null);
+      toast.success('Ticket deleted successfully');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete ticket');
+    }
+  };
+
+  const handleMarkAsResolved = async (ticketId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.patch(
+        `${API_ENDPOINTS.TICKETS}/${ticketId}/tenant-status`,
+        { status: 'resolved' },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      setTickets(tickets.map(ticket => 
+        ticket._id === ticketId 
+          ? { ...ticket, status: 'resolved' }
+          : ticket
+      ));
+      
+      toast.success('Ticket marked as resolved');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update ticket status');
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'new':
-        return 'bg-blue-100 text-blue-800';
+        return 'info';
       case 'review':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'warning';
       case 'approved':
-        return 'bg-green-100 text-green-800';
+        return 'success';
       case 'declined':
-        return 'bg-red-100 text-red-800';
+        return 'error';
       case 'closed':
-        return 'bg-gray-100 text-gray-800';
+        return 'default';
+      case 'resolved':
+        return 'success';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'default';
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading tickets...</p>
-        </div>
-      </div>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <CircularProgress />
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-12">
-        <p className="text-red-600">{error}</p>
-      </div>
+      <Box sx={{ textAlign: 'center', py: 4 }}>
+        <Typography color="error">{error}</Typography>
+      </Box>
     );
   }
 
   return (
-    <div className="bg-white">
-      <div className="px-6 pt-6">
-        <div>
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-semibold text-gray-900">My Repair Tickets</h1>
-            <button
-              onClick={() => navigate('/create-ticket')}
-              className="inline-flex items-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-            >
-              Create New Ticket
-            </button>
-          </div>
+    <Box>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h5" component="h1" sx={{ fontWeight: 600 }}>
+          My Repair Tickets
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => navigate('/create-ticket')}
+        >
+          Create New Ticket
+        </Button>
+      </Box>
 
-          {tickets.length === 0 ? (
-            <div className="mt-8 text-center text-gray-500">
-              No tickets found. Create your first repair ticket!
-            </div>
-          ) : (
-            <div className="space-y-4 pb-6">
-              {tickets.map((ticket) => (
-                <div
-                  key={ticket._id}
-                  className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900">
-                        {ticket.property.title}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {ticket.property.location.street}, {ticket.property.location.city}, {ticket.property.location.state}
-                      </p>
-                      <p className="mt-1 text-sm text-gray-500">
-                        Created: {new Date(ticket.createdAt).toLocaleDateString()}
-                      </p>
-                      <p className="mt-2 text-sm text-gray-700">
-                        {ticket.description}
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-end space-y-2">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(ticket.status)}`}
-                      >
-                        {ticket.status}
-                      </span>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => setCommentingTicketId(ticket._id)}
-                          className="text-sm text-primary-600 hover:text-primary-800"
+      {tickets.length === 0 ? (
+        <Paper sx={{ p: 4, textAlign: 'center' }}>
+          <Typography variant="h6" color="text.secondary" gutterBottom>
+            No Tickets Yet
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Create your first repair ticket to get started!
+          </Typography>
+        </Paper>
+      ) : (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {tickets.map((ticket) => (
+            <Paper key={ticket._id} sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                <Box>
+                  <Typography variant="h6" gutterBottom>
+                    {ticket.property.title}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    {ticket.property.location.street}, {ticket.property.location.city}, {ticket.property.location.state}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Created: {new Date(ticket.createdAt).toLocaleDateString()}
+                  </Typography>
+                  <Typography variant="body1" sx={{ mt: 1 }}>
+                    {ticket.description}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
+                  <Chip
+                    label={ticket.status}
+                    color={getStatusColor(ticket.status)}
+                    size="small"
+                  />
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    {ticket.status === 'new' && (
+                      <Tooltip title="Delete Ticket">
+                        <IconButton
+                          size="small"
+                          onClick={() => {
+                            setTicketToDelete(ticket._id);
+                            setDeleteDialogOpen(true);
+                          }}
+                          color="error"
                         >
-                          Add Comment
-                        </button>
-                        {ticket.comments && ticket.comments.length > 0 && (
-                          <button
-                            onClick={() => toggleComments(ticket._id)}
-                            className="text-sm text-gray-600 hover:text-gray-800"
-                          >
-                            {expandedComments[ticket._id] ? 'Hide Comments' : 'Show Comments'}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                    {ticket.status === 'approved' && (
+                      <Tooltip title="Mark as Resolved">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleMarkAsResolved(ticket._id)}
+                          color="success"
+                        >
+                          <CheckCircleIcon />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                    <Tooltip title="Add Comment">
+                      <IconButton
+                        size="small"
+                        onClick={() => setCommentingTicketId(ticket._id)}
+                        color="primary"
+                      >
+                        <CommentIcon />
+                      </IconButton>
+                    </Tooltip>
+                    {ticket.comments && ticket.comments.length > 0 && (
+                      <Tooltip title={expandedComments[ticket._id] ? "Hide Comments" : "Show Comments"}>
+                        <IconButton
+                          size="small"
+                          onClick={() => toggleComments(ticket._id)}
+                          color="primary"
+                        >
+                          {expandedComments[ticket._id] ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                  </Box>
+                </Box>
+              </Box>
 
-                  {/* Comments Section */}
-                  {ticket.comments && ticket.comments.length > 0 && expandedComments[ticket._id] && (
-                    <div className="mt-4 border-t border-gray-200 pt-4">
-                      <h4 className="text-sm font-medium text-gray-900 mb-2">Comments</h4>
-                      <div className="space-y-3">
-                        {ticket.comments.map((comment, index) => (
-                          <div key={`${ticket._id}-${index}`} className="bg-gray-50 p-3 rounded-lg">
-                            <div className="flex justify-between items-start">
-                              <div className="flex items-center space-x-2">
-                                <div className="text-sm font-medium text-gray-900">
-                                  {comment.user.name}
-                                </div>
-                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                                  comment.user.role === 'admin' 
-                                    ? 'bg-purple-100 text-purple-800' 
-                                    : 'bg-blue-100 text-blue-800'
-                                }`}>
-                                  {comment.user.role}
-                                </span>
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                {new Date(comment.createdAt).toLocaleString()}
-                              </div>
-                            </div>
-                            <p className="mt-1 text-sm text-gray-700">{comment.text}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Comment Modal */}
-      {commentingTicketId && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 max-w-lg w-full">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Add Comment</h3>
-            <textarea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-              rows={4}
-              placeholder="Enter your comment..."
-            />
-            <div className="mt-4 flex justify-end space-x-3">
-              <button
-                onClick={() => {
-                  setCommentingTicketId(null);
-                  setNewComment('');
-                }}
-                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleAddComment(commentingTicketId)}
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-              >
-                Add Comment
-              </button>
-            </div>
-          </div>
-        </div>
+              {/* Comments Section */}
+              {ticket.comments && ticket.comments.length > 0 && expandedComments[ticket._id] && (
+                <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Comments
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {ticket.comments.map((comment, index) => (
+                      <Paper key={index} sx={{ p: 2, bgcolor: 'background.default' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography variant="subtitle2">
+                              {comment.user.name}
+                            </Typography>
+                            <Chip
+                              label={comment.user.role}
+                              size="small"
+                              color={comment.user.role === 'admin' ? 'secondary' : 'primary'}
+                            />
+                          </Box>
+                          <Typography variant="caption" color="text.secondary">
+                            {new Date(comment.createdAt).toLocaleString()}
+                          </Typography>
+                        </Box>
+                        <Typography variant="body2">
+                          {comment.text}
+                        </Typography>
+                      </Paper>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+            </Paper>
+          ))}
+        </Box>
       )}
-    </div>
+
+      {/* Comment Dialog */}
+      <Dialog
+        open={Boolean(commentingTicketId)}
+        onClose={() => {
+          setCommentingTicketId(null);
+          setNewComment('');
+        }}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Add Comment</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Comment"
+            fullWidth
+            multiline
+            rows={4}
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            variant="outlined"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setCommentingTicketId(null);
+              setNewComment('');
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => handleAddComment(commentingTicketId)}
+            variant="contained"
+            color="primary"
+          >
+            Add Comment
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setTicketToDelete(null);
+        }}
+      >
+        <DialogTitle>Delete Ticket</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this ticket? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setDeleteDialogOpen(false);
+              setTicketToDelete(null);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => handleDeleteTicket(ticketToDelete)}
+            color="error"
+            variant="contained"
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 } 
