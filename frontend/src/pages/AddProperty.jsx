@@ -318,7 +318,7 @@ const AddProperty = () => {
               </Typography>
 
               <Grid container spacing={3}>
-                <Grid item xs={12}>
+                <Grid xs={12}>
                   <Paper 
                     variant="outlined" 
                     sx={{ 
@@ -370,7 +370,7 @@ const AddProperty = () => {
                   </Paper>
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid xs={12}>
                   <Paper 
                     variant="outlined" 
                     sx={{ 
@@ -422,7 +422,7 @@ const AddProperty = () => {
                   </Paper>
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid xs={12}>
                   <Paper 
                     variant="outlined" 
                     sx={{ 

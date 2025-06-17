@@ -346,7 +346,7 @@ const LeaseAgreements = () => {
         <DialogTitle>Upload Lease Agreement</DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <FormControl fullWidth>
                 <InputLabel>Country</InputLabel>
                 <Select
@@ -365,7 +365,7 @@ const LeaseAgreements = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <FormControl fullWidth>
                 <InputLabel>Region</InputLabel>
                 <Select
@@ -383,7 +383,7 @@ const LeaseAgreements = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <Button
                 variant="outlined"
                 component="label"

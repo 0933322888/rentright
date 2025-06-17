@@ -196,7 +196,7 @@ export default function ApplicationDetails({
             {/* Application Details */}
             <Grid container spacing={3}>
               {/* Tenant Score Section */}
-              <Grid item xs={12} md={4}>
+              <Grid xs={12} md={4}>
                 <Paper 
                   variant="outlined" 
                   sx={{ 
@@ -263,7 +263,7 @@ export default function ApplicationDetails({
               </Grid>
 
               {/* Viewing Schedule Section */}
-              <Grid item xs={12} md={4}>
+              <Grid xs={12} md={4}>
                 <Paper 
                   variant="outlined" 
                   sx={{ 
@@ -334,7 +334,7 @@ export default function ApplicationDetails({
               </Grid>
 
               {/* Contact Information Section */}
-              <Grid item xs={12} md={4}>
+              <Grid xs={12} md={4}>
                 <Paper 
                   variant="outlined" 
                   sx={{ 
@@ -455,7 +455,7 @@ export default function ApplicationDetails({
                 {/* Tenant Profile Details */}
                 <Grid container spacing={3}>
                   {/* Employment & Income Section */}
-                  <Grid item xs={12}>
+                  <Grid xs={12}>
                     <Box sx={{ 
                       p: 2, 
                       bgcolor: 'grey.50', 
@@ -467,7 +467,7 @@ export default function ApplicationDetails({
                         Employment & Income
                       </Typography>
                       <Grid container spacing={2}>
-                        <Grid item xs={12} md={6}>
+                        <Grid xs={12} md={6}>
                           <Box sx={{ 
                             p: 1.5,
                             bgcolor: 'white',
@@ -483,7 +483,7 @@ export default function ApplicationDetails({
                         </Grid>
                         {application.tenantDocument.isCurrentlyEmployed === 'yes' && (
                           <>
-                            <Grid item xs={12} md={6}>
+                            <Grid xs={12} md={6}>
                               <Box sx={{ 
                                 p: 1.5,
                                 bgcolor: 'white',
@@ -497,7 +497,7 @@ export default function ApplicationDetails({
                                 </Typography>
                               </Box>
                             </Grid>
-                            <Grid item xs={12} md={6}>
+                            <Grid xs={12} md={6}>
                               <Box sx={{ 
                                 p: 1.5,
                                 bgcolor: 'white',
@@ -513,7 +513,7 @@ export default function ApplicationDetails({
                             </Grid>
                           </>
                         )}
-                        <Grid item xs={12}>
+                        <Grid xs={12}>
                           <Box sx={{ 
                             p: 1.5,
                             bgcolor: 'white',
@@ -534,7 +534,7 @@ export default function ApplicationDetails({
                   </Grid>
 
                   {/* Expenses & Debts Section */}
-                  <Grid item xs={12}>
+                  <Grid xs={12}>
                     <Box sx={{ 
                       p: 2, 
                       bgcolor: 'grey.50', 
@@ -546,7 +546,7 @@ export default function ApplicationDetails({
                         Expenses & Debts
                       </Typography>
                       <Grid container spacing={2}>
-                        <Grid item xs={12} md={6}>
+                        <Grid xs={12} md={6}>
                           <Box sx={{ 
                             p: 1.5,
                             bgcolor: 'white',
@@ -560,7 +560,7 @@ export default function ApplicationDetails({
                             </Typography>
                           </Box>
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid xs={12} md={6}>
                           <Box sx={{ 
                             p: 1.5,
                             bgcolor: 'white',
@@ -581,7 +581,7 @@ export default function ApplicationDetails({
                   </Grid>
 
                   {/* Rental History Section */}
-                  <Grid item xs={12}>
+                  <Grid xs={12}>
                     <Box sx={{ 
                       p: 2, 
                       bgcolor: 'grey.50', 
@@ -593,7 +593,7 @@ export default function ApplicationDetails({
                         Rental History
                       </Typography>
                       <Grid container spacing={2}>
-                        <Grid item xs={12} md={6}>
+                        <Grid xs={12} md={6}>
                           <Box sx={{ 
                             p: 1.5,
                             bgcolor: 'white',
@@ -616,7 +616,7 @@ export default function ApplicationDetails({
                             </Box>
                           </Box>
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid xs={12} md={6}>
                           <Box sx={{ 
                             p: 1.5,
                             bgcolor: 'white',
@@ -637,7 +637,7 @@ export default function ApplicationDetails({
                   </Grid>
 
                   {/* Financial Preparedness Section */}
-                  <Grid item xs={12}>
+                  <Grid xs={12}>
                     <Box sx={{ 
                       p: 2, 
                       bgcolor: 'grey.50', 
@@ -649,7 +649,7 @@ export default function ApplicationDetails({
                         Financial Preparedness
                       </Typography>
                       <Grid container spacing={2}>
-                        <Grid item xs={12} md={6}>
+                        <Grid xs={12} md={6}>
                           <Box sx={{ 
                             p: 1.5,
                             bgcolor: 'white',
@@ -672,7 +672,7 @@ export default function ApplicationDetails({
                             </Box>
                           </Box>
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid xs={12} md={6}>
                           <Box sx={{ 
                             p: 1.5,
                             bgcolor: 'white',
@@ -700,7 +700,7 @@ export default function ApplicationDetails({
                   </Grid>
 
                   {/* Payment Capability Section */}
-                  <Grid item xs={12}>
+                  <Grid xs={12}>
                     <Box sx={{ 
                       p: 2, 
                       bgcolor: 'grey.50', 
@@ -712,7 +712,7 @@ export default function ApplicationDetails({
                         Payment Capability
                       </Typography>
                       <Grid container spacing={2}>
-                        <Grid item xs={12}>
+                        <Grid xs={12}>
                           <Box sx={{ 
                             p: 1.5,
                             bgcolor: 'white',
@@ -777,7 +777,7 @@ export default function ApplicationDetails({
                         {application.tenantDocument[field]?.length > 0 ? (
                           <Grid container spacing={2}>
                             {application.tenantDocument[field].map((doc, docIndex) => (
-                              <Grid item xs={12} sm={6} md={4} key={docIndex}>
+                              <Grid xs={12} sm={6} md={4} key={docIndex}>
                                 <Box sx={{ 
                                   p: 2, 
                                   border: '1px solid', 

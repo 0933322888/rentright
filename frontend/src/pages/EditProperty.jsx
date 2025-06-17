@@ -77,13 +77,8 @@ export default function EditProperty() {
     submitData.append('location[state]', formData.location.state);
     submitData.append('location[zipCode]', formData.location.zipCode);
 
-    // Add features fields
-    submitData.append('features[bedrooms]', formData.features.bedrooms);
-    submitData.append('features[bathrooms]', formData.features.bathrooms);
-    submitData.append('features[squareFootage]', formData.features.squareFootage);
-    submitData.append('features[furnished]', formData.features.furnished);
-    submitData.append('features[parking]', formData.features.parking);
-    submitData.append('features[petsAllowed]', formData.features.petsAllowed);
+    // Add features as JSON string (consistent with AddProperty)
+    submitData.append('features', JSON.stringify(formData.features));
 
     // Handle images
     const existingImages = [];

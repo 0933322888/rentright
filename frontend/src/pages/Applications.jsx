@@ -191,7 +191,7 @@ export default function Applications() {
 
       <Grid container spacing={2}>
         {filteredApplications.map((application) => (
-          <Grid item xs={12} key={application._id}>
+          <Grid xs={12} key={application._id}>
             <Paper sx={{ p: 3 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                 <Box>

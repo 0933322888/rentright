@@ -223,8 +223,13 @@ const PropertyDetails = () => {
       <div className="flex flex-col md:flex-row gap-8 w-full">
         {/* Left: Images Section and Apply Button */}
         <div className="w-full md:w-[800px] flex flex-col gap-6 mb-6 md:mb-0">
-          <div className="h-[500px] md:h-[700px] rounded-lg overflow-hidden shadow-lg relative cursor-pointer group transition-transform duration-200 hover:scale-[1.02] hover:shadow-2xl" onClick={() => { setGalleryOpen(true); setGalleryIndex(0); }}>
-            <ImageCarousel images={property.images} />
+          <div className="h-[500px] md:h-[700px] rounded-lg overflow-hidden shadow-lg relative cursor-pointer group transition-transform duration-200 hover:scale-[1.02] hover:shadow-2xl" onClick={() => { 
+            if (property.images && property.images.length > 0) {
+              setGalleryOpen(true); 
+              setGalleryIndex(0);
+            }
+          }}>
+            <ImageCarousel images={property.images || []} />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent z-10 pointer-events-none" />
             <div className="absolute bottom-0 left-0 p-6 z-20 text-white pointer-events-none">
               <h1 className="text-3xl md:text-4xl font-bold mb-2 drop-shadow-lg">{property.title}</h1>
@@ -233,7 +238,7 @@ const PropertyDetails = () => {
                 <span className="inline-flex items-center bg-white/80 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"><FaHome className="mr-1" />{property.type}</span>
               </div>
               <div className="flex items-center gap-4 text-sm">
-                <span className="inline-flex items-center"><FaMapMarkerAlt className="mr-1" />{property.location.city}, {property.location.state}</span>
+                <span className="inline-flex items-center"><FaMapMarkerAlt className="mr-1" />{property.location?.city || 'N/A'}, {property.location?.state || 'N/A'}</span>
               </div>
               <span className="hidden md:block mt-2 text-xs text-white/80">Click to view gallery</span>
             </div>
@@ -270,7 +275,7 @@ const PropertyDetails = () => {
           <div className="flex flex-wrap items-center gap-4 bg-white rounded-lg shadow p-4 mb-2">
             <span className="inline-flex items-center text-2xl font-bold text-blue-700"><FaDollarSign className="mr-1" /> {property.price}/month</span>
             <span className="inline-flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"><FaHome className="mr-1" />{property.type}</span>
-            <span className="inline-flex items-center text-gray-700"><FaMapMarkerAlt className="mr-1" />{property.location.city}, {property.location.state}</span>
+            <span className="inline-flex items-center text-gray-700"><FaMapMarkerAlt className="mr-1" />{property.location?.city || 'N/A'}, {property.location?.state || 'N/A'}</span>
             {/* Status Badge */}
             {property.status && (
               <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ml-auto
@@ -288,8 +293,8 @@ const PropertyDetails = () => {
             <div className="bg-white rounded-lg shadow p-6 transition-transform duration-200 hover:scale-[1.01] hover:shadow-2xl">
               <h2 className="text-xl font-semibold mb-4">Details</h2>
               <div className="flex flex-wrap gap-6 text-lg">
-                <div className="flex items-center gap-2"><FaBed /> {property.features.bedrooms} Bedrooms</div>
-                <div className="flex items-center gap-2"><FaBath /> {property.features.bathrooms} Bathrooms</div>
+                <div className="flex items-center gap-2"><FaBed /> {property.features?.bedrooms || 'N/A'} Bedrooms</div>
+                <div className="flex items-center gap-2"><FaBath /> {property.features?.bathrooms || 'N/A'} Bathrooms</div>
                 <div className="flex items-center gap-2"><FaHome /> {property.type}</div>
               </div>
             </div>
@@ -298,8 +303,8 @@ const PropertyDetails = () => {
             <div className="bg-white rounded-lg shadow p-6 transition-transform duration-200 hover:scale-[1.01] hover:shadow-2xl">
               <h2 className="text-xl font-semibold mb-4">Location</h2>
               <div className="flex flex-col gap-1 text-gray-700 mb-4">
-                <span><FaMapMarkerAlt className="inline mr-1" /> {property.location.street}</span>
-                <span>{property.location.city}, {property.location.state} {property.location.zipCode}</span>
+                <span><FaMapMarkerAlt className="inline mr-1" /> {property.location?.street || 'Address not available'}</span>
+                <span>{property.location?.city || 'N/A'}, {property.location?.state || 'N/A'} {property.location?.zipCode || ''}</span>
               </div>
               {/* Map Preview */}
               {property.location?.coordinates && property.location.coordinates.length === 2 && (
@@ -373,7 +378,7 @@ const PropertyDetails = () => {
       </div>
 
       {/* Gallery Modal (moved to top level, overlays everything) */}
-      {galleryOpen && (
+      {galleryOpen && property.images && property.images.length > 0 && (
         <>
           <style>{`
             .leaflet-container,
@@ -388,7 +393,7 @@ const PropertyDetails = () => {
             <button className="absolute top-6 right-8 bg-black bg-opacity-70 rounded-full p-2 text-white text-3xl z-50 hover:text-blue-400 transition-colors" onClick={() => setGalleryOpen(false)}><FaTimes /></button>
             <button className="absolute left-6 top-1/2 -translate-y-1/2 bg-black bg-opacity-70 rounded-full p-2 text-white text-3xl z-50 hover:text-blue-400 transition-colors" onClick={() => setGalleryIndex((galleryIndex - 1 + property.images.length) % property.images.length)}><FaChevronLeft /></button>
             <img
-              src={property.images[galleryIndex].startsWith('http') 
+              src={property.images[galleryIndex]?.startsWith('http') 
                 ? property.images[galleryIndex] 
                 : `http://localhost:10000/uploads/${property.images[galleryIndex]}`}
               alt={`Gallery image ${galleryIndex + 1}`}

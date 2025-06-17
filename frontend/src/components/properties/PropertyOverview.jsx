@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Box,
@@ -9,10 +9,18 @@ import {
   Button,
   Chip,
   IconButton,
-  Grid
+  Grid,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
+import { getImageUrl, handleImageError } from '../../utils/imageUtils';
+
+// Base64 encoded SVG for fallback image
+const FALLBACK_IMAGE_DATA_URL = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NzM4NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
 
 export default function PropertyOverview({ 
   property, 
@@ -23,27 +31,24 @@ export default function PropertyOverview({
 }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [failedImages, setFailedImages] = useState(new Set());
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleNextImage = () => {
-    if (property.images && property.images.length > 0) {
-      setCurrentImageIndex((prevIndex) => 
-        prevIndex === property.images.length - 1 ? 0 : prevIndex + 1
-      );
-    }
+    setCurrentImageIndex((prevIndex) => 
+      prevIndex === property.images.length - 1 ? 0 : prevIndex + 1
+    );
   };
 
   const handlePrevImage = () => {
-    if (property.images && property.images.length > 0) {
-      setCurrentImageIndex((prevIndex) => 
-        prevIndex === 0 ? property.images.length - 1 : prevIndex - 1
-      );
-    }
+    setCurrentImageIndex((prevIndex) => 
+      prevIndex === 0 ? property.images.length - 1 : prevIndex - 1
+    );
   };
 
   const handleImageError = (docId, e) => {
     if (!failedImages.has(docId)) {
       setFailedImages(prev => new Set([...prev, docId]));
-      e.target.src = 'https://via.placeholder.com/400x300';
+      e.target.src = FALLBACK_IMAGE_DATA_URL;
     }
   };
 
@@ -62,7 +67,7 @@ export default function PropertyOverview({
 
   return (
     <Grid container spacing={3}>
-      <Grid item xs={12} md={6}>
+      <Grid xs={12} md={6}>
         <Card sx={{ 
           height: '100%',
           display: 'flex',
@@ -90,8 +95,8 @@ export default function PropertyOverview({
                 (typeof property.images[currentImageIndex] === 'string' && 
                  property.images[currentImageIndex].startsWith('http') 
                   ? property.images[currentImageIndex] 
-                  : `http://localhost:5000/uploads/${property.images[currentImageIndex]}`)
-                : 'https://via.placeholder.com/400x300'}
+                  : getImageUrl(property.images[currentImageIndex]))
+                : FALLBACK_IMAGE_DATA_URL}
               alt={property.title}
               sx={{
                 position: 'relative',
@@ -105,6 +110,7 @@ export default function PropertyOverview({
                   transform: 'scale(1.04)'
                 }
               }}
+              onError={(e) => handleImageError(property.images[currentImageIndex], e)}
             />
             {property.images && property.images.length > 1 && (
               <>

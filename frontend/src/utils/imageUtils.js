@@ -2,6 +2,9 @@
  * Utility functions for handling images
  */
 
+// Base64 encoded SVG for fallback image (gray background with "No Image" text)
+const FALLBACK_IMAGE_DATA_URL = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NzM4NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
+
 /**
  * Get the full URL for an image
  * @param {string} imagePath - The image path or URL
@@ -9,7 +12,7 @@
  */
 export const getImageUrl = (imagePath) => {
   if (!imagePath) {
-    return 'https://via.placeholder.com/400x300';
+    return FALLBACK_IMAGE_DATA_URL;
   }
   
   if (imagePath.startsWith('http')) {
@@ -22,9 +25,10 @@ export const getImageUrl = (imagePath) => {
 /**
  * Handle image loading errors
  * @param {Event} event - The error event
- * @param {string} fallbackUrl - Optional fallback URL (defaults to placeholder)
+ * @param {string} fallbackUrl - Optional fallback URL (defaults to data URL)
  */
-export const handleImageError = (event, fallbackUrl = 'https://via.placeholder.com/400x300') => {
+export const handleImageError = (event, fallbackUrl = FALLBACK_IMAGE_DATA_URL) => {
+  console.log('Image failed to load:', event.target.src);
   event.target.src = fallbackUrl;
 };
 

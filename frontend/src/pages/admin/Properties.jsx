@@ -98,6 +98,24 @@ export default function AdminProperties() {
     }
   };
 
+  const handleReject = async (propertyId) => {
+    const comments = prompt('Please provide a reason for rejection (optional):');
+    try {
+      await axios.patch(
+        `${API_ENDPOINTS.ADMIN_PROPERTIES}/${propertyId}/reject`,
+        { comments },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        }
+      );
+      toast.success('Property rejected successfully');
+      fetchProperties();
+    } catch (err) {
+      toast.error('Failed to reject property');
+      console.error('Error rejecting property:', err);
+    }
+  };
+
   const handleDelete = async (propertyId) => {
     if (!window.confirm('Are you sure you want to delete this property?')) {
       return;
@@ -184,6 +202,7 @@ export default function AdminProperties() {
             >
               <option value="all">All</option>
               <option value="new">New</option>
+              <option value="pending">Pending Approval</option>
               <option value="review">Review</option>
               <option value="active">Active</option>
               <option value="rented">Rented</option>
@@ -378,12 +397,20 @@ export default function AdminProperties() {
                           View
                         </Link>
                         {property.status === 'pending' && (
-                          <button
-                            onClick={() => handleApprove(property._id)}
-                            className="inline-flex items-center justify-center rounded-md border border-transparent bg-green-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                          >
-                            Approve
-                          </button>
+                          <>
+                            <button
+                              onClick={() => handleApprove(property._id)}
+                              className="inline-flex items-center justify-center rounded-md border border-transparent bg-green-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => handleReject(property._id)}
+                              className="inline-flex items-center justify-center rounded-md border border-transparent bg-red-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                            >
+                              Reject
+                            </button>
+                          </>
                         )}
                         <button
                           onClick={() => handleDelete(property._id)}

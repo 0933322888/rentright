@@ -147,6 +147,18 @@ export default function MyProperties() {
                         <Typography variant="subtitle2" noWrap>
                           {property.title}
                         </Typography>
+                        <Typography 
+                          variant="caption" 
+                          sx={{ 
+                            color: property.status === 'active' ? 'success.main' : 
+                                   property.status === 'pending' ? 'warning.main' : 'text.secondary',
+                            fontWeight: 'medium'
+                          }}
+                        >
+                          {property.status === 'active' ? 'Approved' : 
+                           property.status === 'pending' ? 'Pending Approval' : 
+                           property.status}
+                        </Typography>
                       </Box>
                     }
                     value={index}
@@ -188,94 +200,94 @@ export default function MyProperties() {
             {properties.map((property, index) => (
               <TabPanel key={property._id} value={index}>
                 <Box sx={{ display: 'flex', gap: 3 }}>
-                  <Box sx={{ borderRight: 1, borderColor: 'divider', pr: 2 }}>
-                    <TabList 
-                      onChange={handleInnerTabChange} 
-                      value={innerTabValue}
-                      orientation="vertical"
-                      sx={{
-                        '& .MuiTab-root': verticalTabStyles.root,
-                        '& .Mui-selected': verticalTabStyles.selected,
-                        '& .MuiTabs-indicator': {
-                          display: 'none',
-                        },
-                      }}
-                    >
-                      <Tab
-                        label={
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                            <HomeIcon sx={{ fontSize: 28 }} />
-                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                              <Typography>Details</Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                Property information and status
-                              </Typography>
+                  <TabContext value={innerTabValue}>
+                    <Box sx={{ borderRight: 1, borderColor: 'divider', pr: 2 }}>
+                      <TabList 
+                        onChange={handleInnerTabChange} 
+                        value={innerTabValue}
+                        orientation="vertical"
+                        sx={{
+                          '& .MuiTab-root': verticalTabStyles.root,
+                          '& .Mui-selected': verticalTabStyles.selected,
+                          '& .MuiTabs-indicator': {
+                            display: 'none',
+                          },
+                        }}
+                      >
+                        <Tab
+                          label={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                              <HomeIcon sx={{ fontSize: 28 }} />
+                              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                <Typography>Details</Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  Property information and status
+                                </Typography>
+                              </Box>
                             </Box>
-                          </Box>
-                        }
-                        value="overview"
-                      />
-                      <Tab
-                        label={
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                            <AssignmentIcon sx={{ fontSize: 28 }} />
-                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                              <Typography>Applications</Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {applications.length} pending applications
-                              </Typography>
+                          }
+                          value="overview"
+                        />
+                        <Tab
+                          label={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                              <AssignmentIcon sx={{ fontSize: 28 }} />
+                              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                <Typography>Applications</Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {applications.length} pending applications
+                                </Typography>
+                              </Box>
                             </Box>
-                          </Box>
-                        }
-                        value="applications"
-                      />
-                      <Tab
-                        label={
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                            <DescriptionIcon sx={{ fontSize: 28 }} />
-                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                              <Typography>Lease Agreement</Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                Manage tenant agreements
-                              </Typography>
+                          }
+                          value="applications"
+                        />
+                        <Tab
+                          label={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                              <DescriptionIcon sx={{ fontSize: 28 }} />
+                              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                <Typography>Lease Agreement</Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  Manage tenant agreements
+                                </Typography>
+                              </Box>
                             </Box>
-                          </Box>
-                        }
-                        value="lease"
-                      />
-                      <Tab
-                        label={
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                            <ReceiptIcon sx={{ fontSize: 28 }} />
-                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                              <Typography>Payments</Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                Track rent and expenses
-                              </Typography>
+                          }
+                          value="lease"
+                        />
+                        <Tab
+                          label={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                              <ReceiptIcon sx={{ fontSize: 28 }} />
+                              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                <Typography>Payments</Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  Track rent and expenses
+                                </Typography>
+                              </Box>
                             </Box>
-                          </Box>
-                        }
-                        value="payments"
-                      />
-                      <Tab
-                        label={
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                            <BuildIcon sx={{ fontSize: 28 }} />
-                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                              <Typography>Tickets</Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {tickets.length} maintenance requests
-                              </Typography>
+                          }
+                          value="payments"
+                        />
+                        <Tab
+                          label={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                              <BuildIcon sx={{ fontSize: 28 }} />
+                              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                <Typography>Tickets</Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {tickets.length} maintenance requests
+                                </Typography>
+                              </Box>
                             </Box>
-                          </Box>
-                        }
-                        value="tickets"
-                      />
-                    </TabList>
-                  </Box>
+                          }
+                          value="tickets"
+                        />
+                      </TabList>
+                    </Box>
 
-                  <Box sx={{ flex: 1 }}>
-                    <TabContext value={innerTabValue}>
+                    <Box sx={{ flex: 1 }}>
                       <TabPanel value="overview">
                         <PropertyOverview
                           property={selectedProperty}
@@ -348,8 +360,8 @@ export default function MyProperties() {
                           onTicketAction={handleTicketAction}
                         />
                       </TabPanel>
-                    </TabContext>
-                  </Box>
+                    </Box>
+                  </TabContext>
                 </Box>
               </TabPanel>
             ))}

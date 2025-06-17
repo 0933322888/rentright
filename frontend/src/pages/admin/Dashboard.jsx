@@ -5,6 +5,7 @@ import { API_ENDPOINTS } from '../../config/api';
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
     properties: 0,
+    pendingProperties: 0,
     landlords: 0,
     tenants: 0,
     applications: 0
@@ -33,8 +34,11 @@ export default function AdminDashboard() {
         })
       ]);
 
+      const pendingProperties = propertiesRes.data.filter(property => property.status === 'pending').length;
+
       setStats({
         properties: propertiesRes.data.length,
+        pendingProperties,
         landlords: landlordsRes.data.length,
         tenants: tenantsRes.data.length,
         applications: applicationsRes.data.length
@@ -58,7 +62,7 @@ export default function AdminDashboard() {
   return (
     <div>
       <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-      <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
         {/* Properties Card */}
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
@@ -72,6 +76,25 @@ export default function AdminDashboard() {
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">Total Properties</dt>
                   <dd className="text-lg font-medium text-gray-900">{stats.properties}</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Pending Properties Card */}
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Pending Approval</dt>
+                  <dd className="text-lg font-medium text-yellow-600">{stats.pendingProperties}</dd>
                 </dl>
               </div>
             </div>

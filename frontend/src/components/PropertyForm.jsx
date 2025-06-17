@@ -301,7 +301,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
           </Box>
           {/* Row: Property Type, Price, Available From */}
           <Grid container spacing={3} alignItems="center" wrap="nowrap">
-            <Grid item sx={{ minWidth: 250 }}>
+            <Grid sx={{ minWidth: 250 }}>
               <TextField
                 required
                 fullWidth
@@ -320,7 +320,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
                 <MenuItem value="commercial">Commercial</MenuItem>
               </TextField>
             </Grid>
-            <Grid item sx={{ minWidth: 250 }}>
+            <Grid sx={{ minWidth: 250 }}>
               <TextField
                 required
                 fullWidth
@@ -336,7 +336,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
                 }}
               />
             </Grid>
-            <Grid item sx={{ minWidth: 250 }}>
+            <Grid sx={{ minWidth: 250 }}>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
                   label="Available From"
@@ -375,7 +375,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
             </Typography>
           </Box>
           <Grid container spacing={3}>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <TextField
                 required
                 fullWidth
@@ -387,7 +387,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
                 size="medium"
               />
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid xs={12} sm={4}>
               <TextField
                 required
                 fullWidth
@@ -399,7 +399,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
                 size="medium"
               />
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid xs={12} sm={4}>
               <TextField
                 required
                 fullWidth
@@ -411,7 +411,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
                 size="medium"
               />
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid xs={12} sm={4}>
               <TextField
                 fullWidth
                 label="ZIP Code"
@@ -443,7 +443,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
             </Typography>
           </Box>
           <Grid container spacing={3}>
-            <Grid item xs={12} sm={4}>
+            <Grid xs={12} sm={4}>
               <TextField
                 required
                 fullWidth
@@ -456,7 +456,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
                 size="medium"
               />
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid xs={12} sm={4}>
               <TextField
                 required
                 fullWidth
@@ -469,7 +469,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
                 size="medium"
               />
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid xs={12} sm={4}>
               <TextField
                 required
                 fullWidth
@@ -482,7 +482,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
                 size="medium"
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid xs={12}>
               <Box sx={{ 
                 display: 'flex', 
                 gap: 3, 
