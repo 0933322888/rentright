@@ -23,3 +23,10 @@ DocuSign envelope is created and sent to both parties
 Each party can sign the document through the embedded signing experience
 Both parties can view the signed document after completion
 The system tracks the signing status and updates the UI accordingly
+
+
+
+http://rentright-website-statick-files.s3-website.ca-central-1.amazonaws.com
+
+
+rentright.ca-central-1.elasticbeanstalk.com
