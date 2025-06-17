@@ -4,6 +4,15 @@ import Application from '../models/applicationModel.js';
 import TenantDocument from '../models/tenantDocumentModel.js';
 import PropertyDocument from '../models/propertyDocumentModel.js';
 import { generateViewingTimeSlots } from '../utils/timeSlotGenerator.js';
+import {
+  getAvailableLeaseAgreements,
+  uploadLeaseAgreement,
+  deleteLeaseAgreement,
+  getLeaseAgreementPath,
+  getValidLocations
+} from '../utils/leaseAgreementUtils.js';
+import fs from 'fs';
+import jwt from 'jsonwebtoken';
 
 // Get all properties for admin
 export const getAllProperties = async (req, res) => {
@@ -535,5 +544,133 @@ export const updateViewingDate = async (req, res) => {
       message: 'Error updating viewing date',
       error: error.message 
     });
+  }
+};
+
+export const getLeaseAgreements = async (req, res) => {
+  try {
+    const agreements = getAvailableLeaseAgreements();
+    const validLocations = getValidLocations();
+    
+    res.json({
+      agreements,
+      validLocations
+    });
+  } catch (error) {
+    console.error('Error getting lease agreements:', error);
+    res.status(500).json({ message: 'Failed to get lease agreements' });
+  }
+};
+
+export const uploadLeaseAgreementFile = async (req, res) => {
+  try {
+    const { countryCode, region } = req.params;
+    
+    if (!req.files || !req.files.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const file = req.files.file;
+    
+    // Validate file type
+    if (!file.mimetype.includes('pdf')) {
+      return res.status(400).json({ message: 'Only PDF files are allowed' });
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      return res.status(400).json({ message: 'File size must be less than 10MB' });
+    }
+
+    const result = await uploadLeaseAgreement(countryCode, region, file);
+    res.json(result);
+  } catch (error) {
+    console.error('Error uploading lease agreement:', error);
+    if (error.message === 'Invalid location') {
+      res.status(400).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: 'Failed to upload lease agreement' });
+    }
+  }
+};
+
+export const deleteLeaseAgreementFile = async (req, res) => {
+  try {
+    const { countryCode, region } = req.params;
+    
+    await deleteLeaseAgreement(countryCode, region);
+    res.json({ message: 'Lease agreement deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting lease agreement:', error);
+    if (error.message === 'Invalid location') {
+      res.status(400).json({ message: error.message });
+    } else if (error.message === 'Lease agreement not found') {
+      res.status(404).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: 'Failed to delete lease agreement' });
+    }
+  }
+};
+
+export const getLeaseAgreementFile = async (req, res) => {
+  try {
+    const { countryCode, region } = req.params;
+    
+    // Get token from either query parameter or Authorization header
+    let token;
+    if (req.query.token) {
+      token = req.query.token;
+    } else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+
+    console.log('Token received:', token ? 'Present' : 'Missing'); // Debug log
+
+    if (!token) {
+      return res.status(401).json({ message: 'Not authorized, no token' });
+    }
+
+    try {
+      // Verify the token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log('Token decoded:', decoded); // Debug log
+      
+      // Get user from database to verify role
+      const user = await User.findById(decoded.id);
+      console.log('User found:', user ? `Role: ${user.role}` : 'Not found'); // Debug log
+
+      if (!user || user.role !== 'admin') {
+        return res.status(403).json({ message: 'Not authorized, admin access required' });
+      }
+
+      const filePath = getLeaseAgreementPath(countryCode, region);
+      console.log('File path:', filePath); // Debug log
+      
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: 'Lease agreement not found' });
+      }
+
+      // Set appropriate headers for PDF viewing
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'inline');
+      
+      res.sendFile(filePath);
+    } catch (error) {
+      console.error('Token verification error:', error);
+      if (error.name === 'JsonWebTokenError') {
+        return res.status(401).json({ message: 'Invalid token' });
+      }
+      if (error.name === 'TokenExpiredError') {
+        return res.status(401).json({ message: 'Token expired' });
+      }
+      throw error;
+    }
+  } catch (error) {
+    console.error('Error getting lease agreement file:', error);
+    if (error.message === 'Invalid location') {
+      res.status(400).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: 'Failed to get lease agreement file' });
+    }
   }
 }; 

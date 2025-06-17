@@ -10,7 +10,8 @@ import {
   getAvailableProperties,
   generatePropertyListing,
   getViewingSlots,
-  getViewingDates
+  getViewingDates,
+  updatePropertyCommissionStatus
 } from '../controllers/propertyController.js';
 import {
   uploadPropertyDocuments,
@@ -90,5 +91,8 @@ router.delete('/:propertyId/documents/:field/:documentId', protect, restrictTo('
 
 // AI Generation route
 router.post('/generate-listing', protect, restrictTo('landlord'), generatePropertyListing);
+
+// Update property commission status
+router.patch('/:propertyId/commission', protect, restrictTo('admin'), updatePropertyCommissionStatus);
 
 export default router; 

@@ -6,7 +6,10 @@ import {
   Box, 
   Typography, 
   Paper,
-  Tab
+  Tab,
+  ThemeProvider,
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
@@ -18,6 +21,12 @@ import { toast } from 'react-hot-toast';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import InfoIcon from '@mui/icons-material/Info';
+import DescriptionIcon from '@mui/icons-material/Description';
+import BuildIcon from '@mui/icons-material/Build';
+import ReceiptIcon from '@mui/icons-material/Receipt';
+import theme from '../theme';
+import { verticalTabStyles } from '../utils/uiUtils';
+import EmptyState from '../components/EmptyState';
 
 const MyLease = () => {
   const { user } = useAuth();
@@ -27,35 +36,31 @@ const MyLease = () => {
   const [tabValue, setTabValue] = useState('lease');
   const [hasNewTickets, setHasNewTickets] = useState(false);
 
+  const fetchLeaseDetails = async () => {
+    if (!user) return;
+
+    try {
+      const response = await axios.get(`${API_ENDPOINTS.APPLICATIONS}/my-lease`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      setLeaseDetails(response.data);
+      setError(null);
+    } catch (error) {
+      console.error('Error fetching lease details:', error);
+      setError('Failed to load lease details');
+      toast.error('Failed to load lease details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchLeaseDetails = async () => {
-      if (!user) return;
-
-      try {
-        const response = await axios.get(API_ENDPOINTS.APPLICATIONS, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        
-        const approvedApplication = response.data.find(app => app.status === 'approved');
-        
-        if (approvedApplication) {
-          setLeaseDetails(approvedApplication);
-        } else {
-          setError('No approved application found');
-        }
-      } catch (err) {
-        console.error('Error fetching lease details:', err);
-        setError('Failed to fetch lease details. Please try again later.');
-        toast.error('Failed to fetch lease details');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchLeaseDetails();
-  }, [user]);
+  }, []);
+
+  const handleLeaseUpdate = (updatedLease) => {
+    setLeaseDetails(updatedLease);
+  };
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -93,63 +98,111 @@ const MyLease = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <TabContext value={tabValue}>
-        <Box sx={{ display: 'flex', gap: 3 }}>
-          <Box sx={{ borderRight: 1, borderColor: 'divider', pr: 2 }}>
-            <TabList 
-              onChange={handleTabChange} 
-              value={tabValue}
-              orientation="vertical"
-            >
-              <Tab
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <CheckCircleIcon sx={{ color: 'success.light' }} />
-                    <Typography>Lease Agreement</Typography>
-                  </Box>
-                }
-                value="lease"
-              />
-              <Tab
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    {hasNewTickets ? (
-                      <InfoIcon sx={{ color: 'info.light' }} />
-                    ) : (
-                      <CheckCircleIcon sx={{ color: 'success.light' }} />
-                    )}
-                    <Typography>Repair Tickets</Typography>
-                  </Box>
-                }
-                value="tickets"
-              />
-              <Tab
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <CheckCircleIcon sx={{ color: 'success.light' }} />
-                    <Typography>Payments</Typography>
-                  </Box>
-                }
-                value="payments"
-              />
-            </TabList>
-          </Box>
+    <ThemeProvider theme={theme}>
+      <div className="bg-white" style={{ minHeight: '100vh' }}>
+        <Box sx={{ p: 4 }}>
+          <TabContext value={tabValue}>
+            <Box sx={{ display: 'flex', gap: 3 }}>
+              <Box sx={{ borderRight: 1, borderColor: 'divider', pr: 2 }}>
+                <TabList 
+                  onChange={handleTabChange} 
+                  value={tabValue}
+                  orientation="vertical"
+                  sx={{
+                    '& .MuiTab-root': verticalTabStyles.root,
+                    '& .Mui-selected': verticalTabStyles.selected,
+                    '& .MuiTabs-indicator': {
+                      display: 'none',
+                    },
+                  }}
+                >
+                  <Tab
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                        <DescriptionIcon sx={{ fontSize: 28 }} />
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                          <Typography>Lease Agreement</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            View and manage your lease
+                          </Typography>
+                        </Box>
+                      </Box>
+                    }
+                    value="lease"
+                  />
+                  <Tab
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                        <BuildIcon sx={{ fontSize: 28 }} />
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                          <Typography>Repair Tickets</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {hasNewTickets ? 'New maintenance requests' : 'Manage maintenance requests'}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    }
+                    value="tickets"
+                  />
+                  <Tab
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                        <ReceiptIcon sx={{ fontSize: 28 }} />
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                          <Typography>Payments</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Track rent and expenses
+                          </Typography>
+                        </Box>
+                      </Box>
+                    }
+                    value="payments"
+                  />
+                </TabList>
+              </Box>
 
-          <Box sx={{ flex: 1 }}>
-            <TabPanel value="lease">
-              <LeaseAgreement leaseDetails={leaseDetails} />
-            </TabPanel>
-            <TabPanel value="tickets">
-              <MyTickets propertyId={leaseDetails.property._id} />
-            </TabPanel>
-            <TabPanel value="payments">
-              <Payments leaseDetails={leaseDetails} />
-            </TabPanel>
-          </Box>
+              <Box sx={{ flex: 1 }}>
+                <TabPanel value="lease" sx={{ p: 0 }}>
+                  {loading ? (
+                    <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+                      <CircularProgress />
+                    </Box>
+                  ) : error ? (
+                    <Alert severity="error">{error}</Alert>
+                  ) : leaseDetails ? (
+                    <LeaseAgreement 
+                      leaseDetails={leaseDetails} 
+                      onLeaseUpdate={handleLeaseUpdate}
+                    />
+                  ) : (
+                    <EmptyState
+                      title="No Active Lease"
+                      message="You don't have any active lease agreements."
+                      icon={DescriptionIcon}
+                    />
+                  )}
+                </TabPanel>
+                <TabPanel value="tickets" sx={{ p: 0 }}>
+                  <MyTickets 
+                    propertyId={leaseDetails?.property?._id} 
+                    onTicketUpdate={(hasNew) => setHasNewTickets(hasNew)}
+                  />
+                </TabPanel>
+                <TabPanel value="payments" sx={{ p: 0 }}>
+                  <Payments 
+                    leaseDetails={leaseDetails}
+                    onPaymentUpdate={() => {
+                      // Refresh lease details to update payment status
+                      fetchLeaseDetails();
+                    }}
+                  />
+                </TabPanel>
+              </Box>
+            </Box>
+          </TabContext>
         </Box>
-      </TabContext>
-    </div>
+      </div>
+    </ThemeProvider>
   );
 };
 

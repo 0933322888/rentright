@@ -1,7 +1,0 @@
-{
-  "name": "rentright",
-  "private": true,
-  "scripts": {
-    "start": "npm --prefix server run start"
-  }
-}

@@ -2,7 +2,7 @@ import TenantDocument from '../models/tenantDocumentModel.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import sharp from 'sharp';
+import Jimp from 'jimp';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,17 +27,12 @@ const generateThumbnail = async (filepath, filename) => {
       fs.mkdirSync(thumbnailsDir, { recursive: true });
     }
 
-    // Generate thumbnail with sharp
-    await sharp(filepath)
-      .resize(300, 300, {
-        fit: 'inside',
-        withoutEnlargement: true
-      })
-      .jpeg({ 
-        quality: 80,
-        progressive: true
-      })
-      .toFile(thumbnailPath);
+    // Generate thumbnail with Jimp
+    const image = await Jimp.read(filepath);
+    await image
+      .resize(300, 300, Jimp.RESIZE_INSIDE) // Maintain aspect ratio
+      .quality(80) // Set JPEG quality
+      .writeAsync(thumbnailPath);
 
     console.log('Thumbnail generated successfully:', thumbnailPath);
     return `/uploads/tenant-documents/thumbnails/${filename}`;

@@ -123,6 +123,7 @@ const PropertyDetails = () => {
       return;
     }
 
+    // Show viewing modal to let user choose whether they want a viewing
     setShowViewingModal(true);
   };
 
@@ -138,9 +139,9 @@ const PropertyDetails = () => {
       const response = await axios.post(
         `${API_ENDPOINTS.PROPERTY(id)}/apply`,
         { 
-          wantsViewing: true,
-          viewingDate: viewingData.viewingDate,
-          viewingTime: viewingData.viewingTime
+          wantsViewing: viewingData.wantsViewing,
+          viewingDate: viewingData.wantsViewing ? viewingData.viewingDate : undefined,
+          viewingTime: viewingData.wantsViewing ? viewingData.viewingTime : undefined
         },
         {
           headers: {
@@ -152,7 +153,7 @@ const PropertyDetails = () => {
 
       if (response.data) {
         setHasApplied(true);
-        setViewingDetails(viewingData);
+        setViewingDetails(viewingData.wantsViewing ? viewingData : null);
         setShowViewingModal(false);
         setShowConfirmation(true);
       }
@@ -389,7 +390,7 @@ const PropertyDetails = () => {
             <img
               src={property.images[galleryIndex].startsWith('http') 
                 ? property.images[galleryIndex] 
-                : `http://localhost:5000/uploads/${property.images[galleryIndex]}`}
+                : `http://localhost:10000/uploads/${property.images[galleryIndex]}`}
               alt={`Gallery image ${galleryIndex + 1}`}
               className="max-h-[80vh] max-w-[90vw] object-contain rounded-lg shadow-lg border-4 border-white"
             />

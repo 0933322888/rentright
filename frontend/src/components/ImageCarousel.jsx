@@ -32,7 +32,7 @@ export default function ImageCarousel({ images }) {
       <img
         src={images[currentIndex].startsWith('http') 
           ? images[currentIndex] 
-          : `http://localhost:5000/uploads/${images[currentIndex]}`}
+          : `http://localhost:10000/uploads/${images[currentIndex]}`}
         alt={`Property image ${currentIndex + 1}`}
         className="w-full h-full object-cover"
         onError={(e) => {

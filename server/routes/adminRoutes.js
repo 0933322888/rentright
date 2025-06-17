@@ -15,17 +15,29 @@ import {
   updateViewingDate,
   deleteViewingDate,
   submitForReview,
-  getPropertyForReview
+  getPropertyForReview,
+  getLeaseAgreements,
+  uploadLeaseAgreementFile,
+  deleteLeaseAgreementFile,
+  getLeaseAgreementFile
 } from '../controllers/adminController.js';
 import { protect, restrictTo } from '../middleware/authMiddleware.js';
 import { isAdmin } from '../middleware/adminMiddleware.js';
 import { loadProperty } from '../middleware/propertyMiddleware.js';
+import fileUpload from 'express-fileupload';
 
 const router = express.Router();
 
 // Protect all admin routes
 router.use(protect);
 router.use(isAdmin);
+
+// Configure file upload middleware
+router.use(fileUpload({
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max file size
+  useTempFiles: true,
+  tempFileDir: '/tmp/'
+}));
 
 // Property routes
 router.get('/properties', getAllProperties);
@@ -49,5 +61,11 @@ router.delete('/tenants/:id', deleteTenant);
 // Application routes
 router.get('/applications', getAllApplications);
 router.delete('/applications/:id', deleteApplication);
+
+// Lease Agreement Management Routes
+router.get('/lease-agreements', getLeaseAgreements);
+router.post('/lease-agreements/:countryCode/:region', uploadLeaseAgreementFile);
+router.delete('/lease-agreements/:countryCode/:region', deleteLeaseAgreementFile);
+router.get('/lease-agreements/:countryCode/:region/file', getLeaseAgreementFile);
 
 export default router; 

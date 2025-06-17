@@ -178,4 +178,64 @@ export const getPropertyTickets = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
+};
+
+// Delete ticket (tenant only)
+export const deleteTicket = async (req, res) => {
+  try {
+    const ticket = await Ticket.findById(req.params.ticketId);
+    
+    if (!ticket) {
+      return res.status(404).json({ message: 'Ticket not found' });
+    }
+
+    // Check if user is the tenant who created the ticket
+    if (ticket.tenant.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to delete this ticket' });
+    }
+
+    // Only allow deletion of new tickets
+    if (ticket.status !== 'new') {
+      return res.status(400).json({ message: 'Can only delete tickets with "new" status' });
+    }
+
+    await Ticket.findByIdAndDelete(req.params.ticketId);
+    res.json({ message: 'Ticket deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Update ticket status (tenant only)
+export const updateTenantTicketStatus = async (req, res) => {
+  try {
+    const { ticketId } = req.params;
+    const { status } = req.body;
+
+    if (status !== 'resolved') {
+      return res.status(400).json({ message: 'Tenants can only mark tickets as resolved' });
+    }
+
+    const ticket = await Ticket.findById(ticketId);
+    if (!ticket) {
+      return res.status(404).json({ message: 'Ticket not found' });
+    }
+
+    // Check if user is the tenant who created the ticket
+    if (ticket.tenant.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to update this ticket' });
+    }
+
+    // Only allow marking approved tickets as resolved
+    if (ticket.status !== 'approved') {
+      return res.status(400).json({ message: 'Can only mark approved tickets as resolved' });
+    }
+
+    ticket.status = status;
+    await ticket.save();
+
+    res.json(ticket);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 }; 

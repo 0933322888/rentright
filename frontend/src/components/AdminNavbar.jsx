@@ -18,8 +18,10 @@ export default function AdminNavbar() {
     { name: 'Properties', href: '/admin/properties' },
     { name: 'Applications', href: '/admin/applications' },
     { name: 'Tickets', href: '/admin/tickets' },
+    { name: 'Escalations', href: '/admin/escalations' },
     { name: 'Landlords', href: '/admin/landlords' },
-    { name: 'Tenants', href: '/admin/tenants' }
+    { name: 'Tenants', href: '/admin/tenants' },
+    { name: 'Lease Agreements', href: '/admin/lease-agreements' }
   ];
 
   const handleLogout = () => {
