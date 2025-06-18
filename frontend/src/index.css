@@ -89,3 +89,63 @@ input::placeholder, textarea::placeholder {
     background-color: #ffffff;
   }
 }
+
+/* Bootstrap Primary Color Overrides - Loaded last for highest priority */
+:root {
+  --bs-primary: #5869ac !important;
+  --bs-primary-rgb: 88, 105, 172 !important;
+}
+
+html {
+  --bs-primary: #5869ac !important;
+  --bs-primary-rgb: 88, 105, 172 !important;
+}
+
+body {
+  --bs-primary: #5869ac !important;
+  --bs-primary-rgb: 88, 105, 172 !important;
+}
+
+/* Force override Bootstrap's primary color classes */
+.btn.btn-primary,
+button.btn-primary,
+[class*="btn-primary"] {
+  background-color: #5869ac !important;
+  border-color: #5869ac !important;
+  color: white !important;
+}
+
+.btn.btn-primary:hover,
+button.btn-primary:hover,
+[class*="btn-primary"]:hover {
+  background-color: #4a5a9a !important;
+  border-color: #4a5a9a !important;
+  color: white !important;
+}
+
+.btn.btn-outline-primary,
+button.btn-outline-primary {
+  color: #5869ac !important;
+  border-color: #5869ac !important;
+  background-color: transparent !important;
+}
+
+.btn.btn-outline-primary:hover,
+button.btn-outline-primary:hover {
+  background-color: #5869ac !important;
+  border-color: #5869ac !important;
+  color: white !important;
+}
+
+.text-primary,
+span.text-primary,
+div.text-primary,
+i.text-primary,
+svg.text-primary,
+[class*="text-primary"] {
+  color: #5869ac !important;
+}
+
+.spinner-border.text-primary {
+  color: #5869ac !important;
+}

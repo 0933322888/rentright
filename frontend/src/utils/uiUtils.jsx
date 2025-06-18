@@ -89,15 +89,15 @@ export const tabStyles = {
     transition: 'all 0.3s',
     '&:hover': {
       opacity: 1,
-      backgroundColor: 'rgba(25, 118, 210, 0.04)',
+      backgroundColor: 'rgba(88, 105, 172, 0.04)',
     },
   },
   selected: {
     opacity: 1,
-    backgroundColor: 'rgba(25, 118, 210, 0.12)',
+    backgroundColor: 'rgba(88, 105, 172, 0.12)',
     borderRadius: '8px',
     '& img': {
-      boxShadow: '0 0 0 2px rgba(25, 118, 210, 0.2)',
+      boxShadow: '0 0 0 2px rgba(88, 105, 172, 0.2)',
     },
   },
 };
@@ -122,21 +122,21 @@ export const verticalTabStyles = {
     },
   },
   selected: {
-    backgroundColor: '#e3f2fd',
-    color: '#1976d2',
-    border: '2px solid #1976d2',
+    backgroundColor: '#f5f6fa',
+    color: '#5869ac',
+    border: '2px solid #5869ac',
     '& .MuiTypography-root': {
-      color: '#1976d2',
+      color: '#5869ac',
       fontWeight: 600,
     },
     '& .MuiTypography-caption': {
-      color: '#1976d2',
+      color: '#5869ac',
     },
     '& .MuiSvgIcon-root': {
-      color: '#1976d2',
+      color: '#5869ac',
     },
     '&:hover': {
-      backgroundColor: '#e3f2fd',
+      backgroundColor: '#f5f6fa',
     },
   },
 }; 

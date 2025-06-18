@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api';
 import '../styles/navbar.css';
+import logo from '../assets/RR_logo.png';
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
@@ -93,27 +94,31 @@ export default function Navbar() {
   };
 
   return (
-    <Disclosure as="nav" className="bg-white shadow w-full">
+    <Disclosure as="nav" className="bg-gradient-to-r from-white to-gray-50 shadow-lg border-b border-gray-100 w-full sticky top-0 z-50">
       {({ open }) => (
         <>
           <div className="w-full px-4 sm:px-6 lg:px-8">
-            <div className="flex h-16 justify-between">
-              <div className="flex">
+            <div className="flex h-20 justify-between items-center">
+              <div className="flex items-center">
                 <div className="flex flex-shrink-0 items-center">
-                  <Link to={user?.role === 'landlord' ? '/my-properties' : '/'} className="text-xl font-bold text-primary-600 navbar-link">
+                  <img src={logo} alt="RentRight Logo" className="w-10 h-8 object-contain" />
+                  <Link 
+                    to={user?.role === 'landlord' ? '/my-properties' : '/'} 
+                    className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent hover:from-primary-700 hover:to-primary-800 transition-all duration-300 navbar-link flex items-center"
+                  >
                     RentRight
                   </Link>
                 </div>
-                <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+                <div className="hidden sm:ml-8 sm:flex sm:space-x-1">
                   {navigationItems.map((item) => (
                     <Link
                       key={item.name}
                       to={item.href}
                       className={classNames(
                         location.pathname === item.href
-                          ? 'border-primary-500 text-gray-900'
-                          : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-                        'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium navbar-link'
+                          ? 'bg-primary-50 text-primary-700 border-primary-500 shadow-sm'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-transparent',
+                        'inline-flex items-center border-b-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 hover:shadow-md navbar-link'
                       )}
                     >
                       {item.name}
@@ -126,18 +131,20 @@ export default function Navbar() {
                 {user ? (
                   <Menu as="div" className="relative ml-3">
                     <div>
-                      <Menu.Button className="flex items-center rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
+                      <Menu.Button className="flex items-center rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 px-4 py-2">
                         <span className="sr-only">Open user menu</span>
                         <div className="flex items-center">
-                          <span className="mr-2 text-gray-700">{user.name}</span>
+                          <span className="mr-3 text-gray-700 font-medium">{user.name}</span>
                           {user.profilePicture ? (
                             <img
                               src={`${import.meta.env.VITE_API_URL}${user.profilePicture}`}
                               alt="Profile"
-                              className="h-8 w-8 rounded-full object-cover"
+                              className="h-10 w-10 rounded-full object-cover border-2 border-white shadow-sm"
                             />
                           ) : (
-                            <UserCircleIcon className="h-8 w-8 text-gray-400" aria-hidden="true" />
+                            <div className="h-10 w-10 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 flex items-center justify-center text-white font-semibold text-lg shadow-sm">
+                              {user.name.charAt(0).toUpperCase()}
+                            </div>
                           )}
                         </div>
                       </Menu.Button>
@@ -151,17 +158,26 @@ export default function Navbar() {
                       leaveFrom="transform opacity-100 scale-100"
                       leaveTo="transform opacity-0 scale-95"
                     >
-                      <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                      <Menu.Items className="absolute right-0 z-10 mt-3 w-56 origin-top-right rounded-xl bg-white py-2 shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none border border-gray-100">
+                        <div className="px-4 py-3 border-b border-gray-100">
+                          <p className="text-sm font-medium text-gray-900">{user.name}</p>
+                          <p className="text-sm text-gray-500">{user.email}</p>
+                        </div>
                         <Menu.Item>
                           {({ active }) => (
                             <Link
                               to="/profile"
                               className={classNames(
-                                active ? 'bg-gray-100' : '',
-                                'block px-4 py-2 text-sm text-gray-700 navbar-link menu-item'
+                                active ? 'bg-primary-50 text-primary-700' : 'text-gray-700',
+                                'block px-4 py-3 text-sm font-medium navbar-link menu-item hover:bg-primary-50 transition-colors duration-150'
                               )}
                             >
-                              Profile
+                              <div className="flex items-center">
+                                <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                Profile
+                              </div>
                             </Link>
                           )}
                         </Menu.Item>
@@ -170,11 +186,16 @@ export default function Navbar() {
                             <button
                               onClick={handleLogout}
                               className={classNames(
-                                active ? 'bg-gray-100' : '',
-                                'block w-full px-4 py-2 text-left text-sm text-gray-700 navbar-link menu-item'
+                                active ? 'bg-red-50 text-red-700' : 'text-gray-700',
+                                'block w-full px-4 py-3 text-left text-sm font-medium navbar-link menu-item hover:bg-red-50 transition-colors duration-150'
                               )}
                             >
-                              Sign out
+                              <div className="flex items-center">
+                                <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                </svg>
+                                Sign out
+                              </div>
                             </button>
                           )}
                         </Menu.Item>
@@ -182,16 +203,16 @@ export default function Navbar() {
                     </Transition>
                   </Menu>
                 ) : (
-                  <div className="flex space-x-4">
+                  <div className="flex space-x-3">
                     <Link
                       to="/login"
-                      className="text-gray-500 hover:text-gray-700 px-3 py-2 text-sm font-medium navbar-link"
+                      className="text-gray-600 hover:text-gray-900 px-4 py-2 text-sm font-semibold rounded-lg hover:bg-gray-50 transition-all duration-200 navbar-link"
                     >
                       Login
                     </Link>
                     <Link
                       to="/register"
-                      className="bg-primary-600 text-white hover:bg-primary-500 px-3 py-2 rounded-md text-sm font-medium navbar-link"
+                      className="bg-gradient-to-r from-primary-600 to-primary-700 text-white hover:from-primary-700 hover:to-primary-800 px-6 py-2 rounded-lg text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 navbar-link"
                     >
                       Register
                     </Link>
@@ -201,8 +222,8 @@ export default function Navbar() {
             </div>
           </div>
 
-          <Disclosure.Panel className="sm:hidden">
-            <div className="space-y-1 pb-3 pt-2">
+          <Disclosure.Panel className="sm:hidden bg-white border-t border-gray-100">
+            <div className="space-y-1 pb-3 pt-2 px-4">
               {navigationItems.map((item) => (
                 <Link
                   key={item.name}
@@ -210,8 +231,8 @@ export default function Navbar() {
                   className={classNames(
                     location.pathname === item.href
                       ? 'bg-primary-50 border-primary-500 text-primary-700'
-                      : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700',
-                    'block border-l-4 py-2 pl-3 pr-4 text-base font-medium'
+                      : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900',
+                    'block border-l-4 py-3 pl-4 pr-4 text-base font-semibold rounded-r-lg transition-all duration-200'
                   )}
                 >
                   {item.name}
@@ -219,51 +240,59 @@ export default function Navbar() {
               ))}
             </div>
             {user ? (
-              <div className="border-t border-gray-200 pb-3 pt-4">
-                <div className="flex items-center px-4">
+              <div className="border-t border-gray-200 pb-4 pt-4 px-4">
+                <div className="flex items-center mb-4">
                   <div className="flex-shrink-0">
                     {user.profilePicture ? (
                       <img
                         src={`${import.meta.env.VITE_API_URL}${user.profilePicture}`}
                         alt="Profile"
-                        className="h-8 w-8 rounded-full object-cover"
+                        className="h-12 w-12 rounded-full object-cover border-2 border-white shadow-sm"
                       />
                     ) : (
-                      <UserCircleIcon className="h-8 w-8 text-gray-400" aria-hidden="true" />
+                      <div className="h-12 w-12 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 flex items-center justify-center text-white font-semibold text-xl shadow-sm">
+                        {user.name.charAt(0).toUpperCase()}
+                      </div>
                     )}
                   </div>
-                  <div className="ml-3">
-                    <div className="text-base font-medium text-gray-800">{user.name}</div>
-                    <div className="text-sm font-medium text-gray-500">{user.email}</div>
+                  <div className="ml-4">
+                    <div className="text-base font-semibold text-gray-900">{user.name}</div>
+                    <div className="text-sm text-gray-500">{user.email}</div>
                   </div>
                 </div>
-                <div className="mt-3 space-y-1">
+                <div className="space-y-1">
                   <Link
                     to="/profile"
-                    className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800 navbar-link menu-item"
+                    className="flex items-center px-4 py-3 text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors duration-150 navbar-link menu-item"
                   >
+                    <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
                     Profile
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="block w-full px-4 py-2 text-left text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800 navbar-link menu-item"
+                    className="flex items-center w-full px-4 py-3 text-left text-base font-medium text-gray-600 hover:bg-red-50 hover:text-red-700 rounded-lg transition-colors duration-150 navbar-link menu-item"
                   >
+                    <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
                     Sign out
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="border-t border-gray-200 pb-3 pt-4">
-                <div className="space-y-1">
+              <div className="border-t border-gray-200 pb-4 pt-4 px-4">
+                <div className="space-y-2">
                   <Link
                     to="/login"
-                    className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800 navbar-link"
+                    className="block px-4 py-3 text-base font-semibold text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors duration-150 navbar-link"
                   >
                     Login
                   </Link>
                   <Link
                     to="/register"
-                    className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800 navbar-link"
+                    className="block px-4 py-3 text-base font-semibold bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all duration-200 navbar-link text-center"
                   >
                     Register
                   </Link>

@@ -110,19 +110,10 @@ export default function MyProperties() {
 
   return (
     <ThemeProvider theme={theme}>
-      <div className="bg-white p-6" style={{ minHeight: '100vh' }}>
-        <Box sx={{ p: 4 }}>
-          <div className="mb-6">
-            <Typography variant="h4" sx={{ fontWeight: 700, mb: 3, color: 'primary.main', letterSpacing: 1 }}>
-              My Properties
-            </Typography>
-            <p className="mt-2 text-sm text-gray-700" style={{ marginBottom: 32 }}>
-              A list of all your properties and their current status.
-            </p>
-          </div>
-
+      <div className="bg-white" style={{ minHeight: '100vh' }}>
+        <Box>
           <TabContext value={selectedPropertyIndex}>
-            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 4 }}>
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
               <TabList 
                 onChange={handlePropertyTabChange} 
                 variant="scrollable"
@@ -137,11 +128,11 @@ export default function MyProperties() {
                   <Tab
                     key={property._id}
                     label={
-                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 1 }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 0.5 }}>
                         <img
                           src={getImageUrl(property.images?.[0])}
                           alt={property.title}
-                          className="w-24 h-24 object-cover rounded-lg mb-2"
+                          className="w-20 h-20 object-cover rounded-lg mb-1"
                           onError={(e) => handleImageErrorWrapper(property.images?.[0])}
                         />
                         <Typography variant="subtitle2" noWrap>
@@ -166,18 +157,18 @@ export default function MyProperties() {
                 ))}
                 <Tab
                   label={
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 1 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 0.5 }}>
                       <Box
                         sx={{
-                          width: 96,
-                          height: 96,
+                          width: 80,
+                          height: 80,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           border: '2px dashed',
                           borderColor: 'primary.main',
                           borderRadius: 1,
-                          mb: 2,
+                          mb: 1,
                           transition: 'all 0.3s',
                         }}
                       >
@@ -198,10 +189,10 @@ export default function MyProperties() {
             </Box>
 
             {properties.map((property, index) => (
-              <TabPanel key={property._id} value={index}>
-                <Box sx={{ display: 'flex', gap: 3 }}>
+              <TabPanel key={property._id} value={index} sx={{ p: 0 }}>
+                <Box sx={{ display: 'flex', gap: 2 }}>
                   <TabContext value={innerTabValue}>
-                    <Box sx={{ borderRight: 1, borderColor: 'divider', pr: 2 }}>
+                    <Box sx={{ borderRight: 1, borderColor: 'divider', pr: 1 }}>
                       <TabList 
                         onChange={handleInnerTabChange} 
                         value={innerTabValue}
@@ -217,7 +208,7 @@ export default function MyProperties() {
                         <Tab
                           label={
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                              <HomeIcon sx={{ fontSize: 28 }} />
+                              <HomeIcon sx={{ fontSize: 24 }} />
                               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                                 <Typography>Details</Typography>
                                 <Typography variant="caption" color="text.secondary">
@@ -231,7 +222,7 @@ export default function MyProperties() {
                         <Tab
                           label={
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                              <AssignmentIcon sx={{ fontSize: 28 }} />
+                              <AssignmentIcon sx={{ fontSize: 24 }} />
                               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                                 <Typography>Applications</Typography>
                                 <Typography variant="caption" color="text.secondary">
@@ -245,7 +236,7 @@ export default function MyProperties() {
                         <Tab
                           label={
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                              <DescriptionIcon sx={{ fontSize: 28 }} />
+                              <DescriptionIcon sx={{ fontSize: 24 }} />
                               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                                 <Typography>Lease Agreement</Typography>
                                 <Typography variant="caption" color="text.secondary">
@@ -259,7 +250,7 @@ export default function MyProperties() {
                         <Tab
                           label={
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                              <ReceiptIcon sx={{ fontSize: 28 }} />
+                              <ReceiptIcon sx={{ fontSize: 24 }} />
                               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                                 <Typography>Payments</Typography>
                                 <Typography variant="caption" color="text.secondary">
@@ -273,7 +264,7 @@ export default function MyProperties() {
                         <Tab
                           label={
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                              <BuildIcon sx={{ fontSize: 28 }} />
+                              <BuildIcon sx={{ fontSize: 24 }} />
                               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                                 <Typography>Tickets</Typography>
                                 <Typography variant="caption" color="text.secondary">
@@ -288,7 +279,7 @@ export default function MyProperties() {
                     </Box>
 
                     <Box sx={{ flex: 1 }}>
-                      <TabPanel value="overview">
+                      <TabPanel value="overview" sx={{ p: 0 }}>
                         <PropertyOverview
                           property={selectedProperty}
                           onDelete={deleteProperty}
@@ -297,7 +288,7 @@ export default function MyProperties() {
                           setClickedButton={setClickedButton}
                         />
                       </TabPanel>
-                      <TabPanel value="applications">
+                      <TabPanel value="applications" sx={{ p: 0 }}>
                         <ApplicationDetails
                           applications={applications}
                           selectedTenantIndex={selectedTenantIndex}
@@ -307,9 +298,9 @@ export default function MyProperties() {
                           onImageError={handleImageErrorWrapper}
                         />
                       </TabPanel>
-                      <TabPanel value="lease">
+                      <TabPanel value="lease" sx={{ p: 0 }}>
                         {applications.length > 0 && applications.some(app => app.status === 'approved') ? (
-                          <Box sx={{ p: 2 }}>
+                          <Box sx={{ p: 1 }}>
                             <LeaseAgreement 
                               leaseDetails={applications.find(app => app.status === 'approved')} 
                               onLeaseUpdate={handleLeaseUpdate}
@@ -323,9 +314,9 @@ export default function MyProperties() {
                           />
                         )}
                       </TabPanel>
-                      <TabPanel value="payments">
+                      <TabPanel value="payments" sx={{ p: 0 }}>
                         {applications.length > 0 && applications.some(app => app.status === 'approved') ? (
-                          <Box sx={{ p: 2 }}>
+                          <Box sx={{ p: 1 }}>
                             {(() => {
                               const approvedApp = applications.find(app => app.status === 'approved');
                               if (!approvedApp.property || typeof approvedApp.property === 'string') {
@@ -352,7 +343,7 @@ export default function MyProperties() {
                           />
                         )}
                       </TabPanel>
-                      <TabPanel value="tickets">
+                      <TabPanel value="tickets" sx={{ p: 0 }}>
                         <TicketManagement
                           tickets={tickets}
                           isLoading={ticketsLoading}

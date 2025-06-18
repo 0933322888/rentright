@@ -64,7 +64,7 @@ export default function ApplicationDetails({
               padding: '12px 16px',
               textTransform: 'none',
               '&.Mui-selected': {
-                backgroundColor: 'rgba(25, 118, 210, 0.12)',
+                backgroundColor: 'rgba(88, 105, 172, 0.12)',
                 borderRadius: '8px',
               },
             },

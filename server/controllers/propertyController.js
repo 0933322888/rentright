@@ -94,6 +94,7 @@ const getProperties = async (req, res) => {
       minPrice, 
       maxPrice, 
       bedrooms, 
+      bathrooms,
       city, 
       furnished,
       available,
@@ -111,7 +112,46 @@ const getProperties = async (req, res) => {
       if (minPrice) filter.price.$gte = Number(minPrice);
       if (maxPrice) filter.price.$lte = Number(maxPrice);
     }
-    if (bedrooms) filter['features.bedrooms'] = Number(bedrooms);
+    if (bedrooms) {
+      const bedroomValues = bedrooms.split(',').map(v => v.trim()).filter(v => v);
+      if (bedroomValues.length > 0) {
+        const exactValues = bedroomValues.filter(v => v !== '4+').map(v => Number(v));
+        const hasFourPlus = bedroomValues.includes('4+');
+        
+        if (exactValues.length > 0 && hasFourPlus) {
+          filter['features.bedrooms'] = { $in: exactValues };
+          filter.$or = [{ 'features.bedrooms': { $gte: 4 } }];
+        } else if (exactValues.length > 0) {
+          filter['features.bedrooms'] = { $in: exactValues };
+        } else if (hasFourPlus) {
+          filter['features.bedrooms'] = { $gte: 4 };
+        }
+      }
+    }
+    if (bathrooms) {
+      const bathroomValues = bathrooms.split(',').map(v => v.trim()).filter(v => v);
+      if (bathroomValues.length > 0) {
+        const exactValues = bathroomValues.filter(v => v !== '4+').map(v => Number(v));
+        const hasFourPlus = bathroomValues.includes('4+');
+        
+        if (exactValues.length > 0 && hasFourPlus) {
+          // For exact values, use range queries to include decimals
+          const bathroomConditions = exactValues.map(value => ({
+            'features.bathrooms': { $gte: value, $lt: value + 1 }
+          }));
+          bathroomConditions.push({ 'features.bathrooms': { $gte: 4 } });
+          filter.$or = bathroomConditions;
+        } else if (exactValues.length > 0) {
+          // For exact values, use range queries to include decimals
+          const bathroomConditions = exactValues.map(value => ({
+            'features.bathrooms': { $gte: value, $lt: value + 1 }
+          }));
+          filter.$or = bathroomConditions;
+        } else if (hasFourPlus) {
+          filter['features.bathrooms'] = { $gte: 4 };
+        }
+      }
+    }
     if (furnished) filter['features.furnished'] = furnished === 'true';
     if (available) filter.available = available === 'true';
     if (landlord) filter.landlord = landlord;
@@ -441,6 +481,7 @@ const getAvailableProperties = async (req, res) => {
       minPrice, 
       maxPrice, 
       bedrooms, 
+      bathrooms,
       city, 
       furnished,
       location 
@@ -461,7 +502,46 @@ const getAvailableProperties = async (req, res) => {
       if (minPrice) filter.price.$gte = Number(minPrice);
       if (maxPrice) filter.price.$lte = Number(maxPrice);
     }
-    if (bedrooms) filter['features.bedrooms'] = Number(bedrooms);
+    if (bedrooms) {
+      const bedroomValues = bedrooms.split(',').map(v => v.trim()).filter(v => v);
+      if (bedroomValues.length > 0) {
+        const exactValues = bedroomValues.filter(v => v !== '4+').map(v => Number(v));
+        const hasFourPlus = bedroomValues.includes('4+');
+        
+        if (exactValues.length > 0 && hasFourPlus) {
+          filter['features.bedrooms'] = { $in: exactValues };
+          filter.$or = [{ 'features.bedrooms': { $gte: 4 } }];
+        } else if (exactValues.length > 0) {
+          filter['features.bedrooms'] = { $in: exactValues };
+        } else if (hasFourPlus) {
+          filter['features.bedrooms'] = { $gte: 4 };
+        }
+      }
+    }
+    if (bathrooms) {
+      const bathroomValues = bathrooms.split(',').map(v => v.trim()).filter(v => v);
+      if (bathroomValues.length > 0) {
+        const exactValues = bathroomValues.filter(v => v !== '4+').map(v => Number(v));
+        const hasFourPlus = bathroomValues.includes('4+');
+        
+        if (exactValues.length > 0 && hasFourPlus) {
+          // For exact values, use range queries to include decimals
+          const bathroomConditions = exactValues.map(value => ({
+            'features.bathrooms': { $gte: value, $lt: value + 1 }
+          }));
+          bathroomConditions.push({ 'features.bathrooms': { $gte: 4 } });
+          filter.$or = bathroomConditions;
+        } else if (exactValues.length > 0) {
+          // For exact values, use range queries to include decimals
+          const bathroomConditions = exactValues.map(value => ({
+            'features.bathrooms': { $gte: value, $lt: value + 1 }
+          }));
+          filter.$or = bathroomConditions;
+        } else if (hasFourPlus) {
+          filter['features.bathrooms'] = { $gte: 4 };
+        }
+      }
+    }
     if (furnished) filter['features.furnished'] = furnished === 'true';
 
     const properties = await Property.find(filter)

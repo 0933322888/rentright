@@ -239,7 +239,6 @@ const AddProperty = () => {
   return (
     <Box sx={{ 
       minHeight: '100vh',
-      py: 4,
       px: 0,
       background: 'linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%)'
     }}>

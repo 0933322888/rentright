@@ -1,6 +1,13 @@
 import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#5869ac', // rgb(88,105,172)
+      light: '#7a8fb8',
+      dark: '#4a5a9a',
+    },
+  },
   components: {
     MuiTab: {
       styleOverrides: {
@@ -14,7 +21,7 @@ const theme = createTheme({
           position: 'relative',
           minHeight: '48px',
           '&:hover': {
-            backgroundColor: 'rgba(25, 118, 210, 0.04)',
+            backgroundColor: 'rgba(88, 105, 172, 0.04)',
             color: 'primary.main',
           },
         },
@@ -36,12 +43,12 @@ const theme = createTheme({
             width: '100%',
             justifyContent: 'flex-start',
             '&:hover': {
-              backgroundColor: 'rgba(25, 118, 210, 0.04)',
+              backgroundColor: 'rgba(88, 105, 172, 0.04)',
               color: 'primary.main',
             },
           },
           '& .MuiTab-root.Mui-selected': {
-            backgroundColor: 'rgba(25, 118, 210, 0.12)',
+            backgroundColor: 'rgba(88, 105, 172, 0.12)',
             color: 'primary.main',
             fontWeight: 'bold',
             '&::before': {
@@ -55,7 +62,7 @@ const theme = createTheme({
               borderRadius: '0 4px 4px 0',
             },
             '&:hover': {
-              backgroundColor: 'rgba(25, 118, 210, 0.16)',
+              backgroundColor: 'rgba(88, 105, 172, 0.16)',
             },
           },
           '& .MuiTabs-indicator': {

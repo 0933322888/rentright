@@ -152,17 +152,6 @@ export default function Applications() {
   if (filteredApplications.length === 0) {
     return (
       <Box>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h5" component="h1" sx={{ fontWeight: 600 }}>
-            My Applications
-          </Typography>
-          <Button
-            variant="contained"
-            onClick={() => navigate('/properties')}
-          >
-            Find Properties
-          </Button>
-        </Box>
         <Paper sx={{ p: 4, textAlign: 'center' }}>
           <Typography variant="h6" gutterBottom>
             No Applications Yet
