@@ -45,6 +45,7 @@ import WbSunnyIcon from '@mui/icons-material/WbSunny';
 import HighlightIcon from '@mui/icons-material/Highlight';
 import StraightenIcon from '@mui/icons-material/Straighten';
 import { API_ENDPOINTS } from '../config/api';
+import { getImageUrl } from '../utils/imageUtils';
 
 const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true, onCancel }) => {
   const theme = useTheme();
@@ -379,7 +380,9 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
                   }}
                 >
                   <img
-                    src={typeof image === 'string' ? image : URL.createObjectURL(image)}
+                    src={typeof image === 'string' 
+                      ? getImageUrl(image)
+                      : URL.createObjectURL(image)}
                     alt={`Property image ${index + 1}`}
                     style={{
                       position: 'absolute',

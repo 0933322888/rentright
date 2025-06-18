@@ -15,8 +15,10 @@ export default function EditProperty() {
   const [propertyData, setPropertyData] = useState(null);
 
   useEffect(() => {
-    fetchProperty();
-  }, [id]);
+    if (user) {
+      fetchProperty();
+    }
+  }, [id, user]);
 
   const fetchProperty = async () => {
     try {
@@ -25,6 +27,14 @@ export default function EditProperty() {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
       });
+      
+      // Check if the property belongs to the current user
+      const propertyLandlordId = response.data.landlord._id || response.data.landlord;
+      if (propertyLandlordId !== user._id) {
+        setError('You are not authorized to edit this property');
+        setFetching(false);
+        return;
+      }
       
       // Transform the data to match our form structure
       const data = {
@@ -62,57 +72,39 @@ export default function EditProperty() {
     setError('');
     setLoading(true);
 
-    const submitData = new FormData();
-    
-    // Add basic fields
-    submitData.append('title', formData.title);
-    submitData.append('description', formData.description);
-    submitData.append('type', formData.type);
-    submitData.append('price', formData.price);
-    submitData.append('status', 'New');
+    // Debug: Log user information
+    console.log('Current user:', user);
+    console.log('Property ID:', id);
 
-    // Add location fields
-    submitData.append('location[street]', formData.location.street);
-    submitData.append('location[city]', formData.location.city);
-    submitData.append('location[state]', formData.location.state);
-    submitData.append('location[zipCode]', formData.location.zipCode);
+    // Prepare JSON data
+    const submitData = {
+      title: formData.title,
+      description: formData.description,
+      type: formData.type,
+      price: formData.price,
+      status: 'New',
+      location: formData.location,
+      features: formData.features,
+      // Keep existing images (don't send new images in JSON update)
+      images: formData.images.filter(image => typeof image === 'string')
+    };
 
-    // Add features as JSON string (consistent with AddProperty)
-    submitData.append('features', JSON.stringify(formData.features));
-
-    // Handle images
-    const existingImages = [];
-    const newImages = [];
-
-    formData.images.forEach(image => {
-      if (typeof image === 'string') {
-        existingImages.push(image);
-      } else if (image instanceof File) {
-        newImages.push(image);
-      }
-    });
-
-    // Add existing images as a single array
-    if (existingImages.length > 0) {
-      submitData.append('existingImages', JSON.stringify(existingImages));
-    }
-
-    // Add new images
-    newImages.forEach(image => {
-      submitData.append('images', image);
-    });
+    console.log('Submitting data:', submitData);
 
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${API_ENDPOINTS.PROPERTIES}/${id}`, submitData, {
+      console.log('Using token:', token ? 'Token exists' : 'No token');
+      
+      await axios.patch(`${API_ENDPOINTS.PROPERTIES}/${id}`, submitData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'application/json',
         },
       });
       navigate('/my-properties');
     } catch (error) {
       console.error('Error updating property:', error);
+      console.error('Error response:', error.response?.data);
       setError(error.response?.data?.message || 'Error updating property');
     } finally {
       setLoading(false);

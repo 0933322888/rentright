@@ -66,9 +66,9 @@ export default function PropertyOverview({
   };
 
   return (
-    <Box sx={{ display: 'flex', gap: 3, height: '100%' }}>
+    <Box sx={{ display: 'flex', gap: 3, height: '100%', p: 3, overflow: 'hidden' }}>
       {/* Left side - Image */}
-      <Box sx={{ flex: '0 0 auto', width: '1200px' }}>
+      <Box sx={{ flex: '0 0 auto', width: { xs: '100%', md: '500px' }, maxWidth: '500px', minWidth: 0 }}>
         <Card sx={{ 
           height: '100%',
           transition: 'transform 0.2s, box-shadow 0.2s',
@@ -87,7 +87,7 @@ export default function PropertyOverview({
           <Box sx={{ position: 'relative' }}>
             <CardMedia
               component="img"
-              height="800"
+              height="400"
               image={property.images && 
                     property.images.length > 0 && 
                     property.images[currentImageIndex] ? 
@@ -100,7 +100,7 @@ export default function PropertyOverview({
               sx={{
                 position: 'relative',
                 borderRadius: 3,
-                height: '800px !important',
+                height: { xs: '300px', sm: '400px', md: '500px' } + ' !important',
                 width: '100% !important',
                 objectFit: 'cover',
                 objectPosition: 'center',
@@ -181,7 +181,7 @@ export default function PropertyOverview({
       </Box>
 
       {/* Right side - Content */}
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
         {/* Header with title and status */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
