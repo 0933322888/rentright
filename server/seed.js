@@ -27,7 +27,7 @@ if (!MONGODB_URI) {
 
 const sampleLandlords = [
   {
-    name: 'John Smith Landlord',
+    name: 'John Smith',
     email: 'l1@l1',
     password: '123',
     role: 'landlord',
@@ -35,7 +35,7 @@ const sampleLandlords = [
     phone: '555-0101'
   },
   {
-    name: 'Sarah Johnson Landlord',
+    name: 'Sarah Johnson',
     email: 'l2@l2',
     password: '123',
     role: 'landlord',
@@ -43,7 +43,7 @@ const sampleLandlords = [
     phone: '555-0102'
   },
   {
-    name: 'Michael Brown Landlord',
+    name: 'Michael Brown',
     email: 'l@l',
     password: '123',
     role: 'landlord',
@@ -54,7 +54,7 @@ const sampleLandlords = [
 
 const sampleTenants = [
   {
-    name: 'Emily Davis Tenant',
+    name: 'Emily Davis',
     email: 't2@t2',
     password: '123',
     role: 'tenant',
@@ -62,7 +62,7 @@ const sampleTenants = [
     phone: '555-0201'
   },
   {
-    name: 'David Wilson Tenant',
+    name: 'David Wilson',
     email: 'david@example.com',
     password: '123',
     role: 'tenant',
@@ -70,7 +70,7 @@ const sampleTenants = [
     phone: '555-0202'
   },
   {
-    name: 'Lisa Anderson Tenant',
+    name: 'Lisa Anderson',
     email: 't@t',
     password: '123',
     role: 'tenant',
@@ -78,7 +78,7 @@ const sampleTenants = [
     phone: '555-0203'
   },
   {
-    name: 'Lisa Anderson Admin',
+    name: 'Lisa Anderson',
     email: 'a@a',
     password: '123',
     role: 'admin',
@@ -368,8 +368,8 @@ const sampleProperties = [
       }
     ],
     images: [
-      'https://media.istockphoto.com/id/520774645/photo/house-exterior-with-curb-appeal.jpg?s=1024x1024&w=is&k=20&c=4rwljqZ3Sd5f2aI3e7um6fKpILko-OrrFiEQCJA38ug=', 
-      'https://media.istockphoto.com/id/590074124/photo/classic-american-house-with-siding-trim-and-red-entry-door.jpg?s=1024x1024&w=is&k=20&c=NXIxkzhayUFnOGqI1hhNFW04ufCpYO_F6KNgNiCHNMo=', 
+      'https://media.istockphoto.com/id/520774645/photo/house-exterior-with-curb-appeal.jpg?s=1024x1024&w=is&k=20&c=4rwljqZ3Sd5f2aI3e7um6fKpILko-OrrFiEQCJA38ug=',
+      'https://media.istockphoto.com/id/590074124/photo/classic-american-house-with-siding-trim-and-red-entry-door.jpg?s=1024x1024&w=is&k=20&c=NXIxkzhayUFnOGqI1hhNFW04ufCpYO_F6KNgNiCHNMo=',
       'https://media.istockphoto.com/id/1255835530/photo/modern-custom-suburban-home-exterior.jpg?s=1024x1024&w=is&k=20&c=4TmxYMrPLVb8u09dT5amw1vBsAVbHCxMWZIXqoy-I34='],
     status: 'active'
   }

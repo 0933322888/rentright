@@ -13,6 +13,7 @@ import 'leaflet/dist/leaflet.css';
 import ViewingScheduleModal from '../components/ViewingScheduleModal';
 import ApplicationConfirmation from '../components/ApplicationConfirmation';
 import { trackPropertyViewOnLoad } from '../utils/statisticsUtils';
+import { getImageUrl } from '../utils/imageUtils';
 
 const PropertyDetails = () => {
   const [property, setProperty] = useState(null);
@@ -397,9 +398,9 @@ const PropertyDetails = () => {
             <button className="absolute top-6 right-8 bg-black bg-opacity-70 rounded-full p-2 text-white text-3xl z-50 hover:text-primary-400 transition-colors" onClick={() => setGalleryOpen(false)}><FaTimes /></button>
             <button className="absolute left-6 top-1/2 -translate-y-1/2 bg-black bg-opacity-70 rounded-full p-2 text-white text-3xl z-50 hover:text-primary-400 transition-colors" onClick={() => setGalleryIndex((galleryIndex - 1 + property.images.length) % property.images.length)}><FaChevronLeft /></button>
             <img
-              src={property.images[galleryIndex]?.startsWith('http') 
-                ? property.images[galleryIndex] 
-                : `http://localhost:10000/uploads/${property.images[galleryIndex]}`}
+              src={property.images[galleryIndex]?.startsWith('http')
+                ? property.images[galleryIndex]
+                : getImageUrl(property.images[galleryIndex])}
               alt={`Gallery image ${galleryIndex + 1}`}
               className="max-h-[80vh] max-w-[90vw] object-contain rounded-lg shadow-lg border-4 border-white"
             />
