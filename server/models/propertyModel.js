@@ -62,8 +62,8 @@ const propertySchema = new mongoose.Schema({
   status: {
     type: String,
     required: true,
-    enum: ['new', 'review', 'submitted', 'rented', 'active'],
-    default: 'new'
+    enum: ['new', 'pending', 'review', 'submitted', 'rented', 'active'],
+    default: 'pending'
   },
   adminComments: {
     type: String,

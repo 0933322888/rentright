@@ -11,6 +11,7 @@ import {
   getLeaseAgreementPath,
   getValidLocations
 } from '../utils/leaseAgreementUtils.js';
+import { geocodeExistingProperties } from '../utils/geocoding.js';
 import fs from 'fs';
 import jwt from 'jsonwebtoken';
 
@@ -33,9 +34,9 @@ export const approveProperty = async (req, res) => {
     const { comments } = req.body;
     const property = req.property; // Using the property from middleware
     
-    // Only allow approval if property is not already active
-    if (property.status === 'active') {
-      return res.status(400).json({ message: 'Property is already active' });
+    // Only allow approval if property is in 'pending' status
+    if (property.status !== 'pending') {
+      return res.status(400).json({ message: 'Property can only be approved when in pending status' });
     }
 
     property.status = 'active';
@@ -364,9 +365,9 @@ export const rejectProperty = async (req, res) => {
       return res.status(404).json({ message: 'Property not found' });
     }
 
-    // Only allow rejection if property is in 'review' status
-    if (property.status !== 'review') {
-      return res.status(400).json({ message: 'Property can only be rejected when in review status' });
+    // Only allow rejection if property is in 'pending' status
+    if (property.status !== 'pending') {
+      return res.status(400).json({ message: 'Property can only be rejected when in pending status' });
     }
 
     property.status = 'new';
@@ -672,5 +673,26 @@ export const getLeaseAgreementFile = async (req, res) => {
     } else {
       res.status(500).json({ message: 'Failed to get lease agreement file' });
     }
+  }
+};
+
+export const geocodeProperties = async (req, res) => {
+  try {
+    console.log('Admin triggered geocoding process for existing properties...');
+    
+    const result = await geocodeExistingProperties(Property);
+    
+    console.log('Geocoding process completed:', result);
+    
+    res.json({
+      message: 'Geocoding process completed successfully',
+      summary: result
+    });
+  } catch (error) {
+    console.error('Error in geocoding properties:', error);
+    res.status(500).json({ 
+      message: 'Failed to geocode properties',
+      error: error.message 
+    });
   }
 }; 

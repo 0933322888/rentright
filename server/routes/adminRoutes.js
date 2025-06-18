@@ -19,12 +19,14 @@ import {
   getLeaseAgreements,
   uploadLeaseAgreementFile,
   deleteLeaseAgreementFile,
-  getLeaseAgreementFile
+  getLeaseAgreementFile,
+  geocodeProperties
 } from '../controllers/adminController.js';
 import { protect, restrictTo } from '../middleware/authMiddleware.js';
 import { isAdmin } from '../middleware/adminMiddleware.js';
 import { loadProperty } from '../middleware/propertyMiddleware.js';
 import fileUpload from 'express-fileupload';
+import { updatePropertyCommissionStatus } from '../controllers/propertyController.js';
 
 const router = express.Router();
 
@@ -47,7 +49,11 @@ router.patch('/properties/:id/viewing-dates/:dateId', loadProperty, updateViewin
 router.delete('/properties/:id/viewing-dates/:dateId', loadProperty, deleteViewingDate);
 router.patch('/properties/:id/approve', loadProperty, approveProperty);
 router.patch('/properties/:id/reject', loadProperty, rejectProperty);
+router.patch('/properties/:id/commission', loadProperty, updatePropertyCommissionStatus);
 router.delete('/properties/:id', loadProperty, deleteProperty);
+
+// Geocoding route
+router.post('/geocode-properties', geocodeProperties);
 
 // Landlord routes
 router.get('/landlords', getAllLandlords);

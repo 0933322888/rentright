@@ -53,7 +53,7 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-const PORT = process.env.NODE_ENV === 'prod' ? process.env.PORT || 8080 : process.env.AWS_BACKEND_PORT || 8080;
+const PORT = process.env.NODE_ENV === 'prod' ? process.env.AWS_BACKEND_PORT || 8080 : process.env.DEV_BACKEND_PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

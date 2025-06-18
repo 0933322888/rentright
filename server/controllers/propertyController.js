@@ -3,18 +3,58 @@ import mongoose from 'mongoose';
 import Application from '../models/applicationModel.js';
 import PropertyDocument from '../models/propertyDocumentModel.js';
 import User from '../models/userModel.js';
+import { geocodeAddressWithRetry } from '../utils/geocoding.js';
 
 const createProperty = async (req, res) => {
   try {
     // Handle images
     const images = req.files?.images ? req.files.images.map(file => file.path.replace(/\\/g, '/').split('uploads/')[1]) : [];
 
-    // Create property with images
-    const property = new Property({
+    // Prepare property data
+    const propertyData = {
       ...req.body,
       landlord: req.user._id,
-      images: images
-    });
+      images: images,
+      status: 'pending' // Set status to pending for admin approval
+    };
+
+    // Handle features field - it might be a JSON string that needs parsing
+    if (req.body.features) {
+      if (typeof req.body.features === 'string') {
+        try {
+          propertyData.features = JSON.parse(req.body.features);
+        } catch (parseError) {
+          console.error('Error parsing features JSON:', parseError);
+          // Keep the original string if parsing fails
+        }
+      } else {
+        propertyData.features = req.body.features;
+      }
+    }
+
+    // Geocode the address to get coordinates
+    if (req.body.location) {
+      try {
+        console.log('Geocoding address for property creation...');
+        const coordinates = await geocodeAddressWithRetry(req.body.location);
+        
+        if (coordinates) {
+          propertyData.location = {
+            ...req.body.location,
+            coordinates: coordinates
+          };
+          console.log('Coordinates added to property:', coordinates);
+        } else {
+          console.log('Could not geocode address, creating property without coordinates');
+        }
+      } catch (geocodingError) {
+        console.error('Geocoding failed, creating property without coordinates:', geocodingError.message);
+        // Continue with property creation even if geocoding fails
+      }
+    }
+
+    // Create property with images and coordinates
+    const property = new Property(propertyData);
 
     const createdProperty = await property.save();
 
@@ -60,7 +100,9 @@ const getProperties = async (req, res) => {
       landlord 
     } = req.query;
 
-    const filter = {};
+    const filter = {
+      status: 'active' // Only show approved properties
+    };
 
     if (type) filter.type = type;
     if (city) filter['location.city'] = new RegExp(city, 'i');
@@ -142,12 +184,50 @@ const updateProperty = async (req, res) => {
     // Combine existing and new images
     const updatedImages = [...existingImages, ...newImages];
 
+    // Prepare update data
+    const updateData = {
+      ...req.body,
+      images: updatedImages
+    };
+
+    // Handle features field - it might be a JSON string that needs parsing
+    if (req.body.features) {
+      if (typeof req.body.features === 'string') {
+        try {
+          updateData.features = JSON.parse(req.body.features);
+        } catch (parseError) {
+          console.error('Error parsing features JSON in update:', parseError);
+          // Keep the original string if parsing fails
+        }
+      } else {
+        updateData.features = req.body.features;
+      }
+    }
+
+    // Geocode the address if location is being updated
+    if (req.body.location) {
+      try {
+        console.log('Geocoding address for property update...');
+        const coordinates = await geocodeAddressWithRetry(req.body.location);
+        
+        if (coordinates) {
+          updateData.location = {
+            ...req.body.location,
+            coordinates: coordinates
+          };
+          console.log('Updated coordinates for property:', coordinates);
+        } else {
+          console.log('Could not geocode address, updating property without coordinates');
+        }
+      } catch (geocodingError) {
+        console.error('Geocoding failed during property update:', geocodingError.message);
+        // Continue with property update even if geocoding fails
+      }
+    }
+
     const updatedProperty = await Property.findByIdAndUpdate(
       req.params.id,
-      {
-        ...req.body,
-        images: updatedImages
-      },
+      updateData,
       { new: true }
     );
 
@@ -368,7 +448,7 @@ const getAvailableProperties = async (req, res) => {
 
     const filter = {
       available: true,
-      status: { $ne: 'rented' }
+      status: 'active' // Only show approved properties
     };
 
     if (type) filter.type = type;
