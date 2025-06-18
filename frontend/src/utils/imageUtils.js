@@ -14,11 +14,15 @@ export const getImageUrl = (imagePath) => {
   if (!imagePath) {
     return FALLBACK_IMAGE_DATA_URL;
   }
-  
+
   if (imagePath.startsWith('http')) {
     return imagePath;
   }
-  
+
+  if (imagePath.startsWith('/uploads/')) {
+    return `${import.meta.env.VITE_API_URL}${imagePath}`;
+  }
+
   return `${import.meta.env.VITE_API_URL}/uploads/${imagePath}`;
 };
 
@@ -39,11 +43,11 @@ export const handleImageError = (event, fallbackUrl = FALLBACK_IMAGE_DATA_URL) =
  */
 export const formatImageSize = (bytes) => {
   if (bytes === 0) return '0 Bytes';
-  
+
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
@@ -55,21 +59,21 @@ export const formatImageSize = (bytes) => {
 export const validateImage = (file) => {
   const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
   const maxSize = 5 * 1024 * 1024; // 5MB
-  
+
   if (!allowedTypes.includes(file.type)) {
     return {
       isValid: false,
       message: 'Invalid file type. Only JPEG, PNG and GIF are allowed.'
     };
   }
-  
+
   if (file.size > maxSize) {
     return {
       isValid: false,
       message: 'File size too large. Maximum size is 5MB.'
     };
   }
-  
+
   return {
     isValid: true,
     message: 'File is valid'

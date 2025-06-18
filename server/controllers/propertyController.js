@@ -8,8 +8,19 @@ import { generatePriceSuggestion } from '../utils/aiPricingService.js';
 
 const createProperty = async (req, res) => {
   try {
-    // Handle images
-    const images = req.files?.images ? req.files.images.map(file => file.path.replace(/\\/g, '/').split('uploads/')[1]) : [];
+    // Handle images for both form-data and JSON
+    let images = [];
+    if (req.files && req.files.images) {
+      if (Array.isArray(req.files.images)) {
+        images = req.files.images
+          .filter(file => file && file.path)
+          .map(file => file.path.replace(/\\/g, '/').split('uploads/')[1]);
+      } else if (req.files.images && req.files.images.path) {
+        images = [req.files.images.path.replace(/\\/g, '/').split('uploads/')[1]];
+      }
+    } else if (req.body.images) {
+      images = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
+    }
 
     // Prepare property data
     const propertyData = {
@@ -102,9 +113,11 @@ const getProperties = async (req, res) => {
       landlord
     } = req.query;
 
-    const filter = {
-      status: 'active' // Only show approved properties
-    };
+    // Only filter by status: 'active' if not querying by landlord
+    const filter = {};
+    if (!landlord) {
+      filter.status = 'active';
+    }
 
     if (type) filter.type = type;
     if (city) filter['location.city'] = new RegExp(city, 'i');
@@ -155,7 +168,14 @@ const getProperties = async (req, res) => {
     }
     if (furnished) filter['features.furnished'] = furnished === 'true';
     if (available) filter.available = available === 'true';
-    if (landlord) filter.landlord = landlord;
+    if (landlord) {
+      try {
+        filter.landlord = new mongoose.Types.ObjectId(landlord);
+      } catch (e) {
+        // fallback to string if not a valid ObjectId
+        filter.landlord = landlord;
+      }
+    }
 
     const properties = await Property.find(filter)
       .populate('landlord', 'name email phone')
@@ -198,6 +218,7 @@ const updateProperty = async (req, res) => {
     if (!property) {
       return res.status(404).json({ message: 'Property not found' });
     }
+
 
     // Check if user is authorized to update this property
     if (property.landlord.toString() !== req.user._id.toString()) {
@@ -730,7 +751,7 @@ const generatePropertyPrice = async (req, res) => {
     // Validate required fields
     const requiredFields = ['type', 'location', 'features'];
     const missingFields = requiredFields.filter(field => !propertyData[field]);
-    
+
     if (missingFields.length > 0) {
       return res.status(400).json({
         message: `Missing required fields: ${missingFields.join(', ')}`
@@ -757,10 +778,52 @@ const generatePropertyPrice = async (req, res) => {
     res.json(priceSuggestion);
   } catch (error) {
     console.error('Error generating price suggestion:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Error generating price suggestion',
-      error: error.message 
+      error: error.message
     });
+  }
+};
+
+export const uploadPropertyImages = async (req, res) => {
+  try {
+    const property = await Property.findById(req.params.id);
+    if (!property) return res.status(404).json({ message: 'Property not found' });
+
+    if (!req.files || !req.files.images) {
+      return res.status(400).json({ message: 'No images uploaded' });
+    }
+
+    let newImages = [];
+    if (Array.isArray(req.files.images)) {
+      newImages = req.files.images
+        .filter(file => file && file.path)
+        .map(file => file.path.replace(/\\/g, '/').split('uploads/')[1]);
+    } else if (req.files.images && req.files.images.path) {
+      newImages = [req.files.images.path.replace(/\\/g, '/').split('uploads/')[1]];
+    }
+
+    property.images = property.images.concat(newImages);
+    await property.save();
+
+    res.json(property);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const uploadImages = async (req, res) => {
+  try {
+    // Multer's upload.array puts files in req.files (array)
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: 'No images uploaded' });
+    }
+    const images = req.files
+      .filter(file => file && file.filename)
+      .map(file => file.filename);
+    res.json({ images });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
 };
 

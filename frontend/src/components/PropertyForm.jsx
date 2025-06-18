@@ -46,6 +46,7 @@ import HighlightIcon from '@mui/icons-material/Highlight';
 import StraightenIcon from '@mui/icons-material/Straighten';
 import { API_ENDPOINTS } from '../config/api';
 import { getImageUrl } from '../utils/imageUtils';
+import axios from 'axios';
 
 const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true, onCancel }) => {
   const theme = useTheme();
@@ -233,9 +234,43 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit(formData);
+
+    // Separate existing image URLs and new files
+    const existingImages = formData.images.filter(img => typeof img === 'string');
+    const newImageFiles = formData.images.filter(img => img instanceof File);
+    let uploadedImageUrls = [];
+
+    if (newImageFiles.length > 0) {
+      const uploadFormData = new FormData();
+      newImageFiles.forEach(file => uploadFormData.append('images', file));
+      try {
+        const token = localStorage.getItem('token');
+        const uploadRes = await axios.post(
+          API_ENDPOINTS.IMAGES,
+          uploadFormData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        uploadedImageUrls = (uploadRes.data.images || []).map(img => `/uploads/${img}`);
+      } catch (err) {
+        alert('Failed to upload images.');
+        return;
+      }
+    }
+
+    // Prepare the final data to submit
+    const submitData = {
+      ...formData,
+      images: [...existingImages, ...uploadedImageUrls],
+    };
+
+    onSubmit(submitData);
   };
 
   return (

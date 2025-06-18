@@ -5,6 +5,7 @@ import { API_ENDPOINTS } from '../config/api';
 import { useAuth } from '../context/AuthContext';
 import 'leaflet/dist/leaflet.css';
 import { trackPropertyClick } from '../utils/statisticsUtils';
+import { getImageUrl } from '../utils/imageUtils';
 
 // Lazy load the map components
 const MapComponent = lazy(() => import('../components/MapComponent'));
@@ -542,7 +543,7 @@ export default function PropertyList() {
                       <div className="w-56 h-56 flex-shrink-0">
                         {property.images && property.images.length > 0 ? (
                           <img
-                            src={property.images[0]}
+                            src={getImageUrl(property.images[0])}
                             alt={property.title}
                             className="w-full h-full object-cover rounded-lg"
                           />

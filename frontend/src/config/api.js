@@ -5,34 +5,35 @@ export const API_ENDPOINTS = {
   // Auth endpoints
   LOGIN: `${BASE_URL}/api/auth/login`,
   REGISTER: `${BASE_URL}/api/auth/register`,
-  
+
   // User endpoints
   USER_PROFILE: `${BASE_URL}/api/users/profile`,
   UPDATE_PROFILE: `${BASE_URL}/api/users/profile`,
   UPDATE_TENANT_PROFILE: `${BASE_URL}/api/users/tenant-profile`,
   GET_TENANT_PROFILE: `${BASE_URL}/api/users/tenant-profile`,
-  
+
   // Property endpoints
   PROPERTIES: `${BASE_URL}/api/properties`,
   PROPERTY: (id) => `${BASE_URL}/api/properties/${id}`,
   AVAILABLE_PROPERTIES: `${BASE_URL}/api/properties/available`,
   GENERATE_PROPERTY_PRICE: `${BASE_URL}/api/properties/generate-price`,
-  
+  IMAGES: `${BASE_URL}/api/properties/images`,
+
   // Payment endpoints
   PAYMENTS: `${BASE_URL}/api/payments`,
-  
+
   // Application endpoints
   APPLICATIONS: `${BASE_URL}/api/applications`,
   PROPERTY_APPLICATIONS: (propertyId) => `${BASE_URL}/api/applications/property/${propertyId}`,
   PROPERTY_DOCUMENTS: (propertyId) => `${BASE_URL}/api/properties/${propertyId}/documents`,
-  
+
   // Admin endpoints
   ADMIN: `${BASE_URL}/api/admin`,
   ADMIN_PROPERTIES: `${BASE_URL}/api/admin/properties`,
   ADMIN_LANDLORDS: `${BASE_URL}/api/admin/landlords`,
   ADMIN_TENANTS: `${BASE_URL}/api/admin/tenants`,
   ADMIN_APPLICATIONS: `${BASE_URL}/api/admin/applications`,
-  ADMIN_PROPERTY_VIEWING_DATES: (propertyId, dateId) => 
+  ADMIN_PROPERTY_VIEWING_DATES: (propertyId, dateId) =>
     `${BASE_URL}/api/admin/properties/${propertyId}/viewing-dates/${dateId}`,
 
   // Ticket endpoints

@@ -18,23 +18,8 @@ import {
     updateLeaseStartDate
 } from '../controllers/applicationController.js';
 import { protect, restrictTo } from '../middleware/authMiddleware.js';
-import fileUpload from 'express-fileupload';
 
 const router = express.Router();
-
-// Configure file upload
-router.use(fileUpload({
-    createParentPath: true,
-    limits: { 
-        fileSize: 10 * 1024 * 1024 // 10MB max file size
-    },
-    abortOnLimit: true,
-    useTempFiles: true,
-    tempFileDir: '/tmp/',
-    debug: true,
-    parseNested: true,
-    safeFileNames: false
-}));
 
 // Protected routes
 router.use(protect);
