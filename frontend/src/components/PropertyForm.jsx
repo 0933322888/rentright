@@ -262,10 +262,10 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
                 onClick={() => setShowPhotoTips(!showPhotoTips)}
                 size="large"
                 sx={{
-                  color: 'primary.main',
+                  color: '#2a7a78',
                   ml: 1,
                   '&:hover': {
-                    bgcolor: 'primary.50'
+                    bgcolor: '#b1f0ee'
                   }
                 }}
               >
