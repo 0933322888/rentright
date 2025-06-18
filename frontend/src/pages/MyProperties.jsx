@@ -18,11 +18,13 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import BuildIcon from '@mui/icons-material/Build';
+import AnalyticsIcon from '@mui/icons-material/Analytics';
 import LeaseAgreement from '../components/lease/LeaseAgreement';
 import Payments from '../components/lease/Payments';
 import PropertyOverview from '../components/properties/PropertyOverview';
 import ApplicationDetails from '../components/properties/ApplicationDetails';
 import TicketManagement from '../components/properties/TicketManagement';
+import PropertyStatistics from '../components/properties/PropertyStatistics';
 import { useProperties } from '../hooks/useProperties';
 import { useApplications } from '../hooks/useApplications';
 import { useTickets } from '../hooks/useTickets';
@@ -275,6 +277,20 @@ export default function MyProperties() {
                           }
                           value="tickets"
                         />
+                        <Tab
+                          label={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                              <AnalyticsIcon sx={{ fontSize: 24 }} />
+                              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                <Typography>Statistics</Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  Property statistics
+                                </Typography>
+                              </Box>
+                            </Box>
+                          }
+                          value="statistics"
+                        />
                       </TabList>
                     </Box>
 
@@ -350,6 +366,9 @@ export default function MyProperties() {
                           error={ticketsError}
                           onTicketAction={handleTicketAction}
                         />
+                      </TabPanel>
+                      <TabPanel value="statistics" sx={{ p: 0 }}>
+                        <PropertyStatistics propertyId={selectedProperty._id} />
                       </TabPanel>
                     </Box>
                   </TabContext>

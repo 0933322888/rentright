@@ -12,6 +12,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import ViewingScheduleModal from '../components/ViewingScheduleModal';
 import ApplicationConfirmation from '../components/ApplicationConfirmation';
+import { trackPropertyViewOnLoad } from '../utils/statisticsUtils';
 
 const PropertyDetails = () => {
   const [property, setProperty] = useState(null);
@@ -36,6 +37,9 @@ const PropertyDetails = () => {
         // Fetch property details
         const propertyResponse = await axios.get(`${API_ENDPOINTS.PROPERTIES}/${id}`);
         setProperty(propertyResponse.data);
+        
+        // Track property view
+        trackPropertyViewOnLoad(id);
         
         // If user is a tenant, check their application status and profile
         if (user && user.role === 'tenant') {
