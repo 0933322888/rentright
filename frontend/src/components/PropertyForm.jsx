@@ -515,7 +515,23 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
                     onClick={handleGeneratePrice}
                     disabled={generatingPrice || loading}
                     startIcon={generatingPrice ? <CircularProgress size={20} /> : <AutoAwesomeIcon />}
-                    sx={{ minWidth: 180, height: 56 }}
+                    sx={{ 
+                      minWidth: 180, 
+                      height: 56,
+                      background: 'linear-gradient(135deg, #ffffff 0%, #b1f0ee 100%)',
+                      border: '1px solid #b1f0ee',
+                      color: '#2a7a78',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #f8f8f8 0%, #9ee8e6 100%)',
+                        border: '1px solid #9ee8e6',
+                        color: '#1f5a58'
+                      },
+                      '&:disabled': {
+                        background: 'linear-gradient(135deg, #f5f5f5 0%, #D3D3D3 100%)',
+                        border: '1px solid #D3D3D3',
+                        color: '#A0A0A0'
+                      }
+                    }}
                   >
                     {generatingPrice ? 'Generating...' : 'Get AI Price'}
                   </Button>
@@ -801,7 +817,22 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
               startIcon={generating ? <CircularProgress size={20} /> : <AutoAwesomeIcon />}
               onClick={handleGenerateListing}
               disabled={generating || loading}
-              sx={{ minWidth: 150 }}
+              sx={{ 
+                minWidth: 150,
+                background: 'linear-gradient(135deg, #ffffff 0%, #b1f0ee 100%)',
+                border: '1px solid #b1f0ee',
+                color: '#2a7a78',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #f8f8f8 0%, #9ee8e6 100%)',
+                  border: '1px solid #9ee8e6',
+                  color: '#1f5a58'
+                },
+                '&:disabled': {
+                  background: 'linear-gradient(135deg, #f5f5f5 0%, #D3D3D3 100%)',
+                  border: '1px solid #D3D3D3',
+                  color: '#A0A0A0'
+                }
+              }}
             >
               {generating ? 'Generating...' : 'Generate with AI'}
             </Button>
