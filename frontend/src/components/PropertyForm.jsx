@@ -14,7 +14,8 @@ import {
   IconButton,
   CircularProgress,
   Tooltip,
-  Alert
+  Alert,
+  Collapse
 } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -27,7 +28,22 @@ import ImageIcon from '@mui/icons-material/Image';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import PsychologyIcon from '@mui/icons-material/Psychology';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
+import LivingIcon from '@mui/icons-material/Living';
+import KitchenIcon from '@mui/icons-material/Kitchen';
+import BedIcon from '@mui/icons-material/Bed';
+import BathroomIcon from '@mui/icons-material/Bathroom';
+import StarIcon from '@mui/icons-material/Star';
+import LightbulbIcon from '@mui/icons-material/Lightbulb';
+import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates';
+import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
+import ViewInArIcon from '@mui/icons-material/ViewInAr';
+import WbSunnyIcon from '@mui/icons-material/WbSunny';
+import HighlightIcon from '@mui/icons-material/Highlight';
+import StraightenIcon from '@mui/icons-material/Straighten';
 import { API_ENDPOINTS } from '../config/api';
 import { getImageUrl } from '../utils/imageUtils';
 
@@ -59,6 +75,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
   const [generatingPrice, setGeneratingPrice] = useState(false);
   const [priceSuggestion, setPriceSuggestion] = useState(null);
   const [priceError, setPriceError] = useState('');
+  const [showPhotoTips, setShowPhotoTips] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, checked } = e.target;
@@ -240,12 +257,107 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
             <Typography variant="h6" color="primary">
               Property Images
             </Typography>
+            <Tooltip title="Photography Tips">
+              <IconButton
+                onClick={() => setShowPhotoTips(!showPhotoTips)}
+                size="large"
+                sx={{
+                  color: 'primary.main',
+                  ml: 1,
+                  '&:hover': {
+                    bgcolor: 'primary.50'
+                  }
+                }}
+              >
+                <TipsAndUpdatesIcon sx={{ fontSize: 28 }} />
+              </IconButton>
+            </Tooltip>
           </Box>
           
           <Box sx={{ mb: 3 }}>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               Upload high-quality images of your property. You can upload up to 10 images.
             </Typography>
+            
+            {/* Photography Guide */}
+            <Collapse in={showPhotoTips}>
+              <Box sx={{ 
+                mb: 3, 
+                p: 2, 
+                bgcolor: 'primary.50', 
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'primary.200'
+              }}>
+                <Typography variant="subtitle2" color="primary" sx={{ mb: 2, fontWeight: 600 }}>
+                  📸 Photography Tips for Better Listings
+                </Typography>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 500, mb: 1, color: 'text.primary' }}>
+                      Essential Shots:
+                    </Typography>
+                    <Box sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <HomeOutlinedIcon sx={{ fontSize: 16, mr: 1, color: 'primary.main' }} />
+                        <span>Front exterior of the property</span>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <LivingIcon sx={{ fontSize: 16, mr: 1, color: 'primary.main' }} />
+                        <span>Living room from multiple angles</span>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <KitchenIcon sx={{ fontSize: 16, mr: 1, color: 'primary.main' }} />
+                        <span>Kitchen (clean and well-lit)</span>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <BedIcon sx={{ fontSize: 16, mr: 1, color: 'primary.main' }} />
+                        <span>Master bedroom</span>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <BathroomIcon sx={{ fontSize: 16, mr: 1, color: 'primary.main' }} />
+                        <span>Bathroom (clean and staged)</span>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <StarIcon sx={{ fontSize: 16, mr: 1, color: 'primary.main' }} />
+                        <span>Any unique features or amenities</span>
+                      </Box>
+                    </Box>
+                  </Box>
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 500, mb: 1, color: 'text.primary' }}>
+                      Photography Best Practices:
+                    </Typography>
+                    <Box sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <WbSunnyIcon sx={{ fontSize: 16, mr: 1, color: 'primary.main' }} />
+                        <span>Use natural lighting when possible</span>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <CleaningServicesIcon sx={{ fontSize: 16, mr: 1, color: 'primary.main' }} />
+                        <span>Clean and declutter before shooting</span>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <ViewInArIcon sx={{ fontSize: 16, mr: 1, color: 'primary.main' }} />
+                        <span>Take photos from corner angles for depth</span>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <LightbulbIcon sx={{ fontSize: 16, mr: 1, color: 'primary.main' }} />
+                        <span>Ensure good lighting in all rooms</span>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <HighlightIcon sx={{ fontSize: 16, mr: 1, color: 'primary.main' }} />
+                        <span>Show the best features prominently</span>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <StraightenIcon sx={{ fontSize: 16, mr: 1, color: 'primary.main' }} />
+                        <span>Keep photos straight and level</span>
+                      </Box>
+                    </Box>
+                  </Box>
+                </Box>
+              </Box>
+            </Collapse>
             
             <Box
               sx={{
