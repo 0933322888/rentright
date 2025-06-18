@@ -4,6 +4,7 @@ import Application from '../models/applicationModel.js';
 import PropertyDocument from '../models/propertyDocumentModel.js';
 import User from '../models/userModel.js';
 import { geocodeAddressWithRetry } from '../utils/geocoding.js';
+import { generatePriceSuggestion } from '../utils/aiPricingService.js';
 
 const createProperty = async (req, res) => {
   try {
@@ -714,6 +715,47 @@ const updatePropertyCommissionStatus = async (req, res) => {
   }
 };
 
+const generatePropertyPrice = async (req, res) => {
+  try {
+    const propertyData = req.body;
+
+    // Validate required fields
+    const requiredFields = ['type', 'location', 'features'];
+    const missingFields = requiredFields.filter(field => !propertyData[field]);
+    
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        message: `Missing required fields: ${missingFields.join(', ')}`
+      });
+    }
+
+    // Validate location data
+    if (!propertyData.location.city || !propertyData.location.state) {
+      return res.status(400).json({
+        message: 'City and state are required for price calculation'
+      });
+    }
+
+    // Validate features data
+    if (!propertyData.features.bedrooms || !propertyData.features.bathrooms) {
+      return res.status(400).json({
+        message: 'Bedrooms and bathrooms are required for price calculation'
+      });
+    }
+
+    // Generate price suggestion using AI service
+    const priceSuggestion = generatePriceSuggestion(propertyData);
+
+    res.json(priceSuggestion);
+  } catch (error) {
+    console.error('Error generating price suggestion:', error);
+    res.status(500).json({ 
+      message: 'Error generating price suggestion',
+      error: error.message 
+    });
+  }
+};
+
 export {
   createProperty,
   getProperties,
@@ -724,5 +766,6 @@ export {
   updateApplicationStatus,
   getAvailableProperties,
   generatePropertyListing,
+  generatePropertyPrice,
   updatePropertyCommissionStatus
 }; 

@@ -12,7 +12,9 @@ import {
   Divider,
   useTheme,
   IconButton,
-  CircularProgress
+  CircularProgress,
+  Tooltip,
+  Alert
 } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -25,6 +27,7 @@ import ImageIcon from '@mui/icons-material/Image';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import PsychologyIcon from '@mui/icons-material/Psychology';
 import { API_ENDPOINTS } from '../config/api';
 
 const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true, onCancel }) => {
@@ -52,6 +55,9 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
     images: initialData.images || []
   });
   const [generating, setGenerating] = useState(false);
+  const [generatingPrice, setGeneratingPrice] = useState(false);
+  const [priceSuggestion, setPriceSuggestion] = useState(null);
+  const [priceError, setPriceError] = useState('');
 
   const handleChange = (e) => {
     const { name, value, checked } = e.target;
@@ -152,6 +158,60 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
       alert(error.message || 'Failed to generate listing. Please try again.');
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleGeneratePrice = async () => {
+    // Validate required fields for price generation
+    if (!formData.type) {
+      setPriceError('Property type is required for price calculation');
+      return;
+    }
+    if (!formData.location.city || !formData.location.state) {
+      setPriceError('City and state are required for price calculation');
+      return;
+    }
+    if (!formData.features.bedrooms || !formData.features.bathrooms) {
+      setPriceError('Bedrooms and bathrooms are required for price calculation');
+      return;
+    }
+
+    setGeneratingPrice(true);
+    setPriceError('');
+    setPriceSuggestion(null);
+
+    try {
+      const response = await fetch(API_ENDPOINTS.GENERATE_PROPERTY_PRICE, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          type: formData.type,
+          location: formData.location,
+          features: formData.features
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to generate price suggestion');
+      }
+
+      const suggestion = await response.json();
+      setPriceSuggestion(suggestion);
+      
+      // Auto-fill the price field with the suggested price
+      setFormData(prev => ({
+        ...prev,
+        price: suggestion.suggestedPrice
+      }));
+    } catch (error) {
+      console.error('Error generating price suggestion:', error);
+      setPriceError(error.message || 'Failed to generate price suggestion. Please try again.');
+    } finally {
+      setGeneratingPrice(false);
     }
   };
 
@@ -321,20 +381,34 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
               </TextField>
             </Grid>
             <Grid sx={{ minWidth: 250 }}>
-              <TextField
-                required
-                fullWidth
-                type="number"
-                label="Price per month"
-                name="price"
-                value={formData.price}
-                onChange={handleChange}
-                variant="outlined"
-                size="medium"
-                InputProps={{
-                  startAdornment: <span>$</span>
-                }}
-              />
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <TextField
+                    required
+                    fullWidth
+                    type="number"
+                    label="Price per month"
+                    name="price"
+                    value={formData.price}
+                    onChange={handleChange}
+                    variant="outlined"
+                    size="medium"
+                    InputProps={{
+                      startAdornment: <span>$</span>
+                    }}
+                  />
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    onClick={handleGeneratePrice}
+                    disabled={generatingPrice || loading}
+                    startIcon={generatingPrice ? <CircularProgress size={20} /> : <AutoAwesomeIcon />}
+                    sx={{ minWidth: 180, height: 56 }}
+                  >
+                    {generatingPrice ? 'Generating...' : 'Get AI Price'}
+                  </Button>
+                </Box>
+              </Box>
             </Grid>
             <Grid sx={{ minWidth: 250 }}>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -356,6 +430,68 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
             </Grid>
           </Grid>
         </Paper>
+
+        {/* Price Suggestion Info Section */}
+        {(priceError || priceSuggestion) && (
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              p: 2, 
+              bgcolor: 'background.default',
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider'
+            }}
+          >
+            {priceError && (
+              <Alert severity="error" sx={{ mb: priceSuggestion ? 2 : 0 }}>
+                {priceError}
+              </Alert>
+            )}
+            {priceSuggestion && (
+              <Box>
+                <Typography variant="subtitle2" color="primary" sx={{ mb: 1, fontWeight: 600 }}>
+                  AI Price Suggestion
+                </Typography>
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    Suggested Price: <strong>${priceSuggestion.suggestedPrice.toLocaleString()}</strong>
+                  </Typography>
+                  <Typography variant="body2" sx={{ mt: 0.5 }}>
+                    Price Range: ${priceSuggestion.priceRange.min.toLocaleString()} - ${priceSuggestion.priceRange.max.toLocaleString()}
+                  </Typography>
+                </Alert>
+                <Box sx={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                  gap: 2,
+                  p: 2,
+                  bgcolor: 'background.paper',
+                  borderRadius: 1,
+                  border: '1px solid',
+                  borderColor: 'divider'
+                }}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">Base Price</Typography>
+                    <Typography variant="body2" fontWeight={500}>${priceSuggestion.breakdown.basePrice.toLocaleString()}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">Location Multiplier</Typography>
+                    <Typography variant="body2" fontWeight={500}>{priceSuggestion.breakdown.locationMultiplier}x</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">Feature Adjustment</Typography>
+                    <Typography variant="body2" fontWeight={500}>+{priceSuggestion.breakdown.featureAdjustment}%</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">Location</Typography>
+                    <Typography variant="body2" fontWeight={500}>{priceSuggestion.breakdown.location}</Typography>
+                  </Box>
+                </Box>
+              </Box>
+            )}
+          </Paper>
+        )}
 
         {/* Location Section */}
         <Paper 

@@ -9,6 +9,7 @@ import {
   updateApplicationStatus,
   getAvailableProperties,
   generatePropertyListing,
+  generatePropertyPrice,
   getViewingSlots,
   getViewingDates,
   updatePropertyCommissionStatus
@@ -89,8 +90,9 @@ router.post('/:propertyId/documents', protect, restrictTo('landlord'), upload.fi
 router.get('/:propertyId/documents', protect, getPropertyDocuments);
 router.delete('/:propertyId/documents/:field/:documentId', protect, restrictTo('landlord'), deletePropertyDocument);
 
-// AI Generation route
+// AI Generation routes
 router.post('/generate-listing', protect, restrictTo('landlord'), generatePropertyListing);
+router.post('/generate-price', protect, restrictTo('landlord'), generatePropertyPrice);
 
 // Update property commission status
 router.patch('/:propertyId/commission', protect, restrictTo('admin'), updatePropertyCommissionStatus);
