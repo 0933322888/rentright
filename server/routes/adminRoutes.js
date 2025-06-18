@@ -25,7 +25,6 @@ import {
 import { protect, restrictTo } from '../middleware/authMiddleware.js';
 import { isAdmin } from '../middleware/adminMiddleware.js';
 import { loadProperty } from '../middleware/propertyMiddleware.js';
-import fileUpload from 'express-fileupload';
 import { updatePropertyCommissionStatus } from '../controllers/propertyController.js';
 
 const router = express.Router();
@@ -33,13 +32,6 @@ const router = express.Router();
 // Protect all admin routes
 router.use(protect);
 router.use(isAdmin);
-
-// Configure file upload middleware
-router.use(fileUpload({
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max file size
-  useTempFiles: true,
-  tempFileDir: '/tmp/'
-}));
 
 // Property routes
 router.get('/properties', getAllProperties);
@@ -73,5 +65,10 @@ router.get('/lease-agreements', getLeaseAgreements);
 router.post('/lease-agreements/:countryCode/:region', uploadLeaseAgreementFile);
 router.delete('/lease-agreements/:countryCode/:region', deleteLeaseAgreementFile);
 router.get('/lease-agreements/:countryCode/:region/file', getLeaseAgreementFile);
+
+router.get('/something', (req, res) => {
+  console.log(req.user); // This is fine
+  res.send('ok');
+});
 
 export default router; 

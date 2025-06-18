@@ -1,7 +1,7 @@
 import express from 'express';
-import { 
-  createEscalation, 
-  getAllEscalations, 
+import {
+  createEscalation,
+  getAllEscalations,
   getLandlordEscalations,
   getEscalationDetails,
   updateEscalationStatus,
