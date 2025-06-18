@@ -37,7 +37,7 @@ const createProperty = async (req, res) => {
       try {
         console.log('Geocoding address for property creation...');
         const coordinates = await geocodeAddressWithRetry(req.body.location);
-        
+
         if (coordinates) {
           propertyData.location = {
             ...req.body.location,
@@ -89,16 +89,16 @@ const createProperty = async (req, res) => {
 
 const getProperties = async (req, res) => {
   try {
-    const { 
-      type, 
-      minPrice, 
-      maxPrice, 
-      bedrooms, 
+    const {
+      type,
+      minPrice,
+      maxPrice,
+      bedrooms,
       bathrooms,
-      city, 
+      city,
       furnished,
       available,
-      landlord 
+      landlord
     } = req.query;
 
     const filter = {
@@ -117,7 +117,7 @@ const getProperties = async (req, res) => {
       if (bedroomValues.length > 0) {
         const exactValues = bedroomValues.filter(v => v !== '4+').map(v => Number(v));
         const hasFourPlus = bedroomValues.includes('4+');
-        
+
         if (exactValues.length > 0 && hasFourPlus) {
           filter['features.bedrooms'] = { $in: exactValues };
           filter.$or = [{ 'features.bedrooms': { $gte: 4 } }];
@@ -133,7 +133,7 @@ const getProperties = async (req, res) => {
       if (bathroomValues.length > 0) {
         const exactValues = bathroomValues.filter(v => v !== '4+').map(v => Number(v));
         const hasFourPlus = bathroomValues.includes('4+');
-        
+
         if (exactValues.length > 0 && hasFourPlus) {
           // For exact values, use range queries to include decimals
           const bathroomConditions = exactValues.map(value => ({
@@ -198,31 +198,39 @@ const updateProperty = async (req, res) => {
       return res.status(404).json({ message: 'Property not found' });
     }
 
+    // Check if user is authorized to update this property
     if (property.landlord.toString() !== req.user._id.toString()) {
+      console.log('Authorization failed:', {
+        propertyLandlord: property.landlord.toString(),
+        userId: req.user._id.toString(),
+        userRole: req.user.role
+      });
       return res.status(403).json({ message: 'Not authorized to update this property' });
     }
 
-    // Handle existing images
+    // Handle existing images - support both JSON and form data
     let existingImages = [];
     if (req.body.existingImages) {
       try {
-        existingImages = JSON.parse(req.body.existingImages);
+        existingImages = typeof req.body.existingImages === 'string'
+          ? JSON.parse(req.body.existingImages)
+          : req.body.existingImages;
       } catch (error) {
         console.error('Error parsing existingImages:', error);
-        existingImages = Array.isArray(req.body.existingImages) ? 
-          req.body.existingImages : 
+        existingImages = Array.isArray(req.body.existingImages) ?
+          req.body.existingImages :
           [req.body.existingImages];
       }
     }
 
-    // Handle new images
-    const newImages = req.files?.images ? 
+    // Handle new images from form data
+    const newImages = req.files?.images ?
       (Array.isArray(req.files.images) ? req.files.images : [req.files.images])
-        .map(file => file.path.replace(/\\/g, '/').split('uploads/')[1]) 
+        .map(file => file.path.replace(/\\/g, '/').split('uploads/')[1])
       : [];
 
-    // Combine existing and new images
-    const updatedImages = [...existingImages, ...newImages];
+    // Combine existing and new images, or use images from JSON
+    const updatedImages = req.body.images || [...existingImages, ...newImages];
 
     // Prepare update data
     const updateData = {
@@ -230,7 +238,7 @@ const updateProperty = async (req, res) => {
       images: updatedImages
     };
 
-    // Handle features field - it might be a JSON string that needs parsing
+    // Handle features field - support both JSON and string formats
     if (req.body.features) {
       if (typeof req.body.features === 'string') {
         try {
@@ -249,7 +257,7 @@ const updateProperty = async (req, res) => {
       try {
         console.log('Geocoding address for property update...');
         const coordinates = await geocodeAddressWithRetry(req.body.location);
-        
+
         if (coordinates) {
           updateData.location = {
             ...req.body.location,
@@ -322,15 +330,15 @@ const applyForProperty = async (req, res) => {
     // Validate viewing details if tenant wants to view the property
     if (wantsViewing) {
       if (!viewingDate || !viewingTime) {
-        return res.status(400).json({ 
-          message: 'Viewing date and time are required when requesting a viewing' 
+        return res.status(400).json({
+          message: 'Viewing date and time are required when requesting a viewing'
         });
       }
 
       // Find the viewing date and time slot in the property
       const viewingDateObj = new Date(viewingDate);
       const [startTime] = viewingTime.split('-');
-      
+
       const viewingDateEntry = property.viewingDates.find(
         date => date.date.toISOString().split('T')[0] === viewingDateObj.toISOString().split('T')[0]
       );
@@ -387,9 +395,9 @@ const applyForProperty = async (req, res) => {
       property.save()
     ]);
 
-    res.status(201).json({ 
-      message: wantsViewing 
-        ? 'Application submitted with viewing request' 
+    res.status(201).json({
+      message: wantsViewing
+        ? 'Application submitted with viewing request'
         : 'Application submitted successfully',
       application
     });
@@ -433,10 +441,10 @@ const updateApplicationStatus = async (req, res) => {
     if (status === 'approved') {
       property.available = false;
       property.tenant = application.tenant;
-      
+
       // Update all other applications to rejected
       await Application.updateMany(
-        { 
+        {
           property: property._id,
           _id: { $ne: application._id }
         },
@@ -476,15 +484,15 @@ const updateApplicationStatus = async (req, res) => {
 
 const getAvailableProperties = async (req, res) => {
   try {
-    const { 
-      type, 
-      minPrice, 
-      maxPrice, 
-      bedrooms, 
+    const {
+      type,
+      minPrice,
+      maxPrice,
+      bedrooms,
       bathrooms,
-      city, 
+      city,
       furnished,
-      location 
+      location
     } = req.query;
 
     const filter = {
@@ -507,7 +515,7 @@ const getAvailableProperties = async (req, res) => {
       if (bedroomValues.length > 0) {
         const exactValues = bedroomValues.filter(v => v !== '4+').map(v => Number(v));
         const hasFourPlus = bedroomValues.includes('4+');
-        
+
         if (exactValues.length > 0 && hasFourPlus) {
           filter['features.bedrooms'] = { $in: exactValues };
           filter.$or = [{ 'features.bedrooms': { $gte: 4 } }];
@@ -523,7 +531,7 @@ const getAvailableProperties = async (req, res) => {
       if (bathroomValues.length > 0) {
         const exactValues = bathroomValues.filter(v => v !== '4+').map(v => Number(v));
         const hasFourPlus = bathroomValues.includes('4+');
-        
+
         if (exactValues.length > 0 && hasFourPlus) {
           // For exact values, use range queries to include decimals
           const bathroomConditions = exactValues.map(value => ({
@@ -605,7 +613,7 @@ const generatePropertyListing = async (req, res) => {
     // Validate required fields
     const requiredFields = ['type', 'price', 'location', 'features', 'availableFrom'];
     const missingFields = requiredFields.filter(field => !propertyInfo[field]);
-    
+
     if (missingFields.length > 0) {
       return res.status(400).json({
         message: `Missing required fields: ${missingFields.join(', ')}`
@@ -651,9 +659,9 @@ export const getViewingSlots = async (req, res) => {
     res.json({ timeSlots: availableSlots });
   } catch (error) {
     console.error('Error in getViewingSlots:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Error fetching viewing slots',
-      error: error.message 
+      error: error.message
     });
   }
 };
@@ -683,9 +691,9 @@ export const getViewingDates = async (req, res) => {
     res.json({ dates: availableDates });
   } catch (error) {
     console.error('Error in getViewingDates:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Error fetching viewing dates',
-      error: error.message 
+      error: error.message
     });
   }
 };

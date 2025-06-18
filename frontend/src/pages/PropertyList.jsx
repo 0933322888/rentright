@@ -4,6 +4,7 @@ import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api';
 import { useAuth } from '../context/AuthContext';
 import 'leaflet/dist/leaflet.css';
+import { trackPropertyClick } from '../utils/statisticsUtils';
 
 // Lazy load the map components
 const MapComponent = lazy(() => import('../components/MapComponent'));
@@ -533,6 +534,7 @@ export default function PropertyList() {
                   key={property._id}
                   to={`/properties/${property._id}`}
                   className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
+                  onClick={() => trackPropertyClick(property._id)}
                 >
                   <div className="p-8">
                     <div className="flex gap-10">

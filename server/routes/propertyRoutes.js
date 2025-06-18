@@ -14,15 +14,26 @@ import {
   updatePropertyCommissionStatus
 } from '../controllers/propertyController.js';
 import {
+  approveProperty,
+  rejectProperty,
+  submitForReview
+} from '../controllers/adminController.js';
+import {
   uploadPropertyDocuments,
   getPropertyDocuments,
   deletePropertyDocument
 } from '../controllers/propertyDocumentController.js';
+import {
+  getPropertyStatistics,
+  trackPropertyView,
+  trackPropertyClick
+} from '../controllers/propertyStatisticsController.js';
 import { protect, restrictTo } from '../middleware/authMiddleware.js';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fileUpload from 'express-fileupload';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -48,15 +59,34 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// Configure file upload
+router.use(fileUpload({
+  createParentPath: true,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB max file size
+  },
+  abortOnLimit: true,
+  useTempFiles: true,
+  tempFileDir: '/tmp/',
+  debug: true,
+  parseNested: true,
+  safeFileNames: false
+}));
+
 // Public routes
 router.get('/', getProperties);
 router.get('/available', getAvailableProperties);
 router.get('/:id', getPropertyById);
 router.get('/:id/viewing-dates', getViewingDates);
 router.get('/:id/viewing-slots', getViewingSlots);
+router.post('/:id/view', trackPropertyView); // Track property views
+router.post('/:id/click', trackPropertyClick); // Track property clicks
 
 // Protected routes
-router.post('/', protect, restrictTo('landlord'), upload.fields([
+router.use(protect);
+
+// Property management routes
+router.post('/', restrictTo(['landlord', 'admin']), upload.fields([
   { name: 'images', maxCount: 10 },
   { name: 'proofOfOwnership', maxCount: 1 },
   { name: 'governmentId', maxCount: 1 },
@@ -64,7 +94,7 @@ router.post('/', protect, restrictTo('landlord'), upload.fields([
   { name: 'utilityBills', maxCount: 5 }
 ]), createProperty);
 
-router.put('/:id', protect, restrictTo('landlord'), upload.fields([
+router.put('/:id', restrictTo(['landlord', 'admin']), upload.fields([
   { name: 'images', maxCount: 10 },
   { name: 'proofOfOwnership', maxCount: 1 },
   { name: 'governmentId', maxCount: 1 },
@@ -72,27 +102,39 @@ router.put('/:id', protect, restrictTo('landlord'), upload.fields([
   { name: 'utilityBills', maxCount: 5 }
 ]), updateProperty);
 
-router.delete('/:id', protect, restrictTo('landlord'), deleteProperty);
+// New route for JSON updates (no file upload)
+router.patch('/:id', restrictTo(['landlord', 'admin']), updateProperty);
+
+router.delete('/:id', restrictTo(['landlord', 'admin']), deleteProperty);
 
 // Application routes
-router.post('/:id/apply', protect, restrictTo('tenant'), applyForProperty);
-router.put('/:propertyId/applications/:applicationId/status', protect, restrictTo('landlord'), updateApplicationStatus);
+router.post('/:id/apply', restrictTo('tenant'), applyForProperty);
+router.put('/:propertyId/applications/:applicationId/status', restrictTo('landlord'), updateApplicationStatus);
 
 // Property document routes
-router.post('/:propertyId/documents', protect, restrictTo('landlord'), upload.fields([
+router.post('/:propertyId/documents', restrictTo(['landlord', 'admin']), upload.fields([
   { name: 'proofOfOwnership', maxCount: 1 },
   { name: 'governmentId', maxCount: 1 },
   { name: 'condoBoardRules', maxCount: 1 },
   { name: 'utilityBills', maxCount: 5 }
 ]), uploadPropertyDocuments);
 
-router.get('/:propertyId/documents', protect, getPropertyDocuments);
-router.delete('/:propertyId/documents/:field/:documentId', protect, restrictTo('landlord'), deletePropertyDocument);
+router.get('/:propertyId/documents', restrictTo(['landlord', 'admin']), getPropertyDocuments);
+router.delete('/:propertyId/documents/:field/:documentId', restrictTo(['landlord', 'admin']), deletePropertyDocument);
+// router.put('/:id/documents', restrictTo(['landlord', 'admin']), updatePropertyDocuments); // TODO: Implement this function
 
 // AI Generation route
-router.post('/generate-listing', protect, restrictTo('landlord'), generatePropertyListing);
+router.post('/generate-listing', restrictTo('landlord'), generatePropertyListing);
 
-// Update property commission status
-router.patch('/:propertyId/commission', protect, restrictTo('admin'), updatePropertyCommissionStatus);
+// Property statistics routes
+router.get('/:id/statistics', restrictTo(['landlord', 'admin']), getPropertyStatistics);
+
+// Admin routes
+router.post('/:id/submit', restrictTo(['landlord']), submitForReview);
+router.post('/:id/approve', restrictTo(['admin']), approveProperty);
+router.post('/:id/reject', restrictTo(['admin']), rejectProperty);
+
+// Update property commission status - moved to the end to avoid conflicts
+router.patch('/:propertyId/commission', restrictTo('admin'), updatePropertyCommissionStatus);
 
 export default router; 

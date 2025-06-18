@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { getImageUrl } from '../utils/imageUtils';
 
 export default function ImageCarousel({ images }) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -55,9 +56,7 @@ export default function ImageCarousel({ images }) {
   return (
     <div className="relative h-96 w-full">
       <img
-        src={images[currentIndex].startsWith('http') 
-          ? images[currentIndex] 
-          : `http://localhost:10000/uploads/${images[currentIndex]}`}
+        src={getImageUrl(images[currentIndex])}
         alt={`Property image ${currentIndex + 1}`}
         className="w-full h-full object-cover"
         onError={handleImageError}
