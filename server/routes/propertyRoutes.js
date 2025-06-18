@@ -126,6 +126,7 @@ router.delete('/:propertyId/documents/:field/:documentId', restrictTo(['landlord
 
 // AI Generation route
 router.post('/generate-listing', restrictTo('landlord'), generatePropertyListing);
+router.post('/generate-price', protect, restrictTo('landlord'), generatePropertyPrice);
 
 // Property statistics routes
 router.get('/:id/statistics', restrictTo(['landlord', 'admin']), getPropertyStatistics);
