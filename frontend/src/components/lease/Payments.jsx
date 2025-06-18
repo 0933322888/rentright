@@ -514,7 +514,7 @@ const PaymentForm = ({ onSubmit, propertyPrice, onCancel }) => {
               Cancel
             </Button>
             <Button type="submit" variant="contained" color="primary">
-              Make Payment
+              Add Payment
             </Button>
           </Box>
         </Box>
@@ -773,7 +773,7 @@ const Payments = ({ leaseDetails, onPaymentUpdate }) => {
                 startIcon={<PaymentIcon />}
                 onClick={() => setShowPaymentForm(true)}
               >
-                Make Payment
+                Add Payment
               </Button>
             </Box>
           )}

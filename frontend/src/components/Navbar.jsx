@@ -118,7 +118,7 @@ export default function Navbar() {
                         location.pathname === item.href
                           ? 'bg-primary-50 text-primary-700 border-primary-500 shadow-sm'
                           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-transparent',
-                        'inline-flex items-center border-b-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 hover:shadow-md navbar-link'
+                        'inline-flex items-center border-b-2 px-4 py-2 text-base font-semibold rounded-lg transition-all duration-200 hover:shadow-md navbar-link'
                       )}
                     >
                       {item.name}
@@ -131,10 +131,10 @@ export default function Navbar() {
                 {user ? (
                   <Menu as="div" className="relative ml-3">
                     <div>
-                      <Menu.Button className="flex items-center rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 px-4 py-2">
+                      <Menu.Button className="flex items-center rounded-full bg-white text-base focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 px-4 py-2">
                         <span className="sr-only">Open user menu</span>
                         <div className="flex items-center">
-                          <span className="mr-3 text-gray-700 font-medium">{user.name} ({user.role.charAt(0).toUpperCase() + user.role.slice(1)})</span>
+                          <span className="mr-3 text-gray-700 font-medium">{user.name}</span>
                           {user.profilePicture ? (
                             <img
                               src={`${import.meta.env.VITE_API_URL}${user.profilePicture}`}
@@ -160,8 +160,8 @@ export default function Navbar() {
                     >
                       <Menu.Items className="absolute right-0 z-10 mt-3 w-56 origin-top-right rounded-xl bg-white py-2 shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none border border-gray-100">
                         <div className="px-4 py-3 border-b border-gray-100">
-                          <p className="text-sm font-medium text-gray-900">{user.name} ({user.role.charAt(0).toUpperCase() + user.role.slice(1)})</p>
-                          <p className="text-sm text-gray-500">{user.email}</p>
+                          <p className="text-base font-medium text-gray-900">{user.name}</p>
+                          <p className="text-base text-gray-500">{user.email}</p>
                         </div>
                         <Menu.Item>
                           {({ active }) => (
@@ -169,7 +169,7 @@ export default function Navbar() {
                               to="/profile"
                               className={classNames(
                                 active ? 'bg-primary-50 text-primary-700' : 'text-gray-700',
-                                'block px-4 py-3 text-sm font-medium navbar-link menu-item hover:bg-primary-50 transition-colors duration-150'
+                                'block px-4 py-3 text-base font-medium navbar-link menu-item hover:bg-primary-50 transition-colors duration-150'
                               )}
                             >
                               <div className="flex items-center">
@@ -187,7 +187,7 @@ export default function Navbar() {
                               onClick={handleLogout}
                               className={classNames(
                                 active ? 'bg-red-50 text-red-700' : 'text-gray-700',
-                                'block w-full px-4 py-3 text-left text-sm font-medium navbar-link menu-item hover:bg-red-50 transition-colors duration-150'
+                                'block w-full px-4 py-3 text-left text-base font-medium navbar-link menu-item hover:bg-red-50 transition-colors duration-150'
                               )}
                             >
                               <div className="flex items-center">
@@ -206,13 +206,13 @@ export default function Navbar() {
                   <div className="flex space-x-3">
                     <Link
                       to="/login"
-                      className="text-gray-600 hover:text-gray-900 px-4 py-2 text-sm font-semibold rounded-lg hover:bg-gray-50 transition-all duration-200 navbar-link"
+                      className="text-gray-600 hover:text-gray-900 px-4 py-2 text-base font-semibold rounded-lg hover:bg-gray-50 transition-all duration-200 navbar-link"
                     >
                       Login
                     </Link>
                     <Link
                       to="/register"
-                      className="bg-gradient-to-r from-primary-600 to-primary-700 text-white hover:from-primary-700 hover:to-primary-800 px-6 py-2 rounded-lg text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 navbar-link"
+                      className="bg-gradient-to-r from-primary-600 to-primary-700 text-white hover:from-primary-700 hover:to-primary-800 px-6 py-2 rounded-lg text-base font-semibold shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 navbar-link"
                     >
                       Register
                     </Link>
@@ -232,7 +232,7 @@ export default function Navbar() {
                     location.pathname === item.href
                       ? 'bg-primary-50 border-primary-500 text-primary-700'
                       : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-900',
-                    'block border-l-4 py-3 pl-4 pr-4 text-base font-semibold rounded-r-lg transition-all duration-200'
+                    'block border-l-4 py-3 pl-4 pr-4 text-lg font-semibold rounded-r-lg transition-all duration-200'
                   )}
                 >
                   {item.name}
@@ -256,14 +256,14 @@ export default function Navbar() {
                     )}
                   </div>
                   <div className="ml-4">
-                    <div className="text-base font-semibold text-gray-900">{user.name} ({user.role.charAt(0).toUpperCase() + user.role.slice(1)})</div>
-                    <div className="text-sm text-gray-500">{user.email}</div>
+                    <div className="text-lg font-semibold text-gray-900">{user.name}</div>
+                    <div className="text-base text-gray-500">{user.email}</div>
                   </div>
                 </div>
                 <div className="space-y-1">
                   <Link
                     to="/profile"
-                    className="flex items-center px-4 py-3 text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors duration-150 navbar-link menu-item"
+                    className="flex items-center px-4 py-3 text-lg font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors duration-150 navbar-link menu-item"
                   >
                     <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -272,7 +272,7 @@ export default function Navbar() {
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center w-full px-4 py-3 text-left text-base font-medium text-gray-600 hover:bg-red-50 hover:text-red-700 rounded-lg transition-colors duration-150 navbar-link menu-item"
+                    className="flex items-center w-full px-4 py-3 text-left text-lg font-medium text-gray-600 hover:bg-red-50 hover:text-red-700 rounded-lg transition-colors duration-150 navbar-link menu-item"
                   >
                     <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -286,13 +286,13 @@ export default function Navbar() {
                 <div className="space-y-2">
                   <Link
                     to="/login"
-                    className="block px-4 py-3 text-base font-semibold text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors duration-150 navbar-link"
+                    className="block px-4 py-3 text-lg font-semibold text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors duration-150 navbar-link"
                   >
                     Login
                   </Link>
                   <Link
                     to="/register"
-                    className="block px-4 py-3 text-base font-semibold bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all duration-200 navbar-link text-center"
+                    className="block px-4 py-3 text-lg font-semibold bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all duration-200 navbar-link text-center"
                   >
                     Register
                   </Link>

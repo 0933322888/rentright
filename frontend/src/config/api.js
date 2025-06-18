@@ -16,6 +16,7 @@ export const API_ENDPOINTS = {
   PROPERTIES: `${BASE_URL}/api/properties`,
   PROPERTY: (id) => `${BASE_URL}/api/properties/${id}`,
   AVAILABLE_PROPERTIES: `${BASE_URL}/api/properties/available`,
+  GENERATE_PROPERTY_PRICE: `${BASE_URL}/api/properties/generate-price`,
   
   // Payment endpoints
   PAYMENTS: `${BASE_URL}/api/payments`,
