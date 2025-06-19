@@ -336,32 +336,32 @@ const Escalations = () => {
 
   if (user?.role !== 'admin') {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <div className="p-6">
         <Alert severity="error">
           You do not have permission to access this page.
         </Alert>
-      </Container>
+      </div>
     );
   }
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <div className="p-6">
         <Typography>Loading escalations...</Typography>
-      </Container>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <div className="p-6">
         <Alert severity="error">{error}</Alert>
-      </Container>
+      </div>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <div className="p-6">
       <Typography variant="h4" gutterBottom>
         Payment Escalations
       </Typography>
@@ -382,15 +382,15 @@ const Escalations = () => {
           <TableBody>
             {escalations.map((escalation) => (
               <TableRow key={escalation._id}>
-                <TableCell>{escalation.property.title}</TableCell>
-                <TableCell>{escalation.tenant.name}</TableCell>
-                <TableCell>{escalation.landlord.name}</TableCell>
-                <TableCell>{escalation.reason.replace('_', ' ').toUpperCase()}</TableCell>
+                <TableCell>{escalation.property?.title || 'Property not available'}</TableCell>
+                <TableCell>{escalation.tenant?.name || 'Tenant not available'}</TableCell>
+                <TableCell>{escalation.landlord?.name || 'Landlord not available'}</TableCell>
+                <TableCell>{escalation.reason?.replace('_', ' ').toUpperCase() || 'Reason not available'}</TableCell>
                 <TableCell>
                   <StatusChip status={escalation.status} />
                 </TableCell>
                 <TableCell>
-                  {format(new Date(escalation.createdAt), 'PP')}
+                  {escalation.createdAt ? format(new Date(escalation.createdAt), 'PP') : 'Date not available'}
                 </TableCell>
                 <TableCell>
                   <Tooltip title="View Details">
@@ -420,7 +420,7 @@ const Escalations = () => {
         onAddNote={(note) => handleAddNote(selectedEscalation._id, note)}
         onUpdateStatus={(status) => handleUpdateStatus(selectedEscalation._id, status)}
       />
-    </Container>
+    </div>
   );
 };
 
