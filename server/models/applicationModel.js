@@ -49,13 +49,11 @@ const applicationSchema = new mongoose.Schema({
     },
     leaseStartDate: {
       date: {
-        type: Date,
-        required: true
+        type: Date
       },
       setBy: {
         type: String,
-        enum: ['tenant', 'landlord'],
-        required: true
+        enum: ['tenant', 'landlord']
       },
       approvedBy: {
         type: String,
