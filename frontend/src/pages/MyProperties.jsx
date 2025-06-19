@@ -80,6 +80,10 @@ export default function MyProperties() {
     setInnerTabValue(newValue);
   };
 
+  const handleNavigateToLease = () => {
+    setInnerTabValue('lease');
+  };
+
   const handleImageErrorWrapper = (imageUrl) => {
     setFailedImages([...failedImages, imageUrl]);
     handleImageError(imageUrl);
@@ -312,6 +316,7 @@ export default function MyProperties() {
                           onApplicationAction={handleApplicationAction}
                           failedImages={failedImages}
                           onImageError={handleImageErrorWrapper}
+                          onNavigateToLease={handleNavigateToLease}
                         />
                       </TabPanel>
                       <TabPanel value="lease" sx={{ p: 0 }}>

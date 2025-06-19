@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -10,7 +10,9 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Tab
+  Tab,
+  Alert,
+  AlertTitle
 } from '@mui/material';
 import { TabList, TabPanel, TabContext } from '@mui/lab';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -24,6 +26,8 @@ import ErrorIcon from '@mui/icons-material/Error';
 import InfoIcon from '@mui/icons-material/Info';
 import PhoneIcon from '@mui/icons-material/Phone';
 import PersonIcon from '@mui/icons-material/Person';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import ApplicationApprovalModal from '../ApplicationApprovalModal';
 
 export default function ApplicationDetails({ 
   applications, 
@@ -31,8 +35,44 @@ export default function ApplicationDetails({
   onTenantTabChange,
   onApplicationAction,
   failedImages,
-  onImageError
+  onImageError,
+  onNavigateToLease
 }) {
+  const [approvalModalOpen, setApprovalModalOpen] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState(null);
+
+  const handleApproveClick = (application) => {
+    setSelectedApplication(application);
+    setApprovalModalOpen(true);
+  };
+
+  const handleApprovalConfirm = () => {
+    if (selectedApplication) {
+      onApplicationAction(selectedApplication._id, 'approve');
+      setApprovalModalOpen(false);
+      setSelectedApplication(null);
+    }
+  };
+
+  const handleApprovalCancel = () => {
+    setApprovalModalOpen(false);
+    setSelectedApplication(null);
+  };
+
+  const handleNavigateToLease = () => {
+    if (onNavigateToLease) {
+      onNavigateToLease();
+    }
+  };
+
+  // Calculate other applications count (excluding the selected one)
+  const getOtherApplicationsCount = (currentApplication) => {
+    return applications.filter(app => 
+      app._id !== currentApplication._id && 
+      ['pending', 'viewing'].includes(app.status)
+    ).length;
+  };
+
   if (applications.length === 0) {
     return (
       <Paper sx={{ p: 4, textAlign: 'center' }}>
@@ -138,7 +178,7 @@ export default function ApplicationDetails({
                 <Button
                   variant="contained"
                   color="success"
-                  onClick={() => onApplicationAction(application._id, 'approve')}
+                  onClick={() => handleApproveClick(application)}
                   startIcon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>}
@@ -191,6 +231,74 @@ export default function ApplicationDetails({
                   </Box>
                 )}
               </Box>
+            )}
+
+            {application.status === 'approved' && (
+              <Alert 
+                severity="success" 
+                sx={{ 
+                  mt: 3, 
+                  mb: 3,
+                  borderRadius: 2,
+                  width: '100%',
+                  '& .MuiAlert-icon': {
+                    fontSize: 28
+                  }
+                }}
+                icon={<CheckCircleIcon />}
+              >
+                <AlertTitle sx={{ fontWeight: 600, mb: 1 }}>
+                  Application Approved Successfully! 🎉
+                </AlertTitle>
+                <Typography variant="body1" sx={{ mb: 2 }}>
+                  Congratulations! You have selected <strong>{application.tenant.name}</strong> as your tenant. 
+                  The property is now assigned and all other applications have been automatically rejected.
+                </Typography>
+                <Box sx={{ 
+                  p: 2, 
+                  bgcolor: 'success.light', 
+                  borderRadius: 1,
+                  border: '1px solid',
+                  borderColor: 'success.main',
+                  mt: 2,
+                  width: '100%'
+                }}>
+                  <Typography variant="subtitle2" fontWeight="bold" color="success.contrastText" sx={{ mb: 1 }}>
+                    Next Steps - Lease Agreement Process:
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <AssignmentIcon color="success" />
+                    <Typography variant="body2" color="success.contrastText">
+                      Go to the <strong>Lease Agreement</strong> tab to proceed with the lease setup
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" color="success.contrastText" sx={{ mb: 2 }}>
+                    • Upload the standard lease agreement document<br/>
+                    • Set and agree on the lease start date<br/>
+                    • Complete the lease approval process with the tenant
+                  </Typography>
+                  {onNavigateToLease && (
+                    <Button
+                      variant="contained"
+                      color="success"
+                      onClick={handleNavigateToLease}
+                      startIcon={<AssignmentIcon />}
+                      sx={{
+                        mt: 1,
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        boxShadow: '0 2px 4px rgba(46,125,50,0.3)',
+                        '&:hover': {
+                          boxShadow: '0 4px 8px rgba(46,125,50,0.4)',
+                        }
+                      }}
+                    >
+                      Go to Lease Agreement
+                    </Button>
+                  )}
+                </Box>
+              </Alert>
             )}
 
             {/* Application Details */}
@@ -848,6 +956,13 @@ export default function ApplicationDetails({
           </Paper>
         </TabPanel>
       ))}
+      <ApplicationApprovalModal
+        open={approvalModalOpen}
+        onClose={handleApprovalCancel}
+        onConfirm={handleApprovalConfirm}
+        application={selectedApplication}
+        otherApplicationsCount={selectedApplication ? getOtherApplicationsCount(selectedApplication) : 0}
+      />
     </TabContext>
   );
 } 
