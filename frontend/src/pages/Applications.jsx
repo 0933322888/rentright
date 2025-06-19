@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { API_ENDPOINTS } from '../config/api';
@@ -184,9 +184,24 @@ export default function Applications() {
             <Paper sx={{ p: 3 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                 <Box>
-                  <Typography variant="h6" gutterBottom>
-                    {application.property?.title || 'Property not found'}
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                    <Typography variant="h6" gutterBottom sx={{ mb: 0 }}>
+                      {application.property?._id ? (
+                        <Link to={`/properties/${application.property._id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                          {application.property.title}
+                        </Link>
+                      ) : (
+                        application.property?.title || 'Property not found'
+                      )}
+                    </Typography>
+                    <Chip
+                      label={application.status}
+                      color={getStatusColor(application.status)}
+                      icon={getStatusIcon(application.status)}
+                      size="small"
+                      sx={{ ml: 1, fontWeight: 500, textTransform: 'capitalize' }}
+                    />
+                  </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                     <LocationOnIcon color="action" fontSize="small" />
                     <Typography variant="body2" color="text.secondary">
@@ -216,11 +231,6 @@ export default function Applications() {
                   </Box>
                 </Box>
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
-                  <Chip
-                    icon={getStatusIcon(application.status)}
-                    label={application.status.charAt(0).toUpperCase() + application.status.slice(1)}
-                    color={getStatusColor(application.status)}
-                  />
                   {application.status === 'new' && (
                     <Tooltip title="Delete Application">
                       <IconButton

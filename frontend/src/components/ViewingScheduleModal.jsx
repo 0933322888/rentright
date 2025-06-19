@@ -13,6 +13,8 @@ const ViewingScheduleModal = ({ show, onHide, onSubmit, propertyTitle, propertyI
   const [selectedTime, setSelectedTime] = useState('');
   const [loading, setLoading] = useState(false);
   const [timeSlots, setTimeSlots] = useState([]);
+  const [leaseStartDate, setLeaseStartDate] = useState(new Date());
+  const [leaseSetBy, setLeaseSetBy] = useState('tenant');
 
   useEffect(() => {
     if (show && wantsViewing) {
@@ -66,7 +68,13 @@ const ViewingScheduleModal = ({ show, onHide, onSubmit, propertyTitle, propertyI
     onSubmit({
       wantsViewing,
       viewingDate: wantsViewing ? selectedDate : undefined,
-      viewingTime: wantsViewing ? selectedTime : undefined
+      viewingTime: wantsViewing ? selectedTime : undefined,
+      leaseAgreement: {
+        leaseStartDate: {
+          setBy: 'tenant',
+          date: leaseStartDate
+        }
+      }
     });
   };
 
@@ -164,6 +172,21 @@ const ViewingScheduleModal = ({ show, onHide, onSubmit, propertyTitle, propertyI
                 </p>
               </div>
             )}
+
+            {/* Lease Start Date Section */}
+            <Form.Group className="mt-4">
+              <Form.Label>Desired Lease Start Date</Form.Label>
+              <div>
+                <DatePicker
+                  selected={leaseStartDate}
+                  onChange={date => setLeaseStartDate(date)}
+                  dateFormat="yyyy-MM-dd"
+                  minDate={new Date()}
+                  className="form-control"
+                  required
+                />
+              </div>
+            </Form.Group>
           </div>
         </Form>
       </Modal.Body>

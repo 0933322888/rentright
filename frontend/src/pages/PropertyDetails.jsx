@@ -143,10 +143,11 @@ const PropertyDetails = () => {
 
       const response = await axios.post(
         `${API_ENDPOINTS.PROPERTY(id)}/apply`,
-        { 
+        {
           wantsViewing: viewingData.wantsViewing,
           viewingDate: viewingData.wantsViewing ? viewingData.viewingDate : undefined,
-          viewingTime: viewingData.wantsViewing ? viewingData.viewingTime : undefined
+          viewingTime: viewingData.wantsViewing ? viewingData.viewingTime : undefined,
+          leaseAgreement: viewingData.leaseAgreement
         },
         {
           headers: {

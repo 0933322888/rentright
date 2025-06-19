@@ -398,7 +398,8 @@ const applyForProperty = async (req, res) => {
       wantsViewing,
       viewingDate: wantsViewing ? viewingDate : undefined,
       viewingTime: wantsViewing ? viewingTime : undefined,
-      tenantScoring
+      tenantScoring,
+      leaseAgreement: req.body.leaseAgreement
     });
 
     // Update property's applications array
