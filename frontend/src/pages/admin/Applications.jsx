@@ -41,19 +41,19 @@ export default function AdminApplications() {
     let filtered = [...applications];
 
     if (filters.propertyTitle) {
-      filtered = filtered.filter(application => 
+      filtered = filtered.filter(application =>
         application.property.title.toLowerCase().includes(filters.propertyTitle.toLowerCase())
       );
     }
 
     if (filters.tenantEmail) {
-      filtered = filtered.filter(application => 
+      filtered = filtered.filter(application =>
         application.tenant.email.toLowerCase().includes(filters.tenantEmail.toLowerCase())
       );
     }
 
     if (filters.status !== 'all') {
-      filtered = filtered.filter(application => 
+      filtered = filtered.filter(application =>
         application.status.toLowerCase() === filters.status.toLowerCase()
       );
     }
@@ -174,16 +174,16 @@ export default function AdminApplications() {
                       Property
                     </th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Tenant
+                      Tenant Info
                     </th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Tenant Rating
+                      Lease Details
                     </th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Application Status
+                      Financial
                     </th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Applied
+                      Status & Dates
                     </th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                       Actions
@@ -194,68 +194,139 @@ export default function AdminApplications() {
                   {filteredApplications.map((application) => (
                     <tr key={application._id}>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
-                        <span className="font-bold">{application.property?.title || 'Property not found'}</span>
-                        <br />
-                        {application.property?.location?.city + ' ' + application.property?.location?.state + ' ' + application.property?.location?.zipCode || 'Location not found'}
-                        <br />
-                        {application.property?.location?.street + ' ' + application.property?.location?.unit || 'Street not found'}
+                        <div className="font-bold">{application.property?.title || 'Property not found'}</div>
+                        <div className="text-gray-500">
+                          {application.property?.location?.street} {application.property?.location?.unit}
+                        </div>
+                        <div className="text-gray-500">
+                          {[
+                            application.property?.location?.city,
+                            application.property?.location?.state,
+                            application.property?.location?.zipCode
+                          ].filter(Boolean).join(', ')}
+                        </div>
                       </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {application.tenant?.email || 'Tenant not found'}
+                      <td className="px-3 py-4 text-sm">
+                        <div className="font-medium text-gray-900">
+                          {application.tenant?.name || 'Name not found'}
+                        </div>
+                        <div className="text-gray-500">
+                          {application.tenant?.email || 'Email not found'}
+                        </div>
+                        <div className="text-gray-500">
+                          {application.tenant?.phone || 'Phone not found'}
+                        </div>
+
                       </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        <div className="flex items-center">
-                          {Array.from({ length: 5 }).map((_, i) => {
-                            const getStarColor = () => {
-                              if (i < (application.tenant?.rating || 0)) {
-                                if (application.tenant?.rating === 5) return 'text-green-500';
-                                if (application.tenant?.rating >= 3) return 'text-yellow-400';
-                                return 'text-red-500';
-                              }
-                              return 'text-gray-300';
-                            };
-                            
-                            return (
-                              <svg
-                                key={i}
-                                className={`h-5 w-5 ${getStarColor()}`}
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                              </svg>
-                            );
-                          })}
+                      <td className="px-3 py-4 text-sm">
+                        <div>
+                          <span className="font-medium">Monthly Rent: </span>
+                          <span className="text-gray-500">
+                            ${application.property?.price.toLocaleString() || 'N/A'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Start Date: </span>
+                          <span className="text-gray-500">
+                            {application.leaseAgreement?.leaseStartDate?.date ? new Date(application.leaseAgreement?.leaseStartDate?.date).toLocaleDateString() : 'Not set'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Landlord Approved: </span>
+                          <span className="text-gray-500">
+                            {application.leaseAgreement?.landlordApprovedAt ?
+                              `${new Date(application.leaseAgreement?.landlordApprovedAt).toLocaleDateString()}` :
+                              'Not approved'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Tenant Approved: </span>
+                          <span className="text-gray-500">
+                            {application.leaseAgreement?.tenantApprovedAt ?
+                              `${new Date(application.leaseAgreement?.tenantApprovedAt).toLocaleDateString()}` :
+                              'Not approved'}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Signed: </span>
+                          <span className={`${application.leaseAgreement?.status === 'signed' ? 'text-green-600' : 'text-gray-500'}`}>
+                            {application.leaseAgreement?.status === 'signed' ? 'Yes' : 'No'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-4 text-sm">
+                        <div className="flex items-center mt-1">
+                          <span className="text-gray-500 mr-1">Tenant Score: </span>
+                          <span className={`font-medium ${!application.tenantScoring ? 'text-gray-500' :
+                            application.tenantScoring >= 80 ? 'text-green-600' :
+                              application.tenantScoring >= 60 ? 'text-yellow-600' :
+                                'text-red-600'
+                            }`}>
+                            {application.tenantScoring ? `${application.tenantScoring}%` : 'N/A'}
+                          </span>
+                          {application.tenantScoring && (
+                            <div className="ml-2 w-20 h-2 bg-gray-200 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full ${application.tenantScoring >= 80 ? 'bg-green-500' :
+                                  application.tenantScoring >= 60 ? 'bg-yellow-500' :
+                                    'bg-red-500'
+                                  }`}
+                                style={{ width: `${application.tenantScoring}%` }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-3 py-4 text-sm">
+                        <div>
+                          <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${application.status === 'approved' ? 'bg-green-100 text-green-800' :
+                            application.status === 'declined' ? 'bg-red-100 text-red-800' :
+                              'bg-yellow-100 text-yellow-800'
+                            }`}>
+                            {application.status}
+                          </span>
+                        </div>
+                        <div className="mt-1">
+                          <span className="font-medium">Applied: </span>
+                          <span className="text-gray-500">
+                            {new Date(application.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Last Updated: </span>
+                          <span className="text-gray-500">
+                            {application.updatedAt ? new Date(application.updatedAt).toLocaleDateString() : 'N/A'}
+                          </span>
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
-                          application.status === 'approved' ? 'bg-green-100 text-green-800' :
-                          application.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {application.status}
-                        </span>
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {new Date(application.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        <div className="flex space-x-2">
+                        <div className="flex flex-col space-y-1">
                           {application.status === 'pending' && (
                             <>
-                              
+                              <button
+                                onClick={() => handleStatusUpdate(application._id, 'approved')}
+                                className="inline-flex items-center rounded-md border border-transparent bg-green-600 px-2 py-1 text-xs font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                              >
+                                Approve
+                              </button>
                               <button
                                 onClick={() => handleStatusUpdate(application._id, 'declined')}
-                                className="inline-flex items-center rounded-md border border-transparent bg-red-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                                className="inline-flex items-center rounded-md border border-transparent bg-yellow-600 px-2 py-1 text-xs font-medium text-white shadow-sm hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
                               >
                                 Decline
                               </button>
                             </>
                           )}
                           <button
+                            onClick={() => handleStatusUpdate(application._id, 'rejected')}
+                            disabled={['rejected', 'terminated', 'cancelled'].includes(application.status)}
+                            className={`inline-flex items-center rounded-md border border-transparent bg-yellow-600 px-2 py-1 text-xs font-medium text-white shadow-sm hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 ${['rejected', 'terminated', 'cancelled'].includes(application.status) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            Reject
+                          </button>
+                          <button
                             onClick={() => handleDelete(application._id)}
-                            className="inline-flex items-center rounded-md border border-transparent bg-red-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                            className="inline-flex items-center rounded-md border border-transparent bg-red-600 px-2 py-1 text-xs font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                           >
                             Delete
                           </button>

@@ -2,6 +2,14 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../config/api';
 import { toast } from 'react-hot-toast';
+import CommentSection from '../../components/CommentSection';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  IconButton
+} from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
 
 export default function AdminLandlords() {
   const [landlords, setLandlords] = useState([]);
@@ -13,6 +21,9 @@ export default function AdminLandlords() {
     name: '',
     verificationStatus: 'all'
   });
+  const [selectedLandlord, setSelectedLandlord] = useState(null);
+  const [isCommentsModalOpen, setIsCommentsModalOpen] = useState(false);
+  const [isAddingComment, setIsAddingComment] = useState(false);
 
   useEffect(() => {
     fetchLandlords();
@@ -24,13 +35,13 @@ export default function AdminLandlords() {
 
   const fetchLandlords = async () => {
     try {
-      const response = await axios.get(API_ENDPOINTS.ADMIN_LANDLORDS, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      setLoading(true);
+      const response = await axios.get(`${API_ENDPOINTS.USERS}?role=landlord`);
       setLandlords(response.data);
-    } catch (err) {
+    } catch (error) {
+      console.error('Error fetching landlords:', error);
       setError('Failed to fetch landlords');
-      console.error('Error fetching landlords:', err);
+      toast.error('Failed to fetch landlords');
     } finally {
       setLoading(false);
     }
@@ -66,6 +77,67 @@ export default function AdminLandlords() {
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleOpenComments = async (landlord) => {
+    setSelectedLandlord(landlord);
+    setIsCommentsModalOpen(true);
+    
+    try {
+      const response = await axios.get(`${API_ENDPOINTS.USERS}/${landlord._id}/comments`);
+      setSelectedLandlord(prev => ({
+        ...prev,
+        comments: response.data
+      }));
+    } catch (error) {
+      toast.error('Failed to fetch comments');
+      console.error('Error fetching comments:', error);
+    }
+  };
+
+  const handleAddComment = async (text) => {
+    if (!selectedLandlord) return;
+
+    setIsAddingComment(true);
+    try {
+      const response = await axios.post(`${API_ENDPOINTS.USERS}/${selectedLandlord._id}/comments`, {
+        text
+      });
+
+      setSelectedLandlord(prev => ({
+        ...prev,
+        comments: [...(prev.comments || []), response.data]
+      }));
+
+      // Update the landlord in the main list to reflect the new comment count
+      setLandlords(prev => prev.map(landlord => 
+        landlord._id === selectedLandlord._id 
+          ? { ...landlord, comments: [...(landlord.comments || []), response.data] }
+          : landlord
+      ));
+
+      toast.success('Comment added successfully');
+    } catch (error) {
+      toast.error('Failed to add comment');
+      console.error('Error adding comment:', error);
+    } finally {
+      setIsAddingComment(false);
+    }
+  };
+
+  const handleDelete = async (landlordId) => {
+    if (!window.confirm('Are you sure you want to delete this landlord? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`${API_ENDPOINTS.USERS}/${landlordId}`);
+      setLandlords(prev => prev.filter(landlord => landlord._id !== landlordId));
+      toast.success('Landlord deleted successfully');
+    } catch (error) {
+      console.error('Error deleting landlord:', error);
+      toast.error('Failed to delete landlord');
+    }
   };
 
   if (loading) {
@@ -128,7 +200,7 @@ export default function AdminLandlords() {
         </div>
       </div>
 
-      <div className="mt-8 flex flex-col">
+      <div className="mt-8">
         <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
           <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
             <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
@@ -148,31 +220,53 @@ export default function AdminLandlords() {
                       Joined
                     </th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Verification Status
+                      Comments
+                    </th>
+                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
                   {filteredLandlords.map((landlord) => (
                     <tr key={landlord._id}>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         {landlord.email}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
                         {landlord.name}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {landlord.propertyCount}
+                        {landlord.propertyCount || 0}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         {new Date(landlord.createdAt).toLocaleDateString()}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
-                          landlord.isVerified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          (landlord.comments?.length || 0) > 0 
+                            ? 'bg-blue-100 text-blue-800' 
+                            : 'bg-gray-100 text-gray-800'
                         }`}>
-                          {landlord.isVerified ? 'Verified' : 'Pending'}
+                          {landlord.comments?.length || 0} comment{(landlord.comments?.length || 0) !== 1 ? 's' : ''}
                         </span>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleOpenComments(landlord)}
+                            className="text-xs text-indigo-600 hover:text-indigo-900"
+                          >
+                            Comments
+                          </button>
+                          <span className="text-gray-300">|</span>
+                          <button
+                            onClick={() => handleDelete(landlord._id)}
+                            className="text-xs text-red-600 hover:text-red-900"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -182,6 +276,37 @@ export default function AdminLandlords() {
           </div>
         </div>
       </div>
+
+      {/* Comments Modal */}
+      <Dialog
+        open={isCommentsModalOpen}
+        onClose={() => setIsCommentsModalOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <div className="flex justify-between items-center">
+            <span>Comments for {selectedLandlord?.name}</span>
+            <IconButton
+              edge="end"
+              color="inherit"
+              onClick={() => setIsCommentsModalOpen(false)}
+              aria-label="close"
+            >
+              <CloseIcon />
+            </IconButton>
+          </div>
+        </DialogTitle>
+        <DialogContent dividers>
+          {selectedLandlord && (
+            <CommentSection
+              comments={selectedLandlord.comments || []}
+              onAddComment={handleAddComment}
+              isLoading={isAddingComment}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 

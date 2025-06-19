@@ -2,6 +2,22 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 
+const commentSchema = new mongoose.Schema({
+  text: {
+    type: String,
+    required: true
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -42,6 +58,7 @@ const userSchema = new mongoose.Schema({
     min: 0,
     max: 100
   },
+  comments: [commentSchema],
   resetPasswordToken: {
     type: String,
     default: null

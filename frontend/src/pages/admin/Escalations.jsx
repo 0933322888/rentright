@@ -1,18 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { API_ENDPOINTS } from '../config/api';
+import { useAuth } from '../../context/AuthContext';
+import { API_ENDPOINTS } from '../../config/api';
 import axios from 'axios';
 import {
-  Container,
-  Typography,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Button,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -22,12 +12,15 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Typography,
   Box,
   Chip,
   IconButton,
   Tooltip,
   Alert,
-  Divider
+  Divider,
+  Button,
+  Paper
 } from '@mui/material';
 import {
   Warning as WarningIcon,
@@ -43,44 +36,40 @@ const StatusChip = ({ status }) => {
   // Handle undefined or null status
   if (!status) {
     return (
-      <Chip
-        label="UNKNOWN"
-        color="default"
-        size="small"
-      />
+      <span className="inline-flex rounded-full px-2 text-xs font-semibold leading-5 bg-gray-100 text-gray-800">
+        UNKNOWN
+      </span>
     );
   }
 
   const getStatusColor = () => {
     switch (status.toLowerCase()) {
       case 'pending':
-        return 'warning';
+        return 'bg-yellow-100 text-yellow-800';
       case 'in_review':
-        return 'info';
+        return 'bg-blue-100 text-blue-800';
       case 'resolved':
-        return 'success';
+        return 'bg-green-100 text-green-800';
       case 'closed':
-        return 'default';
+        return 'bg-gray-100 text-gray-800';
       default:
-        return 'default';
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   return (
-    <Chip
-      label={status.toString().replace('_', ' ').toUpperCase()}
-      color={getStatusColor()}
-      size="small"
-    />
+    <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${getStatusColor()}`}>
+      {status.toString().replace('_', ' ').toUpperCase()}
+    </span>
   );
 };
 
-const EscalationDetailsModal = ({ 
-  open, 
-  onClose, 
-  escalation, 
-  onAddNote, 
-  onUpdateStatus 
+const EscalationDetailsModal = ({
+  open,
+  onClose,
+  escalation,
+  onAddNote,
+  onUpdateStatus
 }) => {
   const [note, setNote] = useState('');
   const [status, setStatus] = useState(escalation?.status || 'pending');
@@ -103,14 +92,14 @@ const EscalationDetailsModal = ({
   };
 
   return (
-    <Dialog 
-      open={open} 
+    <Dialog
+      open={open}
       onClose={onClose}
       maxWidth="md"
       fullWidth
     >
-      <DialogTitle sx={{ 
-        bgcolor: 'primary.main', 
+      <DialogTitle sx={{
+        bgcolor: 'primary.main',
         color: 'white',
         display: 'flex',
         alignItems: 'center',
@@ -288,17 +277,17 @@ const Escalations = () => {
         `${API_ENDPOINTS.ESCALATIONS}/${escalationId}/notes`,
         { text: note }
       );
-      
+
       // Update the escalation in the list while preserving all data
-      setEscalations(prev => 
-        prev.map(esc => 
+      setEscalations(prev =>
+        prev.map(esc =>
           esc._id === escalationId ? { ...esc, ...response.data } : esc
         )
       );
-      
+
       // Update the selected escalation while preserving all data
       setSelectedEscalation(prev => prev && prev._id === escalationId ? { ...prev, ...response.data } : prev);
-      
+
       toast.success('Note added successfully');
     } catch (err) {
       console.error('Error adding note:', err);
@@ -312,21 +301,21 @@ const Escalations = () => {
         `${API_ENDPOINTS.ESCALATIONS}/${escalationId}/status`,
         { status }
       );
-      
+
       // Update the escalation in the list while preserving all data
-      setEscalations(prev => 
-        prev.map(esc => 
+      setEscalations(prev =>
+        prev.map(esc =>
           esc._id === escalationId ? { ...esc, status: response.data.status } : esc
         )
       );
-      
+
       // Update the selected escalation while preserving all data
-      setSelectedEscalation(prev => 
-        prev && prev._id === escalationId 
+      setSelectedEscalation(prev =>
+        prev && prev._id === escalationId
           ? { ...prev, status: response.data.status }
           : prev
       );
-      
+
       toast.success('Status updated successfully');
     } catch (err) {
       console.error('Error updating status:', err);
@@ -362,64 +351,97 @@ const Escalations = () => {
 
   return (
     <div className="p-6">
-      <Typography variant="h4" gutterBottom>
-        Payment Escalations
-      </Typography>
+      <div className="mt-8 flex flex-col">
+        <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+          <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+            <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+              <table className="min-w-full divide-y divide-gray-300">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      Status
+                    </th>
+                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      Property
+                    </th>
+                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      Tenant
+                    </th>
+                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      Reason
+                    </th>
+                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      Created
+                    </th>
+                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      Last Updated
+                    </th>
+                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 bg-white">
+                  {escalations.length > 0 ? (
+                    escalations.map((escalation) => (
+                      <tr key={escalation._id}>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          <StatusChip status={escalation.status} />
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                          {escalation.property?.title || 'N/A'}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                          {escalation.tenant?.name || 'N/A'}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          {escalation.reason?.replace('_', ' ').toUpperCase() || 'N/A'}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          {escalation.createdAt ? format(new Date(escalation.createdAt), 'PP') : 'N/A'}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          {escalation.updatedAt ? format(new Date(escalation.updatedAt), 'PP') : 'N/A'}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          <button
+                            onClick={() => {
+                              setSelectedEscalation(escalation);
+                              setShowDetailsModal(true);
+                            }}
+                            className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                          >
+                            View Details
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={7} className="px-3 py-4 text-sm text-gray-500 text-center">
+                        No escalations found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Property</TableCell>
-              <TableCell>Tenant</TableCell>
-              <TableCell>Landlord</TableCell>
-              <TableCell>Reason</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Created</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {escalations.map((escalation) => (
-              <TableRow key={escalation._id}>
-                <TableCell>{escalation.property?.title || 'Property not available'}</TableCell>
-                <TableCell>{escalation.tenant?.name || 'Tenant not available'}</TableCell>
-                <TableCell>{escalation.landlord?.name || 'Landlord not available'}</TableCell>
-                <TableCell>{escalation.reason?.replace('_', ' ').toUpperCase() || 'Reason not available'}</TableCell>
-                <TableCell>
-                  <StatusChip status={escalation.status} />
-                </TableCell>
-                <TableCell>
-                  {escalation.createdAt ? format(new Date(escalation.createdAt), 'PP') : 'Date not available'}
-                </TableCell>
-                <TableCell>
-                  <Tooltip title="View Details">
-                    <IconButton
-                      onClick={() => {
-                        setSelectedEscalation(escalation);
-                        setShowDetailsModal(true);
-                      }}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                  </Tooltip>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      <EscalationDetailsModal
-        open={showDetailsModal}
-        onClose={() => {
-          setShowDetailsModal(false);
-          setSelectedEscalation(null);
-        }}
-        escalation={selectedEscalation}
-        onAddNote={(note) => handleAddNote(selectedEscalation._id, note)}
-        onUpdateStatus={(status) => handleUpdateStatus(selectedEscalation._id, status)}
-      />
+      {selectedEscalation && (
+        <EscalationDetailsModal
+          open={showDetailsModal}
+          onClose={() => {
+            setShowDetailsModal(false);
+            setSelectedEscalation(null);
+          }}
+          escalation={selectedEscalation}
+          onAddNote={(note) => handleAddNote(selectedEscalation._id, note)}
+          onUpdateStatus={(status) => handleUpdateStatus(selectedEscalation._id, status)}
+        />
+      )}
     </div>
   );
 };
