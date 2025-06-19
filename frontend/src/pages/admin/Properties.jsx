@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../config/api';
 import { toast } from 'react-hot-toast';
 import { Menu, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
+import { adminButtonStyles } from '../../utils/uiUtils';
 
 export default function AdminProperties() {
   const [properties, setProperties] = useState([]);
@@ -18,6 +19,7 @@ export default function AdminProperties() {
     landlord: '',
     address: ''
   });
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchProperties();
@@ -380,32 +382,35 @@ export default function AdminProperties() {
                       ${property.price}
                     </td>
                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                      <div className="flex flex-col space-y-2">
-                        <Link
-                          to={`/admin/properties/${property._id}`}
-                          className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => navigate(`/admin/properties/${property._id}`)}
+                          className={adminButtonStyles.textView}
                         >
                           View
-                        </Link>
+                        </button>
                         {property.status === 'pending' && (
                           <>
+                            <span className="text-gray-300">|</span>
                             <button
                               onClick={() => handleApprove(property._id)}
-                              className="inline-flex items-center justify-center rounded-md border border-transparent bg-green-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                              className={adminButtonStyles.textApprove}
                             >
                               Approve
                             </button>
+                            <span className="text-gray-300">|</span>
                             <button
                               onClick={() => handleReject(property._id)}
-                              className="inline-flex items-center justify-center rounded-md border border-transparent bg-red-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                              className={adminButtonStyles.textReject}
                             >
                               Reject
                             </button>
                           </>
                         )}
+                        <span className="text-gray-300">|</span>
                         <button
                           onClick={() => handleDelete(property._id)}
-                          className="inline-flex items-center justify-center rounded-md border border-transparent bg-red-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                          className={adminButtonStyles.textDelete}
                         >
                           Delete
                         </button>

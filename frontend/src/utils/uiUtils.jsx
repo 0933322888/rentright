@@ -139,4 +139,118 @@ export const verticalTabStyles = {
       backgroundColor: '#f5f6fa',
     },
   },
+};
+
+// Admin Button Styles - Unified styling for all admin pages
+
+// Base button classes
+const baseButtonClasses = "inline-flex items-center justify-center rounded-md border border-transparent text-xs font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2";
+
+// Button size variants
+export const buttonSizes = {
+  xs: "px-2 py-1 text-xs",
+  sm: "px-2.5 py-1.5 text-xs", 
+  md: "px-3 py-2 text-sm",
+  lg: "px-4 py-2 text-sm",
+  xl: "px-6 py-3 text-base"
+};
+
+// Button color variants
+export const buttonColors = {
+  primary: {
+    base: "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500",
+    disabled: "bg-blue-400 text-white cursor-not-allowed"
+  },
+  secondary: {
+    base: "bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500",
+    disabled: "bg-gray-400 text-white cursor-not-allowed"
+  },
+  success: {
+    base: "bg-green-600 text-white hover:bg-green-700 focus:ring-green-500",
+    disabled: "bg-green-400 text-white cursor-not-allowed"
+  },
+  warning: {
+    base: "bg-yellow-600 text-white hover:bg-yellow-700 focus:ring-yellow-500",
+    disabled: "bg-yellow-400 text-white cursor-not-allowed"
+  },
+  danger: {
+    base: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
+    disabled: "bg-red-400 text-white cursor-not-allowed"
+  },
+  outline: {
+    base: "bg-white text-gray-700 border-gray-300 hover:bg-gray-50 focus:ring-gray-500",
+    disabled: "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+  }
+};
+
+// Generate button classes
+export const getButtonClasses = (color = 'primary', size = 'sm', disabled = false) => {
+  const colorClasses = disabled ? buttonColors[color].disabled : buttonColors[color].base;
+  const sizeClasses = buttonSizes[size];
+  
+  return `${baseButtonClasses} ${sizeClasses} ${colorClasses}`;
+};
+
+// Predefined button variants for common use cases
+export const adminButtonStyles = {
+  // Primary actions (View, Edit, etc.)
+  primary: getButtonClasses('primary', 'sm'),
+  primaryMd: getButtonClasses('primary', 'md'),
+  primaryLg: getButtonClasses('primary', 'lg'),
+  
+  // Success actions (Approve, etc.)
+  success: getButtonClasses('success', 'sm'),
+  successMd: getButtonClasses('success', 'md'),
+  
+  // Warning actions (Decline, Reject, etc.)
+  warning: getButtonClasses('warning', 'sm'),
+  warningMd: getButtonClasses('warning', 'md'),
+  
+  // Danger actions (Delete, etc.)
+  danger: getButtonClasses('danger', 'sm'),
+  dangerMd: getButtonClasses('danger', 'md'),
+  
+  // Secondary actions
+  secondary: getButtonClasses('secondary', 'sm'),
+  outline: getButtonClasses('outline', 'sm'),
+  
+  // Disabled states
+  disabled: getButtonClasses('primary', 'sm', true),
+  disabledSuccess: getButtonClasses('success', 'sm', true),
+  disabledWarning: getButtonClasses('warning', 'sm', true),
+  disabledDanger: getButtonClasses('danger', 'sm', true),
+  
+  // Text-only buttons (matching Tenants page style)
+  textView: "text-blue-600 hover:text-blue-900 text-xs",
+  textComments: "text-indigo-600 hover:text-indigo-900 text-xs",
+  textDelete: "text-xs text-red-600 hover:text-red-900",
+  textApprove: "text-green-600 hover:text-green-900 text-xs",
+  textReject: "text-yellow-600 hover:text-yellow-900 text-xs",
+  textEdit: "text-gray-600 hover:text-gray-900 text-xs"
+};
+
+// Status badge styles
+export const statusBadgeStyles = {
+  success: "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-green-100 text-green-800",
+  warning: "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800",
+  danger: "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-red-100 text-red-800",
+  info: "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800",
+  gray: "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-800"
+};
+
+// Get status badge class based on status
+export const getStatusBadgeClass = (status) => {
+  const statusMap = {
+    'active': statusBadgeStyles.success,
+    'approved': statusBadgeStyles.success,
+    'pending': statusBadgeStyles.warning,
+    'review': statusBadgeStyles.warning,
+    'declined': statusBadgeStyles.danger,
+    'rejected': statusBadgeStyles.danger,
+    'inactive': statusBadgeStyles.gray,
+    'complete': statusBadgeStyles.success,
+    'incomplete': statusBadgeStyles.warning
+  };
+  
+  return statusMap[status] || statusBadgeStyles.gray;
 }; 

@@ -11,6 +11,7 @@ import {
   IconButton
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
+import { adminButtonStyles } from '../../utils/uiUtils';
 
 export default function AdminTenants() {
   const [tenants, setTenants] = useState([]);
@@ -290,6 +291,13 @@ export default function AdminTenants() {
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => navigate(`/admin/tenants/${tenant._id}/profile`)}
+                            className="text-blue-600 hover:text-blue-900 text-xs"
+                          >
+                            View
+                          </button>
+                          <span className="text-gray-300">|</span>
                           <button
                             onClick={() => handleOpenComments(tenant)}
                             className="text-indigo-600 hover:text-indigo-900 text-xs"

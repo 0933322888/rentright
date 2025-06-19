@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../config/api';
 import { toast } from 'react-hot-toast';
+import { adminButtonStyles } from '../../utils/uiUtils';
 
 export default function AdminApplications() {
   const [applications, setApplications] = useState([]);
@@ -300,33 +301,36 @@ export default function AdminApplications() {
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        <div className="flex flex-col space-y-1">
+                        <div className="flex items-center gap-2">
                           {application.status === 'pending' && (
                             <>
                               <button
                                 onClick={() => handleStatusUpdate(application._id, 'approved')}
-                                className="inline-flex items-center rounded-md border border-transparent bg-green-600 px-2 py-1 text-xs font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                                className={adminButtonStyles.textApprove}
                               >
                                 Approve
                               </button>
+                              <span className="text-gray-300">|</span>
                               <button
                                 onClick={() => handleStatusUpdate(application._id, 'declined')}
-                                className="inline-flex items-center rounded-md border border-transparent bg-yellow-600 px-2 py-1 text-xs font-medium text-white shadow-sm hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
+                                className={adminButtonStyles.textReject}
                               >
                                 Decline
                               </button>
+                              <span className="text-gray-300">|</span>
                             </>
                           )}
                           <button
                             onClick={() => handleStatusUpdate(application._id, 'rejected')}
                             disabled={['rejected', 'terminated', 'cancelled'].includes(application.status)}
-                            className={`inline-flex items-center rounded-md border border-transparent bg-yellow-600 px-2 py-1 text-xs font-medium text-white shadow-sm hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 ${['rejected', 'terminated', 'cancelled'].includes(application.status) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`${adminButtonStyles.textReject} ${['rejected', 'terminated', 'cancelled'].includes(application.status) ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
                             Reject
                           </button>
+                          <span className="text-gray-300">|</span>
                           <button
                             onClick={() => handleDelete(application._id)}
-                            className="inline-flex items-center rounded-md border border-transparent bg-red-600 px-2 py-1 text-xs font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                            className={adminButtonStyles.textDelete}
                           >
                             Delete
                           </button>

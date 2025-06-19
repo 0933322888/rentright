@@ -31,6 +31,7 @@ import {
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
+import { adminButtonStyles } from '../../utils/uiUtils';
 
 const StatusChip = ({ status }) => {
   // Handle undefined or null status
@@ -44,8 +45,8 @@ const StatusChip = ({ status }) => {
 
   const getStatusColor = () => {
     switch (status.toLowerCase()) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+      case 'new':
+        return 'bg-orange-100 text-orange-800';
       case 'in_review':
         return 'bg-blue-100 text-blue-800';
       case 'resolved':
@@ -72,7 +73,7 @@ const EscalationDetailsModal = ({
   onUpdateStatus
 }) => {
   const [note, setNote] = useState('');
-  const [status, setStatus] = useState(escalation?.status || 'pending');
+  const [status, setStatus] = useState(escalation?.status || 'new');
 
   const handleAddNote = () => {
     if (!note.trim()) return;
@@ -218,7 +219,7 @@ const EscalationDetailsModal = ({
                   label="Status"
                   onChange={(e) => setStatus(e.target.value)}
                 >
-                  <MenuItem value="pending">Pending</MenuItem>
+                  <MenuItem value="new">New</MenuItem>
                   <MenuItem value="in_review">In Review</MenuItem>
                   <MenuItem value="resolved">Resolved</MenuItem>
                   <MenuItem value="closed">Closed</MenuItem>
@@ -409,7 +410,7 @@ const Escalations = () => {
                               setSelectedEscalation(escalation);
                               setShowDetailsModal(true);
                             }}
-                            className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            className={adminButtonStyles.textView}
                           >
                             View Details
                           </button>
