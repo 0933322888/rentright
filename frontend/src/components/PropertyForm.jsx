@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { 
-  TextField, 
-  Button, 
-  Grid, 
-  MenuItem, 
-  FormControlLabel, 
-  Switch, 
+import {
+  TextField,
+  Button,
+  Grid,
+  MenuItem,
+  FormControlLabel,
+  Switch,
   Box,
   Paper,
   Typography,
@@ -166,7 +166,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
       }
 
       const { title, description } = await response.json();
-      
+
       setFormData(prev => ({
         ...prev,
         title,
@@ -223,7 +223,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
 
       const suggestion = await response.json();
       setPriceSuggestion(suggestion);
-      
+
       // Auto-fill the price field with the suggested price
       setFormData(prev => ({
         ...prev,
@@ -280,10 +280,10 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
     <form onSubmit={handleSubmit}>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {/* Property Images Section - Now First */}
-        <Paper 
-          elevation={0} 
-          sx={{ 
-            p: 3, 
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
             bgcolor: 'background.default',
             borderRadius: 2,
             border: '1px solid',
@@ -301,7 +301,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
                 size="large"
                 sx={{
                   color: '#2a7a78',
-                  ml: 1,
+                  ml: 3,
                   '&:hover': {
                     bgcolor: '#b1f0ee'
                   }
@@ -309,20 +309,23 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
               >
                 <TipsAndUpdatesIcon sx={{ fontSize: 28 }} />
               </IconButton>
+              <Typography variant="body2" color="text.secondary" sx={{ ml: 2 }}>
+                Photo Tips
+              </Typography>
             </Tooltip>
           </Box>
-          
+
           <Box sx={{ mb: 3 }}>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               Upload high-quality images of your property. You can upload up to 10 images.
             </Typography>
-            
+
             {/* Photography Guide */}
             <Collapse in={showPhotoTips}>
-              <Box sx={{ 
-                mb: 3, 
-                p: 2, 
-                bgcolor: 'primary.50', 
+              <Box sx={{
+                mb: 3,
+                p: 2,
+                bgcolor: 'primary.50',
                 borderRadius: 2,
                 border: '1px solid',
                 borderColor: 'primary.200'
@@ -396,7 +399,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
                 </Box>
               </Box>
             </Collapse>
-            
+
             <Box
               sx={{
                 display: 'grid',
@@ -418,7 +421,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
                   }}
                 >
                   <img
-                    src={typeof image === 'string' 
+                    src={typeof image === 'string'
                       ? getImageUrl(image)
                       : URL.createObjectURL(image)}
                     alt={`Property image ${index + 1}`}
@@ -448,7 +451,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
                   </IconButton>
                 </Box>
               ))}
-              
+
               {formData.images.length < 10 && (
                 <Box
                   component="label"
@@ -496,10 +499,10 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
         </Paper>
 
         {/* Basic Information Section - Removed Title and Description */}
-        <Paper 
-          elevation={0} 
-          sx={{ 
-            p: 3, 
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
             bgcolor: 'background.default',
             borderRadius: 2,
             border: '1px solid',
@@ -539,13 +542,13 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
                   label="Available From"
                   value={formData.availableFrom}
                   onChange={handleDateChange}
-                  slotProps={{ 
-                    textField: { 
-                      fullWidth: true, 
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
                       required: true,
                       variant: "outlined",
                       size: "medium"
-                    } 
+                    }
                   }}
                   minDate={new Date()}
                 />
@@ -555,10 +558,10 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
         </Paper>
 
         {/* Location Section */}
-        <Paper 
-          elevation={0} 
-          sx={{ 
-            p: 3, 
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
             bgcolor: 'background.default',
             borderRadius: 2,
             border: '1px solid',
@@ -635,10 +638,10 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
         </Paper>
 
         {/* Features Section */}
-        <Paper 
-          elevation={0} 
-          sx={{ 
-            p: 3, 
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
             bgcolor: 'background.default',
             borderRadius: 2,
             border: '1px solid',
@@ -692,9 +695,9 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
               />
             </Grid>
             <Grid xs={12}>
-              <Box sx={{ 
-                display: 'flex', 
-                gap: 3, 
+              <Box sx={{
+                display: 'flex',
+                gap: 3,
                 flexWrap: 'wrap',
                 p: 2,
                 bgcolor: 'background.paper',
@@ -739,10 +742,10 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
         </Paper>
 
         {/* Pricing Section - New Section */}
-        <Paper 
-          elevation={0} 
-          sx={{ 
-            p: 3, 
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
             bgcolor: 'background.default',
             borderRadius: 2,
             border: '1px solid',
@@ -782,7 +785,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
                 onClick={handleGeneratePrice}
                 disabled={generatingPrice || loading}
                 startIcon={generatingPrice ? <CircularProgress size={20} /> : <AutoAwesomeIcon />}
-                sx={{ 
+                sx={{
                   width: '100%',
                   height: 56,
                   background: 'linear-gradient(135deg, #ffffff 0%, #b1f0ee 100%)',
@@ -805,51 +808,51 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
             </Grid>
           </Grid>
           <br></br>
-        {/* Price Suggestion Info Section */}
-        {(priceError || priceSuggestion) && (
-          <Paper 
-            elevation={0} 
-            sx={{ 
-              p: 2, 
-              bgcolor: 'background.default',
-              borderRadius: 2,
-              border: '1px solid',
-              borderColor: 'divider'
-            }}
-          >
-            {priceError && (
-              <Alert severity="error" sx={{ mb: priceSuggestion ? 2 : 0 }}>
-                {priceError}
-              </Alert>
-            )}
-            {priceSuggestion && priceSuggestion.suggestedPrice && (
-              <Box>
-                <Typography variant="subtitle2" color="primary" sx={{ mb: 1, fontWeight: 600 }}>
-                  AI Price Suggestion
-                </Typography>
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    Suggested Price: <strong>${priceSuggestion.suggestedPrice.toLocaleString()}</strong>
-                  </Typography>
-                  <Typography variant="body2" sx={{ mt: 0.5 }}>
-                    Based on the provided property information, the suggested price range is ${priceSuggestion.priceRange?.min.toLocaleString()} - ${priceSuggestion.priceRange?.max.toLocaleString()}
-                  </Typography>
-                  <Typography variant="body2" sx={{ mt: 0.5 }}>
-                    Comment: {priceSuggestion.comment} {priceSuggestion.justification}
-                  </Typography>
+          {/* Price Suggestion Info Section */}
+          {(priceError || priceSuggestion) && (
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2,
+                bgcolor: 'background.default',
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'divider'
+              }}
+            >
+              {priceError && (
+                <Alert severity="error" sx={{ mb: priceSuggestion ? 2 : 0 }}>
+                  {priceError}
                 </Alert>
-              </Box>
-            )}
-          </Paper>
-        )}
+              )}
+              {priceSuggestion && priceSuggestion.suggestedPrice && (
+                <Box>
+                  <Typography variant="subtitle2" color="primary" sx={{ mb: 1, fontWeight: 600 }}>
+                    AI Price Suggestion
+                  </Typography>
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      Suggested Price: <strong>${priceSuggestion.suggestedPrice.toLocaleString()}</strong>
+                    </Typography>
+                    <Typography variant="body2" sx={{ mt: 0.5 }}>
+                      Based on the provided property information, the suggested price range is ${priceSuggestion.priceRange?.min.toLocaleString()} - ${priceSuggestion.priceRange?.max.toLocaleString()}
+                    </Typography>
+                    <Typography variant="body2" sx={{ mt: 0.5 }}>
+                      Comment: {priceSuggestion.comment} {priceSuggestion.justification}
+                    </Typography>
+                  </Alert>
+                </Box>
+              )}
+            </Paper>
+          )}
         </Paper>
 
 
         {/* Title and Description Section - New Section at the End */}
-        <Paper 
-          elevation={0} 
-          sx={{ 
-            p: 3, 
+        <Paper
+          elevation={0}
+          sx={{
+            p: 3,
             bgcolor: 'background.default',
             borderRadius: 2,
             border: '1px solid',
@@ -869,7 +872,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
               startIcon={generating ? <CircularProgress size={20} /> : <AutoAwesomeIcon />}
               onClick={handleGenerateListing}
               disabled={generating || loading}
-              sx={{ 
+              sx={{
                 minWidth: 150,
                 background: 'linear-gradient(135deg, #ffffff 0%, #b1f0ee 100%)',
                 border: '1px solid #b1f0ee',
@@ -889,7 +892,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
               {generating ? 'Generating...' : 'Generate with AI'}
             </Button>
           </Box>
-          
+
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <TextField
               required
@@ -945,7 +948,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
             size="large"
             disabled={loading}
             endIcon={isFirstStep ? <ArrowForwardIcon /> : null}
-            sx={{ 
+            sx={{
               minWidth: 200,
               py: 1.5
             }}

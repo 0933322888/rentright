@@ -15,6 +15,7 @@ import {
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../config/api';
+import ImageModal from '../ImageModal';
 
 export default function TicketManagement({ 
   tickets, 
@@ -25,6 +26,9 @@ export default function TicketManagement({
   const [newComment, setNewComment] = useState('');
   const [commentingTicketId, setCommentingTicketId] = useState(null);
   const [expandedComments, setExpandedComments] = useState({});
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const handleAddComment = async (ticketId) => {
     if (!newComment.trim()) {
@@ -61,6 +65,22 @@ export default function TicketManagement({
       ...prev,
       [ticketId]: !prev[ticketId]
     }));
+  };
+
+  const handleImageClick = (images, index) => {
+    setSelectedImages(images);
+    setSelectedImageIndex(index);
+    setImageModalOpen(true);
+  };
+
+  const handleCloseImageModal = () => {
+    setImageModalOpen(false);
+    setSelectedImages([]);
+    setSelectedImageIndex(0);
+  };
+
+  const handleImageChange = (newIndex) => {
+    setSelectedImageIndex(newIndex);
   };
 
   if (isLoading) {
@@ -121,6 +141,29 @@ export default function TicketManagement({
               <Typography variant="body1" sx={{ mt: 1 }}>
                 {ticket.description}
               </Typography>
+              {ticket.images && ticket.images.length > 0 && (
+                <Box mt={2}>
+                  <Typography variant="subtitle2" gutterBottom>Attached Images:</Typography>
+                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    {ticket.images.map((img, index) => (
+                      <img
+                        key={index}
+                        src={`${import.meta.env.VITE_API_URL}${img}`}
+                        alt={`Ticket attachment ${index + 1}`}
+                        style={{
+                          width: '100px',
+                          height: '100px',
+                          objectFit: 'cover',
+                          borderRadius: '4px',
+                          border: '1px solid #ddd',
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => handleImageClick(ticket.images, index)}
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              )}
             </Box>
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
               <Chip 
@@ -226,6 +269,15 @@ export default function TicketManagement({
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Image Modal */}
+      <ImageModal
+        open={imageModalOpen}
+        onClose={handleCloseImageModal}
+        images={selectedImages}
+        currentIndex={selectedImageIndex}
+        onImageChange={handleImageChange}
+      />
     </Box>
   );
 } 
