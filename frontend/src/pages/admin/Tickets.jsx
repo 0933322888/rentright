@@ -5,6 +5,7 @@ import { API_ENDPOINTS } from '../../config/api';
 import { toast } from 'react-hot-toast';
 import React from 'react';
 import { adminButtonStyles } from '../../utils/uiUtils';
+import ImageModal from '../../components/ImageModal';
 
 export default function AdminTickets() {
   const navigate = useNavigate();
@@ -21,6 +22,9 @@ export default function AdminTickets() {
   const [newComment, setNewComment] = useState('');
   const [commentingTicketId, setCommentingTicketId] = useState(null);
   const [expandedComments, setExpandedComments] = useState({});
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   useEffect(() => {
     fetchTickets();
@@ -192,6 +196,22 @@ export default function AdminTickets() {
     }));
   };
 
+  const handleImageClick = (images, index) => {
+    setSelectedImages(images);
+    setSelectedImageIndex(index);
+    setImageModalOpen(true);
+  };
+
+  const handleCloseImageModal = () => {
+    setImageModalOpen(false);
+    setSelectedImages([]);
+    setSelectedImageIndex(0);
+  };
+
+  const handleImageChange = (newIndex) => {
+    setSelectedImageIndex(newIndex);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -299,6 +319,9 @@ export default function AdminTickets() {
                     Description
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Images
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -330,6 +353,29 @@ export default function AdminTickets() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900">{ticket.description}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        {ticket.images && ticket.images.length > 0 ? (
+                          <div className="flex space-x-1">
+                            {ticket.images.slice(0, 3).map((img, index) => (
+                              <img
+                                key={index}
+                                src={`${import.meta.env.VITE_API_URL}${img}`}
+                                alt={`Ticket image ${index + 1}`}
+                                className="w-8 h-8 object-cover rounded border border-gray-300 cursor-pointer hover:opacity-80 hover:scale-110 transition-all duration-200"
+                                title={`Click to view image ${index + 1}`}
+                                onClick={() => handleImageClick(ticket.images, index)}
+                              />
+                            ))}
+                            {ticket.images.length > 3 && (
+                              <div className="w-8 h-8 bg-gray-200 rounded border border-gray-300 flex items-center justify-center text-xs text-gray-600">
+                                +{ticket.images.length - 3}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-sm">No images</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
@@ -421,7 +467,7 @@ export default function AdminTickets() {
                     {/* Comments Section */}
                     {ticket.comments && ticket.comments.length > 0 && expandedComments[ticket._id] && (
                       <tr>
-                        <td colSpan="7" className="px-6 py-4">
+                        <td colSpan="8" className="px-6 py-4">
                           <div className="bg-gray-50 p-4 rounded-lg">
                             <h4 className="text-sm font-medium text-gray-900 mb-2">Comments</h4>
                             <div className="space-y-3">
@@ -492,6 +538,15 @@ export default function AdminTickets() {
           </div>
         </div>
       )}
+
+      {/* Image Modal */}
+      <ImageModal
+        open={imageModalOpen}
+        onClose={handleCloseImageModal}
+        images={selectedImages}
+        currentIndex={selectedImageIndex}
+        onImageChange={handleImageChange}
+      />
     </div>
   );
 } 

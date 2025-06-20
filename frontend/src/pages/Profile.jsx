@@ -3,74 +3,85 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { API_ENDPOINTS } from '../config/api';
-import { useDropzone } from 'react-dropzone';
+import DocumentUpload from '../components/DocumentUpload';
 import { toast, Toaster } from 'react-hot-toast';
+import { 
+  Box, 
+  Typography, 
+  Paper, 
+  TextField, 
+  Button, 
+  Alert,
+  Container,
+  Divider,
+  Grid,
+  Card,
+  CardMedia,
+  CardContent,
+  CardActions,
+  IconButton,
+  MenuItem
+} from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import ImageIcon from '@mui/icons-material/Image';
 
-// Separate component for document upload
-function DocumentUpload({ field, documents, previews, onDrop, onDelete }) {
-  const { getRootProps, getInputProps } = useDropzone({ onDrop });
-  const BASE_URL = import.meta.env.VITE_API_URL;
+// Document preview component similar to AddProperty
+const DocumentPreview = ({ file, onDelete }) => {
+  const isImage = file.type.startsWith('image/');
+  const isPDF = file.type === 'application/pdf';
+  const previewUrl = URL.createObjectURL(file);
 
   return (
-    <div className="space-y-4">
-      <h4 className="text-sm font-medium text-gray-700 capitalize">
-        {field.replace(/([A-Z])/g, ' $1').trim()}
-      </h4>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {documents[field].map((_, index) => {
-          const preview = previews[field][index];
-          const isImage = preview?.type === 'image' || 
-                         (preview?.url && (preview.url.endsWith('.jpg') || 
-                                         preview.url.endsWith('.jpeg') || 
-                                         preview.url.endsWith('.png') || 
-                                         preview.url.endsWith('.gif')));
-
-          return (
-            <div key={index} className="relative">
-              {isImage ? (
-                <img
-                  src={preview?.url.startsWith('data:') ? 
-                    preview.url : 
-                    `${BASE_URL}${preview.url}`}
-                  alt={`${field} ${index + 1}`}
-                  className="w-full h-32 object-cover rounded-lg"
-                />
-              ) : (
-                <div className="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <svg className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                  </svg>
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={() => onDelete(field, index)}
-                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          );
-        })}
-      </div>
-      <div {...getRootProps()} className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md cursor-pointer">
-        <div className="space-y-1 text-center">
-          <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <div className="flex text-sm text-gray-600 justify-center">
-            <span className="text-primary-600 hover:text-primary-500 font-medium">Upload files</span>
-            <p className="pl-1">or drag and drop</p>
-          </div>
-          <p className="text-xs text-gray-500">PNG, JPG, PDF up to 10MB</p>
-          <input {...getInputProps()} />
-        </div>
-      </div>
-    </div>
+    <Card sx={{ maxWidth: 200, position: 'relative', m: 1 }}>
+      {isImage ? (
+        <CardMedia
+          component="img"
+          sx={{
+            height: 140,
+            objectFit: 'cover'
+          }}
+          image={previewUrl}
+          alt={file.name}
+        />
+      ) : (
+        <Box
+          sx={{
+            height: 140,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: 'grey.100'
+          }}
+        >
+          {isPDF ? (
+            <PictureAsPdfIcon sx={{ fontSize: 48, color: 'error.main' }} />
+          ) : (
+            <ImageIcon sx={{ fontSize: 48, color: 'primary.main' }} />
+          )}
+        </Box>
+      )}
+      <CardContent sx={{ p: 1 }}>
+        <Typography variant="body2" noWrap title={file.name}>
+          {file.name}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {(file.size / 1024).toFixed(1)} KB
+        </Typography>
+      </CardContent>
+      <CardActions sx={{ p: 0, justifyContent: 'center' }}>
+        <IconButton 
+          size="small" 
+          color="error" 
+          onClick={onDelete}
+          sx={{ position: 'absolute', top: 4, right: 4, bgcolor: 'rgba(255,255,255,0.8)' }}
+        >
+          <DeleteIcon />
+        </IconButton>
+      </CardActions>
+    </Card>
   );
-}
+};
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -115,13 +126,6 @@ export default function Profile() {
     monthsAheadCanPay: ''
   });
   const [documents, setDocuments] = useState({
-    proofOfIdentity: [],
-    proofOfIncome: [],
-    creditHistory: [],
-    rentalHistory: [],
-    additionalDocuments: []
-  });
-  const [previews, setPreviews] = useState({
     proofOfIdentity: [],
     proofOfIncome: [],
     creditHistory: [],
@@ -179,9 +183,8 @@ export default function Profile() {
                 console.log('Setting initial answers:', newAnswers);
                 setAnswers(newAnswers);
 
-                // Initialize documents and previews states
+                // Initialize documents state
                 const initialDocuments = {};
-                const initialPreviews = {};
 
                 // Process each document field
                 ['proofOfIdentity', 'proofOfIncome', 'creditHistory', 'rentalHistory', 'additionalDocuments'].forEach(field => {
@@ -190,20 +193,12 @@ export default function Profile() {
                       name: doc.originalName || 'Document',
                       type: doc.mimeType || 'application/octet-stream'
                     }));
-
-                    initialPreviews[field] = data[field].map(doc => ({
-                      url: doc.url,
-                      thumbnailUrl: doc.thumbnailUrl,
-                      type: doc.mimeType?.startsWith('image/') ? 'image' : 'pdf'
-                    }));
                   } else {
                     initialDocuments[field] = [];
-                    initialPreviews[field] = [];
                   }
                 });
 
                 setDocuments(initialDocuments);
-                setPreviews(initialPreviews);
               }
             } catch (error) {
               console.error('Error fetching tenant profile:', error);
@@ -304,6 +299,34 @@ export default function Profile() {
     setLoading(true);
 
     try {
+      // Client-side validation
+      const requiredFields = [
+        'isCurrentlyEmployed',
+        'employmentType',
+        'monthlyNetIncome',
+        'hasAdditionalIncome',
+        'monthlyDebtRepayment',
+        'paysChildSupport',
+        'hasBeenEvicted',
+        'currentlyPaysRent',
+        'hasTwoMonthsRentSavings',
+        'canShareFinancialDocuments',
+        'canPayMoreThanOneMonth'
+      ];
+
+      const missingFields = [];
+      requiredFields.forEach(field => {
+        if (!answers[field] || answers[field] === '') {
+          missingFields.push(field);
+        }
+      });
+
+      if (missingFields.length > 0) {
+        setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
+        setLoading(false);
+        return;
+      }
+
       const token = localStorage.getItem('token');
       const formData = new FormData();
 
@@ -369,9 +392,8 @@ export default function Profile() {
         console.log('Updated answers:', updatedAnswers);
         setAnswers(updatedAnswers);
 
-        // Update documents and previews
+        // Update documents
         const updatedDocuments = {};
-        const updatedPreviews = {};
 
         ['proofOfIdentity', 'proofOfIncome', 'creditHistory', 'rentalHistory', 'additionalDocuments'].forEach(field => {
           if (data[field] && Array.isArray(data[field])) {
@@ -379,23 +401,14 @@ export default function Profile() {
               name: doc.originalName || 'Document',
               type: doc.mimeType || 'application/octet-stream'
             }));
-
-            updatedPreviews[field] = data[field].map(doc => ({
-              url: doc.url,
-              thumbnailUrl: doc.thumbnailUrl,
-              type: doc.mimeType?.startsWith('image/') ? 'image' : 'pdf'
-            }));
           } else {
             updatedDocuments[field] = [];
-            updatedPreviews[field] = [];
           }
         });
 
         console.log('Updated documents:', updatedDocuments);
-        console.log('Updated previews:', updatedPreviews);
 
         setDocuments(updatedDocuments);
-        setPreviews(updatedPreviews);
         setSuccess('Tenant profile updated successfully');
       }
     } catch (error) {
@@ -406,626 +419,593 @@ export default function Profile() {
     }
   };
 
-  const onDrop = (field) => (acceptedFiles) => {
+  const handleDocumentDrop = (field) => (acceptedFiles) => {
+    if (!Array.isArray(acceptedFiles)) {
+      acceptedFiles = [acceptedFiles];
+    }
     setDocuments(prev => ({
       ...prev,
-      [field]: [...prev[field], ...acceptedFiles]
+      [field]: [...(Array.isArray(prev[field]) ? prev[field] : []), ...acceptedFiles]
     }));
-
-    // Create previews for images
-    acceptedFiles.forEach(file => {
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          setPreviews(prev => ({
-            ...prev,
-            [field]: [...prev[field], {
-              url: reader.result,
-              thumbnailUrl: reader.result,
-              type: 'image'
-            }]
-          }));
-        };
-        reader.readAsDataURL(file);
-      } else {
-        setPreviews(prev => ({
-          ...prev,
-          [field]: [...prev[field], {
-            url: URL.createObjectURL(file),
-            thumbnailUrl: URL.createObjectURL(file),
-            type: 'pdf'
-          }]
-        }));
-      }
-    });
   };
 
-  const handleDeleteDocument = async (field, index) => {
-    try {
-      const token = localStorage.getItem('token');
-      
-      // If the document exists on the server (has a URL), make an API call to delete it
-      if (previews[field][index]?.url && !previews[field][index]?.url.startsWith('data:')) {
-        await axios.delete(`${API_ENDPOINTS.GET_TENANT_PROFILE}/${field}/${index}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-      }
-
-      // Update local state
-      setDocuments(prev => ({
-        ...prev,
-        [field]: prev[field].filter((_, i) => i !== index)
-      }));
-      setPreviews(prev => ({
-        ...prev,
-        [field]: prev[field].filter((_, i) => i !== index)
-      }));
-
-      toast.success('Document deleted successfully');
-    } catch (error) {
-      console.error('Error deleting document:', error);
-      toast.error('Failed to delete document');
-    }
+  const handleDeleteDocument = (field, index) => {
+    setDocuments(prev => ({
+      ...prev,
+      [field]: (Array.isArray(prev[field]) ? prev[field] : []).filter((_, i) => i !== index)
+    }));
   };
-
-  if (!user) {
-    navigate('/login');
-    return null;
-  }
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading profile...</p>
-        </div>
-      </div>
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <Typography>Loading...</Typography>
+      </Container>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <Toaster position="top-right" />
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-        <div className="px-4 py-5 sm:px-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">Profile Information</h3>
-          <p className="mt-1 max-w-2xl text-sm text-gray-500">Update your personal information.</p>
-        </div>
-        <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {user.role !== 'admin' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Profile Picture</label>
-                <div className="mt-2 flex items-center space-x-4">
-                  <div className="h-24 w-24 overflow-hidden rounded-full bg-gray-100">
-                    {(profilePreview || user.profilePicture) ? (
-                      <img 
-                        src={profilePreview || `${import.meta.env.VITE_API_URL}${user.profilePicture}`} 
-                        alt="Profile" 
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <svg className="h-full w-full text-gray-300" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
-                      </svg>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/gif"
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          setFormData(prev => ({ ...prev, profilePicture: file }));
-                          setProfilePreview(URL.createObjectURL(file));
-                          setUploadError('');
-                        }
-                      }}
-                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
-                    />
-                    {uploadError && (
-                      <p className="mt-1 text-sm text-red-600">{uploadError}</p>
-                    )}
-                    <p className="mt-1 text-xs text-gray-500">
-                      PNG, JPG, GIF up to 5MB
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
-              <input
-                type="text"
-                name="name"
-                id="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-              />
-            </div>
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-              <input
-                type="email"
-                name="email"
-                id="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-              />
-            </div>
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone</label>
-              <input
-                type="tel"
-                name="phone"
-                id="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-              />
-            </div>
-            <div>
-              <button
+    <Box sx={{ 
+      minHeight: '100vh',
+      px: 0,
+      background: 'linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%)'
+    }}>
+      <Paper 
+        elevation={3} 
+        sx={{ 
+          p: { xs: 2, sm: 4 },
+          borderRadius: 2,
+          background: 'rgba(255, 255, 255, 0.9)',
+          backdropFilter: 'blur(10px)',
+          m: 0,
+          width: '100%'
+        }}
+      >
+
+        {/* Basic Profile Form */}
+        <Paper sx={{ p: 3, mb: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Basic Information
+          </Typography>
+          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                />
+              </Grid>
+            </Grid>
+            <Box sx={{ mt: 2 }}>
+              <Button
                 type="submit"
+                variant="contained"
                 disabled={loading}
-                className="inline-flex justify-center rounded-md border border-transparent bg-primary-600 py-2 px-4 text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
               >
                 {loading ? 'Updating...' : 'Update Profile'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+              </Button>
+            </Box>
+          </Box>
+        </Paper>
 
-      {user?.role === 'tenant' && (
-        <div className="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
-          <div className="px-4 py-5 sm:px-6">
-            <h3 className="text-lg leading-6 font-medium text-gray-900">Tenant Application</h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">
+        {/* Tenant Profile Section */}
+        {user?.role === 'tenant' && (
+          <Paper sx={{ p: 3, mb: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Tenant Application
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
               We will use this information for each application to help you find the perfect property.
-            </p>
-          </div>
-          <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
-            <form onSubmit={handleTenantSubmit} className="space-y-8">
+            </Typography>
+
+            <Box component="form" onSubmit={handleTenantSubmit}>
+              {/* Required fields note */}
+              <Alert severity="info" sx={{ mb: 3 }}>
+                Fields marked with an asterisk (*) are required. Please complete all required fields to submit your tenant profile.
+              </Alert>
+
               {/* Section 1: Employment & Income */}
-              <div className="bg-white shadow sm:rounded-lg">
-                <div className="px-4 py-5 sm:p-6">
-                  <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Employment & Income</h3>
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Are you currently employed?</label>
-                      <div className="mt-2 space-x-4">
-                        <label className="inline-flex items-center">
-                          <input
-                            type="radio"
-                            name="isCurrentlyEmployed"
-                            value="true"
-                            checked={answers.isCurrentlyEmployed === 'true'}
-                            onChange={handleAnswerChange}
-                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">Yes</span>
-                        </label>
-                        <label className="inline-flex items-center">
-                          <input
-                            type="radio"
-                            name="isCurrentlyEmployed"
-                            value="false"
-                            checked={answers.isCurrentlyEmployed === 'false'}
-                            onChange={handleAnswerChange}
-                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">No</span>
-                        </label>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label htmlFor="employmentType" className="block text-sm font-medium text-gray-700">What is your employment type?</label>
-                      <select
-                        id="employmentType"
-                        name="employmentType"
-                        value={answers.employmentType}
-                        onChange={handleAnswerChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                      >
-                        <option value="">Select employment type</option>
-                        <option value="full-time">Full-time</option>
-                        <option value="part-time">Part-time</option>
-                        <option value="self-employed">Self-employed</option>
-                        <option value="contractor">Contractor</option>
-                        <option value="student">Student</option>
-                        <option value="unemployed">Unemployed</option>
-                        <option value="retired">Retired</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label htmlFor="monthlyNetIncome" className="block text-sm font-medium text-gray-700">What is your current monthly net income (after taxes)?</label>
-                      <div className="mt-1 relative rounded-md shadow-sm">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <span className="text-gray-500 sm:text-sm">$</span>
-                        </div>
+              <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Employment & Income
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Are you currently employed? *
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <label>
                         <input
-                          type="number"
-                          name="monthlyNetIncome"
-                          id="monthlyNetIncome"
-                          value={answers.monthlyNetIncome}
+                          type="radio"
+                          name="isCurrentlyEmployed"
+                          value="true"
+                          checked={answers.isCurrentlyEmployed === 'true'}
                           onChange={handleAnswerChange}
-                          className="pl-7 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                          placeholder="0.00"
-                          min="0"
-                          step="0.01"
+                          required
                         />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Do you have any additional sources of income?</label>
-                      <div className="mt-2 space-x-4">
-                        <label className="inline-flex items-center">
-                          <input
-                            type="radio"
-                            name="hasAdditionalIncome"
-                            value="true"
-                            checked={answers.hasAdditionalIncome === 'true'}
-                            onChange={handleAnswerChange}
-                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">Yes</span>
-                        </label>
-                        <label className="inline-flex items-center">
-                          <input
-                            type="radio"
-                            name="hasAdditionalIncome"
-                            value="false"
-                            checked={answers.hasAdditionalIncome === 'false'}
-                            onChange={handleAnswerChange}
-                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">No</span>
-                        </label>
-                      </div>
-                    </div>
-
-                    {answers.hasAdditionalIncome === 'true' && (
-                      <div>
-                        <label htmlFor="additionalIncomeDescription" className="block text-sm font-medium text-gray-700">Please describe your additional income sources:</label>
-                        <textarea
-                          id="additionalIncomeDescription"
-                          name="additionalIncomeDescription"
-                          rows={3}
-                          value={answers.additionalIncomeDescription}
+                        Yes
+                      </label>
+                      <label>
+                        <input
+                          type="radio"
+                          name="isCurrentlyEmployed"
+                          value="false"
+                          checked={answers.isCurrentlyEmployed === 'false'}
                           onChange={handleAnswerChange}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                          placeholder="Describe your additional income sources..."
+                          required
                         />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+                        No
+                      </label>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      select
+                      label="Employment Type *"
+                      name="employmentType"
+                      value={answers.employmentType}
+                      onChange={handleAnswerChange}
+                      required
+                    >
+                      <MenuItem value="">Select employment type</MenuItem>
+                      <MenuItem value="full-time">Full-time</MenuItem>
+                      <MenuItem value="part-time">Part-time</MenuItem>
+                      <MenuItem value="self-employed">Self-employed</MenuItem>
+                      <MenuItem value="contractor">Contractor</MenuItem>
+                      <MenuItem value="student">Student</MenuItem>
+                      <MenuItem value="unemployed">Unemployed</MenuItem>
+                      <MenuItem value="retired">Retired</MenuItem>
+                    </TextField>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Monthly Net Income (after taxes) *"
+                      name="monthlyNetIncome"
+                      type="number"
+                      value={answers.monthlyNetIncome}
+                      onChange={handleAnswerChange}
+                      inputProps={{ min: 0, step: 0.01 }}
+                      required
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Do you have any additional sources of income? *
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <label>
+                        <input
+                          type="radio"
+                          name="hasAdditionalIncome"
+                          value="true"
+                          checked={answers.hasAdditionalIncome === 'true'}
+                          onChange={handleAnswerChange}
+                          required
+                        />
+                        Yes
+                      </label>
+                      <label>
+                        <input
+                          type="radio"
+                          name="hasAdditionalIncome"
+                          value="false"
+                          checked={answers.hasAdditionalIncome === 'false'}
+                          onChange={handleAnswerChange}
+                          required
+                        />
+                        No
+                      </label>
+                    </Box>
+                  </Grid>
+
+                  {answers.hasAdditionalIncome === 'true' && (
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="Additional Income Description"
+                        name="additionalIncomeDescription"
+                        multiline
+                        rows={3}
+                        value={answers.additionalIncomeDescription}
+                        onChange={handleAnswerChange}
+                      />
+                    </Grid>
+                  )}
+                </Grid>
+              </Paper>
 
               {/* Section 2: Expenses & Debts */}
-              <div className="bg-white shadow sm:rounded-lg">
-                <div className="px-4 py-5 sm:p-6">
-                  <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Expenses & Debts</h3>
-                  <div className="space-y-6">
-                    <div>
-                      <label htmlFor="monthlyDebtRepayment" className="block text-sm font-medium text-gray-700">What is your approximate monthly debt repayment amount (credit cards, loans, etc.)?</label>
-                      <div className="mt-1 relative rounded-md shadow-sm">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <span className="text-gray-500 sm:text-sm">$</span>
-                        </div>
+              <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Expenses & Debts
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Monthly Debt Repayment Amount *"
+                      name="monthlyDebtRepayment"
+                      type="number"
+                      value={answers.monthlyDebtRepayment}
+                      onChange={handleAnswerChange}
+                      inputProps={{ min: 0, step: 0.01 }}
+                      required
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Do you pay any regular child or spousal support? *
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <label>
                         <input
-                          type="number"
-                          name="monthlyDebtRepayment"
-                          id="monthlyDebtRepayment"
-                          value={answers.monthlyDebtRepayment}
+                          type="radio"
+                          name="paysChildSupport"
+                          value="true"
+                          checked={answers.paysChildSupport === 'true'}
                           onChange={handleAnswerChange}
-                          className="pl-7 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                          placeholder="0.00"
-                          min="0"
-                          step="0.01"
+                          required
                         />
-                      </div>
-                    </div>
+                        Yes
+                      </label>
+                      <label>
+                        <input
+                          type="radio"
+                          name="paysChildSupport"
+                          value="false"
+                          checked={answers.paysChildSupport === 'false'}
+                          onChange={handleAnswerChange}
+                          required
+                        />
+                        No
+                      </label>
+                    </Box>
+                  </Grid>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Do you pay any regular child or spousal support?</label>
-                      <div className="mt-2 space-x-4">
-                        <label className="inline-flex items-center">
-                          <input
-                            type="radio"
-                            name="paysChildSupport"
-                            value="true"
-                            checked={answers.paysChildSupport === 'true'}
-                            onChange={handleAnswerChange}
-                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">Yes</span>
-                        </label>
-                        <label className="inline-flex items-center">
-                          <input
-                            type="radio"
-                            name="paysChildSupport"
-                            value="false"
-                            checked={answers.paysChildSupport === 'false'}
-                            onChange={handleAnswerChange}
-                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">No</span>
-                        </label>
-                      </div>
-                    </div>
-
-                    {answers.paysChildSupport === 'true' && (
-                      <div>
-                        <label htmlFor="childSupportAmount" className="block text-sm font-medium text-gray-700">How much do you pay per month?</label>
-                        <div className="mt-1 relative rounded-md shadow-sm">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <span className="text-gray-500 sm:text-sm">$</span>
-                          </div>
-                          <input
-                            type="number"
-                            name="childSupportAmount"
-                            id="childSupportAmount"
-                            value={answers.childSupportAmount}
-                            onChange={handleAnswerChange}
-                            className="pl-7 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                            placeholder="0.00"
-                            min="0"
-                            step="0.01"
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+                  {answers.paysChildSupport === 'true' && (
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="Child Support Amount per Month"
+                        name="childSupportAmount"
+                        type="number"
+                        value={answers.childSupportAmount}
+                        onChange={handleAnswerChange}
+                        inputProps={{ min: 0, step: 0.01 }}
+                      />
+                    </Grid>
+                  )}
+                </Grid>
+              </Paper>
 
               {/* Section 3: Rental History */}
-              <div className="bg-white shadow sm:rounded-lg">
-                <div className="px-4 py-5 sm:p-6">
-                  <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Rental History</h3>
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Have you ever been evicted?</label>
-                      <div className="mt-2 space-x-4">
-                        <label className="inline-flex items-center">
-                          <input
-                            type="radio"
-                            name="hasBeenEvicted"
-                            value="true"
-                            checked={answers.hasBeenEvicted === 'true'}
-                            onChange={handleAnswerChange}
-                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">Yes</span>
-                        </label>
-                        <label className="inline-flex items-center">
-                          <input
-                            type="radio"
-                            name="hasBeenEvicted"
-                            value="false"
-                            checked={answers.hasBeenEvicted === 'false'}
-                            onChange={handleAnswerChange}
-                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">No</span>
-                        </label>
-                      </div>
-                    </div>
+              <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Rental History
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Have you ever been evicted? *
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <label>
+                        <input
+                          type="radio"
+                          name="hasBeenEvicted"
+                          value="true"
+                          checked={answers.hasBeenEvicted === 'true'}
+                          onChange={handleAnswerChange}
+                          required
+                        />
+                        Yes
+                      </label>
+                      <label>
+                        <input
+                          type="radio"
+                          name="hasBeenEvicted"
+                          value="false"
+                          checked={answers.hasBeenEvicted === 'false'}
+                          onChange={handleAnswerChange}
+                          required
+                        />
+                        No
+                      </label>
+                    </Box>
+                  </Grid>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Do you currently pay rent?</label>
-                      <div className="mt-2 space-x-4">
-                        <label className="inline-flex items-center">
-                          <input
-                            type="radio"
-                            name="currentlyPaysRent"
-                            value="true"
-                            checked={answers.currentlyPaysRent === 'true'}
-                            onChange={handleAnswerChange}
-                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">Yes</span>
-                        </label>
-                        <label className="inline-flex items-center">
-                          <input
-                            type="radio"
-                            name="currentlyPaysRent"
-                            value="false"
-                            checked={answers.currentlyPaysRent === 'false'}
-                            onChange={handleAnswerChange}
-                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">No</span>
-                        </label>
-                      </div>
-                    </div>
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Do you currently pay rent? *
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <label>
+                        <input
+                          type="radio"
+                          name="currentlyPaysRent"
+                          value="true"
+                          checked={answers.currentlyPaysRent === 'true'}
+                          onChange={handleAnswerChange}
+                          required
+                        />
+                        Yes
+                      </label>
+                      <label>
+                        <input
+                          type="radio"
+                          name="currentlyPaysRent"
+                          value="false"
+                          checked={answers.currentlyPaysRent === 'false'}
+                          onChange={handleAnswerChange}
+                          required
+                        />
+                        No
+                      </label>
+                    </Box>
+                  </Grid>
 
-                    {answers.currentlyPaysRent === 'true' && (
-                      <div>
-                        <label htmlFor="currentRentAmount" className="block text-sm font-medium text-gray-700">How much is your current rent?</label>
-                        <div className="mt-1 relative rounded-md shadow-sm">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <span className="text-gray-500 sm:text-sm">$</span>
-                          </div>
-                          <input
-                            type="number"
-                            name="currentRentAmount"
-                            id="currentRentAmount"
-                            value={answers.currentRentAmount}
-                            onChange={handleAnswerChange}
-                            className="pl-7 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                            placeholder="0.00"
-                            min="0"
-                            step="0.01"
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+                  {answers.currentlyPaysRent === 'true' && (
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="Current Rent Amount"
+                        name="currentRentAmount"
+                        type="number"
+                        value={answers.currentRentAmount}
+                        onChange={handleAnswerChange}
+                        inputProps={{ min: 0, step: 0.01 }}
+                      />
+                    </Grid>
+                  )}
+                </Grid>
+              </Paper>
 
               {/* Section 4: Financial Preparedness */}
-              <div className="bg-white shadow sm:rounded-lg">
-                <div className="px-4 py-5 sm:p-6">
-                  <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Financial Preparedness</h3>
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Do you have savings equivalent to at least 2 months of rent?</label>
-                      <div className="mt-2 space-x-4">
-                        <label className="inline-flex items-center">
-                          <input
-                            type="radio"
-                            name="hasTwoMonthsRentSavings"
-                            value="true"
-                            checked={answers.hasTwoMonthsRentSavings === 'true'}
-                            onChange={handleAnswerChange}
-                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">Yes</span>
-                        </label>
-                        <label className="inline-flex items-center">
-                          <input
-                            type="radio"
-                            name="hasTwoMonthsRentSavings"
-                            value="false"
-                            checked={answers.hasTwoMonthsRentSavings === 'false'}
-                            onChange={handleAnswerChange}
-                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">No</span>
-                        </label>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Would you be comfortable sharing proof of income or financial statements to support your application?</label>
-                      <div className="mt-2 space-x-4">
-                        <label className="inline-flex items-center">
-                          <input
-                            type="radio"
-                            name="canShareFinancialDocuments"
-                            value="true"
-                            checked={answers.canShareFinancialDocuments === 'true'}
-                            onChange={handleAnswerChange}
-                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">Yes</span>
-                        </label>
-                        <label className="inline-flex items-center">
-                          <input
-                            type="radio"
-                            name="canShareFinancialDocuments"
-                            value="false"
-                            checked={answers.canShareFinancialDocuments === 'false'}
-                            onChange={handleAnswerChange}
-                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">No</span>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Existing fields */}
-              <div className="bg-white shadow sm:rounded-lg">
-                <div className="px-4 py-5 sm:p-6">
-                  <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Additional Information</h3>
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Can you pay more than one month's rent at a time?</label>
-                      <div className="mt-2 space-x-4">
-                        <label className="inline-flex items-center">
-                          <input
-                            type="radio"
-                            name="canPayMoreThanOneMonth"
-                            value="true"
-                            checked={answers.canPayMoreThanOneMonth === 'true'}
-                            onChange={handleAnswerChange}
-                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">Yes</span>
-                        </label>
-                        <label className="inline-flex items-center">
-                          <input
-                            type="radio"
-                            name="canPayMoreThanOneMonth"
-                            value="false"
-                            checked={answers.canPayMoreThanOneMonth === 'false'}
-                            onChange={handleAnswerChange}
-                            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                          />
-                          <span className="ml-2 text-sm text-gray-700">No</span>
-                        </label>
-                      </div>
-                    </div>
-
-                    {answers.canPayMoreThanOneMonth === 'true' && (
-                      <div>
-                        <label htmlFor="monthsAheadCanPay" className="block text-sm font-medium text-gray-700">How many months ahead can you pay?</label>
+              <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Financial Preparedness
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Do you have savings equivalent to at least 2 months of rent? *
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <label>
                         <input
-                          type="number"
-                          name="monthsAheadCanPay"
-                          id="monthsAheadCanPay"
-                          value={answers.monthsAheadCanPay}
+                          type="radio"
+                          name="hasTwoMonthsRentSavings"
+                          value="true"
+                          checked={answers.hasTwoMonthsRentSavings === 'true'}
                           onChange={handleAnswerChange}
-                          min="1"
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                          required
                         />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+                        Yes
+                      </label>
+                      <label>
+                        <input
+                          type="radio"
+                          name="hasTwoMonthsRentSavings"
+                          value="false"
+                          checked={answers.hasTwoMonthsRentSavings === 'false'}
+                          onChange={handleAnswerChange}
+                          required
+                        />
+                        No
+                      </label>
+                    </Box>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Would you be comfortable sharing proof of income or financial statements? *
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <label>
+                        <input
+                          type="radio"
+                          name="canShareFinancialDocuments"
+                          value="true"
+                          checked={answers.canShareFinancialDocuments === 'true'}
+                          onChange={handleAnswerChange}
+                          required
+                        />
+                        Yes
+                      </label>
+                      <label>
+                        <input
+                          type="radio"
+                          name="canShareFinancialDocuments"
+                          value="false"
+                          checked={answers.canShareFinancialDocuments === 'false'}
+                          onChange={handleAnswerChange}
+                          required
+                        />
+                        No
+                      </label>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Paper>
+
+              {/* Section 5: Additional Information */}
+              <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Additional Information
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Can you pay more than one month's rent at a time? *
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <label>
+                        <input
+                          type="radio"
+                          name="canPayMoreThanOneMonth"
+                          value="true"
+                          checked={answers.canPayMoreThanOneMonth === 'true'}
+                          onChange={handleAnswerChange}
+                          required
+                        />
+                        Yes
+                      </label>
+                      <label>
+                        <input
+                          type="radio"
+                          name="canPayMoreThanOneMonth"
+                          value="false"
+                          checked={answers.canPayMoreThanOneMonth === 'false'}
+                          onChange={handleAnswerChange}
+                          required
+                        />
+                        No
+                      </label>
+                    </Box>
+                  </Grid>
+
+                  {answers.canPayMoreThanOneMonth === 'true' && (
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="How many months ahead can you pay?"
+                        name="monthsAheadCanPay"
+                        type="number"
+                        value={answers.monthsAheadCanPay}
+                        onChange={handleAnswerChange}
+                        inputProps={{ min: 1 }}
+                      />
+                    </Grid>
+                  )}
+                </Grid>
+              </Paper>
 
               {/* Document Upload Sections */}
-              {['proofOfIdentity', 'proofOfIncome', 'creditHistory', 'rentalHistory', 'additionalDocuments'].map((field) => (
-                <DocumentUpload
-                  key={field}
-                  field={field}
-                  documents={documents}
-                  previews={previews}
-                  onDrop={onDrop(field)}
-                  onDelete={handleDeleteDocument}
-                />
-              ))}
+              <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Required Documents
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                  Please upload the following documents to support your tenant application.
+                </Typography>
 
-              <div>
-                <button
+                <Grid container spacing={3}>
+                  <Grid item xs={12}>
+                    <DocumentUpload
+                      field="proofOfIdentity"
+                      documents={documents}
+                      onDrop={handleDocumentDrop('proofOfIdentity')}
+                      onDelete={handleDeleteDocument}
+                      maxFiles={5}
+                      required={true}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <DocumentUpload
+                      field="proofOfIncome"
+                      documents={documents}
+                      onDrop={handleDocumentDrop('proofOfIncome')}
+                      onDelete={handleDeleteDocument}
+                      maxFiles={5}
+                      required={true}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <DocumentUpload
+                      field="creditHistory"
+                      documents={documents}
+                      onDrop={handleDocumentDrop('creditHistory')}
+                      onDelete={handleDeleteDocument}
+                      maxFiles={5}
+                      required={false}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <DocumentUpload
+                      field="rentalHistory"
+                      documents={documents}
+                      onDrop={handleDocumentDrop('rentalHistory')}
+                      onDelete={handleDeleteDocument}
+                      maxFiles={5}
+                      required={false}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <DocumentUpload
+                      field="additionalDocuments"
+                      documents={documents}
+                      onDrop={handleDocumentDrop('additionalDocuments')}
+                      onDelete={handleDeleteDocument}
+                      maxFiles={5}
+                      required={false}
+                    />
+                  </Grid>
+                </Grid>
+              </Paper>
+
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <Button
                   type="submit"
+                  variant="contained"
                   disabled={loading}
-                  className="inline-flex justify-center rounded-md border border-transparent bg-primary-600 py-2 px-4 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                  sx={{ minWidth: 200 }}
                 >
                   {loading ? 'Updating...' : 'Update Tenant Profile'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                </Button>
+              </Box>
+            </Box>
+          </Paper>
+        )}
 
-      {error && (
-        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-sm text-red-600">{error}</p>
-        </div>
-      )}
+        {error && (
+          <Alert severity="error" sx={{ mt: 2 }} onClose={() => setError('')}>
+            {error}
+          </Alert>
+        )}
 
-      {success && (
-        <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
-          <p className="text-sm text-green-600">{success}</p>
-        </div>
-      )}
-    </div>
+        {success && (
+          <Alert severity="success" sx={{ mt: 2 }} onClose={() => setSuccess('')}>
+            {success}
+          </Alert>
+        )}
+      </Paper>
+
+      <Toaster />
+    </Box>
   );
 } 

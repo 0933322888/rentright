@@ -22,7 +22,7 @@ Return the answer strictly in this format, dont add any other text:
   const response = await axios.post(
     "https://api.openai.com/v1/chat/completions",
     {
-      model: "gpt-4o",
+      model: "gpt-4.1-mini",
       messages: [
         { role: "system", content: "You help price rental listings accurately." },
         { role: "user", content: prompt },

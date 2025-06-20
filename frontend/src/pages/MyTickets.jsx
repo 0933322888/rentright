@@ -17,7 +17,12 @@ import {
   DialogActions,
   IconButton,
   Tooltip,
-  DialogContentText
+  DialogContentText,
+  Card,
+  CardContent,
+  CardMedia,
+  Collapse,
+  Grid
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CommentIcon from '@mui/icons-material/Comment';
@@ -25,6 +30,10 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { LoadingSpinner, ErrorDisplay, EmptyState } from '../utils/uiUtils';
+import { getImageUrl, handleImageError } from '../utils/imageUtils';
+import { tabStyles, verticalTabStyles } from '../utils/uiUtils';
+import ImageModal from '../components/ImageModal';
 
 export default function MyTickets() {
   const navigate = useNavigate();
@@ -36,6 +45,9 @@ export default function MyTickets() {
   const [expandedComments, setExpandedComments] = useState({});
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [ticketToDelete, setTicketToDelete] = useState(null);
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   useEffect(() => {
     fetchTickets();
@@ -156,6 +168,22 @@ export default function MyTickets() {
     }
   };
 
+  const handleImageClick = (images, index) => {
+    setSelectedImages(images);
+    setSelectedImageIndex(index);
+    setImageModalOpen(true);
+  };
+
+  const handleCloseImageModal = () => {
+    setImageModalOpen(false);
+    setSelectedImages([]);
+    setSelectedImageIndex(0);
+  };
+
+  const handleImageChange = (newIndex) => {
+    setSelectedImageIndex(newIndex);
+  };
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
@@ -214,6 +242,29 @@ export default function MyTickets() {
                   <Typography variant="body1" sx={{ mt: 1 }}>
                     {ticket.description}
                   </Typography>
+                  {ticket.images && ticket.images.length > 0 && (
+                    <Box mt={2}>
+                      <Typography variant="subtitle2" gutterBottom>Attached Images:</Typography>
+                      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                        {ticket.images.map((img, index) => (
+                          <img
+                            key={index}
+                            src={`${import.meta.env.VITE_API_URL}${img}`}
+                            alt={`Ticket attachment ${index + 1}`}
+                            style={{
+                              width: '100px',
+                              height: '100px',
+                              objectFit: 'cover',
+                              borderRadius: '4px',
+                              border: '1px solid #ddd',
+                              cursor: 'pointer'
+                            }}
+                            onClick={() => handleImageClick(ticket.images, index)}
+                          />
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
                 </Box>
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
                   <Chip
@@ -383,6 +434,15 @@ export default function MyTickets() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Image Modal */}
+      <ImageModal
+        open={imageModalOpen}
+        onClose={handleCloseImageModal}
+        images={selectedImages}
+        currentIndex={selectedImageIndex}
+        onImageChange={handleImageChange}
+      />
     </Box>
   );
 } 

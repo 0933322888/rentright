@@ -15,6 +15,10 @@ const ticketSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  images: {
+    type: [String], // Array of URLs to the uploaded images
+    required: false
+  },
   status: {
     type: String,
     enum: ['new', 'review', 'approved', 'declined', 'closed', 'resolved'],

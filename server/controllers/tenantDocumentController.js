@@ -77,25 +77,21 @@ export const updateTenantProfile = async (req, res) => {
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
           
           // Get the file extension with dot
-          const fileExt = path.extname(file.name);
+          const fileExt = path.extname(file.originalname);
           // Get the filename without extension
-          const baseName = path.basename(file.name, fileExt);
+          const baseName = path.basename(file.originalname, fileExt);
           // Create sanitized filename with proper extension
           const sanitizedName = baseName.replace(/[^a-zA-Z0-9]/g, '_');
           const filename = `${uniqueSuffix}-${sanitizedName}${fileExt}`;
           
           const filepath = path.join(uploadsDir, filename);
 
-          console.log('Saving file to:', filepath);
-
-          // Move file to uploads directory
-          await file.mv(filepath);
+          console.log('File already saved by multer at:', file.path);
 
           // Generate thumbnail for image files
           let thumbnailUrl = null;
           if (file.mimetype.startsWith('image/')) {
             thumbnailUrl = await generateThumbnail(filepath, filename);
-            console.log('Generated thumbnail URL:', thumbnailUrl);
           }
 
           // Update document record
@@ -109,7 +105,7 @@ export const updateTenantProfile = async (req, res) => {
             uploadedAt: new Date(),
             thumbnailUrl: thumbnailUrl,
             mimeType: file.mimetype,
-            originalName: file.name
+            originalName: file.originalname
           });
         }
       }
@@ -143,9 +139,38 @@ export const updateTenantProfile = async (req, res) => {
       monthsAheadCanPay: req.body.monthsAheadCanPay
     };
 
+    // Validate required fields before updating
+    const requiredFields = [
+      'isCurrentlyEmployed',
+      'employmentType', 
+      'monthlyNetIncome',
+      'hasAdditionalIncome',
+      'monthlyDebtRepayment',
+      'paysChildSupport',
+      'hasBeenEvicted',
+      'currentlyPaysRent',
+      'hasTwoMonthsRentSavings',
+      'canShareFinancialDocuments',
+      'canPayMoreThanOneMonth'
+    ];
+
+    const missingFields = [];
+    requiredFields.forEach(field => {
+      if (!fieldsToUpdate[field] || fieldsToUpdate[field] === '') {
+        missingFields.push(field);
+      }
+    });
+
+    if (missingFields.length > 0) {
+      return res.status(400).json({ 
+        message: `Missing required fields: ${missingFields.join(', ')}`,
+        missingFields 
+      });
+    }
+
     // Update only the fields that are provided in the request
     Object.entries(fieldsToUpdate).forEach(([field, value]) => {
-      if (value !== undefined) {
+      if (value !== undefined && value !== '') {
         // Convert numeric fields
         if (['monthlyNetIncome', 'monthlyDebtRepayment', 'childSupportAmount', 'currentRentAmount', 'monthsAheadCanPay'].includes(field)) {
           tenantDocument[field] = Number(value);
