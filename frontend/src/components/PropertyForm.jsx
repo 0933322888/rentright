@@ -60,7 +60,8 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
       street: initialData.location?.street || '',
       city: initialData.location?.city || '',
       state: initialData.location?.state || '',
-      zipCode: initialData.location?.zipCode || ''
+      zipCode: initialData.location?.zipCode || '',
+      unit: initialData.location?.unit || ''
     },
     features: {
       bedrooms: initialData.features?.bedrooms || '',
@@ -207,9 +208,11 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
-          type: formData.type,
+          propertyInfo: {
+            type: formData.type,
+            features: formData.features
+          },
           location: formData.location,
-          features: formData.features
         }),
       });
 
@@ -509,7 +512,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
               Basic Information
             </Typography>
           </Box>
-          {/* Row: Property Type, Price, Available From */}
+          {/* Row: Property Type, Available From */}
           <Grid container spacing={3} alignItems="center" wrap="nowrap">
             <Grid sx={{ minWidth: 250 }}>
               <TextField
@@ -531,52 +534,6 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
               </TextField>
             </Grid>
             <Grid sx={{ minWidth: 250 }}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <TextField
-                    required
-                    fullWidth
-                    type="number"
-                    label="Price per month"
-                    name="price"
-                    value={formData.price}
-                    onChange={handleChange}
-                    variant="outlined"
-                    size="medium"
-                    InputProps={{
-                      startAdornment: <span>$</span>
-                    }}
-                  />
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    onClick={handleGeneratePrice}
-                    disabled={generatingPrice || loading}
-                    startIcon={generatingPrice ? <CircularProgress size={20} /> : <AutoAwesomeIcon />}
-                    sx={{ 
-                      minWidth: 180, 
-                      height: 56,
-                      background: 'linear-gradient(135deg, #ffffff 0%, #b1f0ee 100%)',
-                      border: '1px solid #b1f0ee',
-                      color: '#2a7a78',
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, #f8f8f8 0%, #9ee8e6 100%)',
-                        border: '1px solid #9ee8e6',
-                        color: '#1f5a58'
-                      },
-                      '&:disabled': {
-                        background: 'linear-gradient(135deg, #f5f5f5 0%, #D3D3D3 100%)',
-                        border: '1px solid #D3D3D3',
-                        color: '#A0A0A0'
-                      }
-                    }}
-                  >
-                    {generatingPrice ? 'Generating...' : 'Get AI Price'}
-                  </Button>
-                </Box>
-              </Box>
-            </Grid>
-            <Grid sx={{ minWidth: 250 }}>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
                   label="Available From"
@@ -596,68 +553,6 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
             </Grid>
           </Grid>
         </Paper>
-
-        {/* Price Suggestion Info Section */}
-        {(priceError || priceSuggestion) && (
-          <Paper 
-            elevation={0} 
-            sx={{ 
-              p: 2, 
-              bgcolor: 'background.default',
-              borderRadius: 2,
-              border: '1px solid',
-              borderColor: 'divider'
-            }}
-          >
-            {priceError && (
-              <Alert severity="error" sx={{ mb: priceSuggestion ? 2 : 0 }}>
-                {priceError}
-              </Alert>
-            )}
-            {priceSuggestion && (
-              <Box>
-                <Typography variant="subtitle2" color="primary" sx={{ mb: 1, fontWeight: 600 }}>
-                  AI Price Suggestion
-                </Typography>
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    Suggested Price: <strong>${priceSuggestion.suggestedPrice.toLocaleString()}</strong>
-                  </Typography>
-                  <Typography variant="body2" sx={{ mt: 0.5 }}>
-                    Price Range: ${priceSuggestion.priceRange.min.toLocaleString()} - ${priceSuggestion.priceRange.max.toLocaleString()}
-                  </Typography>
-                </Alert>
-                <Box sx={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-                  gap: 2,
-                  p: 2,
-                  bgcolor: 'background.paper',
-                  borderRadius: 1,
-                  border: '1px solid',
-                  borderColor: 'divider'
-                }}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">Base Price</Typography>
-                    <Typography variant="body2" fontWeight={500}>${priceSuggestion.breakdown.basePrice.toLocaleString()}</Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">Location Multiplier</Typography>
-                    <Typography variant="body2" fontWeight={500}>{priceSuggestion.breakdown.locationMultiplier}x</Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">Feature Adjustment</Typography>
-                    <Typography variant="body2" fontWeight={500}>+{priceSuggestion.breakdown.featureAdjustment}%</Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">Location</Typography>
-                    <Typography variant="body2" fontWeight={500}>{priceSuggestion.breakdown.location}</Typography>
-                  </Box>
-                </Box>
-              </Box>
-            )}
-          </Paper>
-        )}
 
         {/* Location Section */}
         <Paper 
@@ -687,6 +582,18 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
                 onChange={handleChange}
                 variant="outlined"
                 size="medium"
+              />
+            </Grid>
+            <Grid xs={12} sm={4}>
+              <TextField
+                fullWidth
+                label="Unit/Apartment"
+                name="location.unit"
+                value={formData.location.unit || ''}
+                onChange={handleChange}
+                variant="outlined"
+                size="medium"
+                placeholder="Apt 2B, Unit 101, etc."
               />
             </Grid>
             <Grid xs={12} sm={4}>
@@ -830,6 +737,113 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
             </Grid>
           </Grid>
         </Paper>
+
+        {/* Pricing Section - New Section */}
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            p: 3, 
+            bgcolor: 'background.default',
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: 'divider'
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+            <AutoAwesomeIcon sx={{ color: theme.palette.primary.main, mr: 1 }} />
+            <Typography variant="h6" color="primary">
+              Pricing
+            </Typography>
+          </Box>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Set your rental price. You can use our AI to get a price suggestion based on your property details and local market data.
+          </Typography>
+          <Grid container spacing={3} alignItems="center">
+            <Grid xs={12} sm={6}>
+              <TextField
+                required
+                fullWidth
+                type="number"
+                label="Price per month"
+                name="price"
+                value={formData.price}
+                onChange={handleChange}
+                variant="outlined"
+                size="medium"
+                InputProps={{
+                  startAdornment: <span>$</span>
+                }}
+              />
+            </Grid>
+            <Grid xs={12} sm={6}>
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={handleGeneratePrice}
+                disabled={generatingPrice || loading}
+                startIcon={generatingPrice ? <CircularProgress size={20} /> : <AutoAwesomeIcon />}
+                sx={{ 
+                  width: '100%',
+                  height: 56,
+                  background: 'linear-gradient(135deg, #ffffff 0%, #b1f0ee 100%)',
+                  border: '1px solid #b1f0ee',
+                  color: '#2a7a78',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #f8f8f8 0%, #9ee8e6 100%)',
+                    border: '1px solid #9ee8e6',
+                    color: '#1f5a58'
+                  },
+                  '&:disabled': {
+                    background: 'linear-gradient(135deg, #f5f5f5 0%, #D3D3D3 100%)',
+                    border: '1px solid #D3D3D3',
+                    color: '#A0A0A0'
+                  }
+                }}
+              >
+                {generatingPrice ? 'Generating...' : 'Get AI Price Suggestion'}
+              </Button>
+            </Grid>
+          </Grid>
+          <br></br>
+        {/* Price Suggestion Info Section */}
+        {(priceError || priceSuggestion) && (
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              p: 2, 
+              bgcolor: 'background.default',
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider'
+            }}
+          >
+            {priceError && (
+              <Alert severity="error" sx={{ mb: priceSuggestion ? 2 : 0 }}>
+                {priceError}
+              </Alert>
+            )}
+            {priceSuggestion && priceSuggestion.suggestedPrice && (
+              <Box>
+                <Typography variant="subtitle2" color="primary" sx={{ mb: 1, fontWeight: 600 }}>
+                  AI Price Suggestion
+                </Typography>
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    Suggested Price: <strong>${priceSuggestion.suggestedPrice.toLocaleString()}</strong>
+                  </Typography>
+                  <Typography variant="body2" sx={{ mt: 0.5 }}>
+                    Based on the provided property information, the suggested price range is ${priceSuggestion.priceRange?.min.toLocaleString()} - ${priceSuggestion.priceRange?.max.toLocaleString()}
+                  </Typography>
+                  <Typography variant="body2" sx={{ mt: 0.5 }}>
+                    Comment: {priceSuggestion.comment} {priceSuggestion.justification}
+                  </Typography>
+                </Alert>
+              </Box>
+            )}
+          </Paper>
+        )}
+        </Paper>
+
 
         {/* Title and Description Section - New Section at the End */}
         <Paper 

@@ -750,7 +750,7 @@ const generatePropertyPrice = async (req, res) => {
     const propertyData = req.body;
 
     // Validate required fields
-    const requiredFields = ['type', 'location', 'features'];
+    const requiredFields = ['propertyInfo', 'location'];
     const missingFields = requiredFields.filter(field => !propertyData[field]);
 
     if (missingFields.length > 0) {
@@ -767,14 +767,14 @@ const generatePropertyPrice = async (req, res) => {
     }
 
     // Validate features data
-    if (!propertyData.features.bedrooms || !propertyData.features.bathrooms) {
+    if (!propertyData.propertyInfo.features.bedrooms || !propertyData.propertyInfo.features.bathrooms) {
       return res.status(400).json({
         message: 'Bedrooms and bathrooms are required for price calculation'
       });
     }
 
     // Generate price suggestion using AI service
-    const priceSuggestion = generatePriceSuggestion(propertyData);
+    const priceSuggestion = await generatePriceSuggestion(propertyData.propertyInfo, propertyData.location);
 
     res.json(priceSuggestion);
   } catch (error) {
