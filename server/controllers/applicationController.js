@@ -189,6 +189,21 @@ export const updateApplicationStatus = async (req, res) => {
       property.tenant = application.tenant;
       property.available = false;
       await property.save();
+
+      // Cancel all other applications for this tenant with status 'viewing' or 'pending'
+      await Application.updateMany(
+        {
+          tenant: application.tenant,
+          _id: { $ne: application._id }, // Exclude the current application
+          status: { $in: ['viewing', 'pending'] }
+        },
+        {
+          status: 'cancelled',
+          updatedAt: Date.now()
+        }
+      );
+
+      console.log(`Cancelled other applications for tenant ${application.tenant} after approval of application ${application._id}`);
     }
 
     res.json(application);

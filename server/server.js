@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import fileUpload from 'express-fileupload';
 import connectDB from './config/db.js';
 import userRoutes from './routes/userRoutes.js';
 import propertyRoutes from './routes/propertyRoutes.js';
@@ -28,6 +29,12 @@ connectDB();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(fileUpload({
+  createParentPath: true,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  },
+}));
 
 // API Routes - these must come BEFORE static file serving
 app.use('/api/auth', authRoutes);

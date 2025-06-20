@@ -1,17 +1,66 @@
 import Ticket from '../models/ticketModel.js'; 
 import Property from '../models/propertyModel.js';
 import User from '../models/userModel.js';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Create uploads directory if it doesn't exist for ticket images
+const uploadsDir = path.join(__dirname, '../uploads/ticket-images');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 // Create a new ticket
 export const createTicket = async (req, res) => {
   try {
     const { propertyId, description } = req.body;
+    console.log('Request body:', req.body);
     const tenantId = req.user._id;
+    const imageUrls = [];
 
-    console.log('Creating ticket for:', { propertyId, tenantId });
+    // Handle image upload
+    if (req.files && req.files.images) {
+      let imageFiles = req.files.images;
+      // Ensure imageFiles is an array
+      if (!Array.isArray(imageFiles)) {
+        imageFiles = [imageFiles];
+      }
+
+      if (imageFiles.length > 5) {
+        return res.status(400).json({ message: 'You can upload a maximum of 5 images.' });
+      }
+
+      for (const imageFile of imageFiles) {
+        // Basic validation
+        if (!imageFile.mimetype.startsWith('image')) {
+          // Skip non-image files if you want to be lenient, or return an error
+          continue; 
+        }
+
+        // Generate unique filename
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const fileExt = path.extname(imageFile.name);
+        const filename = `${uniqueSuffix}${fileExt}`;
+        const filepath = path.join(uploadsDir, filename);
+
+        // Move file to uploads directory
+        await imageFile.mv(filepath);
+
+        // Add the URL to the array
+        imageUrls.push(`/uploads/ticket-images/${filename}`);
+      }
+    }
 
     // First find the property to check if user is the current tenant
+    console.log('PropertyId:', propertyId);
     const property = await Property.findById(propertyId).populate('tenant');
+    console.log('Property:', property);
+
     if (!property) {
       console.log('Property not found:', propertyId);
       return res.status(404).json({ message: 'Property not found' });
@@ -35,7 +84,8 @@ export const createTicket = async (req, res) => {
     const ticket = new Ticket({
       property: propertyId,
       tenant: tenantId,
-      description
+      description,
+      images: imageUrls
     });
 
     await ticket.save();
