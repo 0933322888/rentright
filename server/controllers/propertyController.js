@@ -5,18 +5,27 @@ import PropertyDocument from '../models/propertyDocumentModel.js';
 import User from '../models/userModel.js';
 import { geocodeAddressWithRetry } from '../utils/geocoding.js';
 import { generatePriceSuggestion } from '../utils/aiPricingService.js';
+import { generateListingContent } from '../utils/aiImageRecognition.js';
 
 const createProperty = async (req, res) => {
   try {
     // Handle images for both form-data and JSON
     let images = [];
+    let imageBuffers = [];
+    
     if (req.files && req.files.images) {
       if (Array.isArray(req.files.images)) {
         images = req.files.images
           .filter(file => file && file.path)
           .map(file => file.path.replace(/\\/g, '/').split('uploads/')[1]);
+        imageBuffers = req.files.images
+          .filter(file => file && file.data)
+          .map(file => file.data);
       } else if (req.files.images && req.files.images.path) {
         images = [req.files.images.path.replace(/\\/g, '/').split('uploads/')[1]];
+        if (req.files.images.data) {
+          imageBuffers = [req.files.images.data];
+        }
       }
     } else if (req.body.images) {
       images = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
@@ -41,6 +50,32 @@ const createProperty = async (req, res) => {
         }
       } else {
         propertyData.features = req.body.features;
+      }
+    }
+
+    // Auto-generate title and description if not provided or empty
+    if (!propertyData.title || !propertyData.description || 
+        propertyData.title.trim() === '' || propertyData.description.trim() === '') {
+      try {
+        console.log('Auto-generating listing content using AI...');
+        const aiResult = await generateListingContent(propertyData, imageBuffers);
+        
+        if (!aiResult.error) {
+          propertyData.title = aiResult.title || propertyData.title;
+          propertyData.description = aiResult.description || propertyData.description;
+          console.log('AI-generated content applied successfully');
+        } else {
+          console.warn('AI generation failed, using fallback:', aiResult.error);
+          const fallbackResult = generateListingText(propertyData);
+          propertyData.title = fallbackResult.title || propertyData.title;
+          propertyData.description = fallbackResult.description || propertyData.description;
+        }
+      } catch (aiError) {
+        console.error('Error in AI content generation:', aiError);
+        // Use fallback generation
+        const fallbackResult = generateListingText(propertyData);
+        propertyData.title = fallbackResult.title || propertyData.title;
+        propertyData.description = fallbackResult.description || propertyData.description;
       }
     }
 
@@ -631,9 +666,15 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const generatePropertyListing = async (req, res) => {
   try {
-    const propertyInfo = req.body;
+    const { propertyInfo, imageUrls } = req.body;
 
     // Validate required fields
+    if (!propertyInfo) {
+      return res.status(400).json({
+        message: 'Property info is required'
+      });
+    }
+
     const requiredFields = ['type', 'price', 'location', 'features', 'availableFrom'];
     const missingFields = requiredFields.filter(field => !propertyInfo[field]);
 
@@ -643,17 +684,42 @@ const generatePropertyListing = async (req, res) => {
       });
     }
 
-    // Simulate AI processing time 
-    const processingTime = Math.floor(Math.random() * 1000) + 3000; // Random time between 1-3 seconds
-    await delay(processingTime);
+    // Convert image URLs to base64 for AI analysis
+    let imageBuffers = [];
+    if (imageUrls && imageUrls.length > 0) {
+      try {
+        const { convertImageUrlsToBase64 } = await import('../utils/imageToBase64.js');
+        imageBuffers = await convertImageUrlsToBase64(imageUrls);
+      } catch (error) {
+        console.warn('Failed to convert image URLs to base64:', error.message);
+        // Continue without images if conversion fails
+      }
+    }
 
-    // Generate the listing text
-    const { title, description } = generateListingText(propertyInfo);
-
-    res.json({ title, description });
+    // Use AI to generate listing content
+    const aiResult = await generateListingContent(propertyInfo, imageBuffers);
+    
+    if (aiResult.error) {
+      // Fallback to simple generation if AI fails
+      console.warn('AI generation failed, using fallback:', aiResult.error);
+      const fallbackResult = generateListingText(propertyInfo);
+      res.json(fallbackResult);
+    } else {
+      res.json({
+        title: aiResult.title,
+        description: aiResult.description
+      });
+    }
   } catch (error) {
     console.error('Error generating property listing:', error);
-    res.status(500).json({ message: 'Error generating property listing' });
+    
+    // Fallback to simple generation if AI fails
+    try {
+      const fallbackResult = generateListingText(req.body.propertyInfo || req.body);
+      res.json(fallbackResult);
+    } catch (fallbackError) {
+      res.status(500).json({ message: 'Error generating property listing' });
+    }
   }
 };
 

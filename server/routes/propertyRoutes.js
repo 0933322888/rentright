@@ -60,6 +60,7 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage });
+const memoryUpload = multer({ storage: multer.memoryStorage() });
 
 // Public routes
 router.get('/', getProperties);
@@ -105,15 +106,12 @@ router.get('/:propertyId/documents', restrictTo('landlord', 'admin'), getPropert
 router.delete('/:propertyId/documents/:field/:documentId', restrictTo('landlord', 'admin'), deletePropertyDocument);
 // router.put('/:id/documents', restrictTo('landlord', 'admin'), updatePropertyDocuments); // TODO: Implement this function
 
-// AI Generation route
+// AI Generation routes
 router.post('/generate-listing', restrictTo('landlord'), generatePropertyListing);
 router.post('/generate-price', protect, restrictTo('landlord'), generatePropertyPrice);
 
 // Property statistics routes
 router.get('/:id/statistics', restrictTo('landlord', 'admin'), getPropertyStatistics);
-// AI Generation routes
-router.post('/generate-listing', protect, restrictTo('landlord'), generatePropertyListing);
-router.post('/generate-price', protect, restrictTo('landlord'), generatePropertyPrice);
 
 // Admin routes
 router.post('/:id/submit', restrictTo('landlord'), submitForReview);

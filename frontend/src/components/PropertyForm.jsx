@@ -47,6 +47,7 @@ import StraightenIcon from '@mui/icons-material/Straighten';
 import { API_ENDPOINTS } from '../config/api';
 import { getImageUrl } from '../utils/imageUtils';
 import axios from 'axios';
+import { toast } from 'react-hot-toast';
 
 const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true, onCancel }) => {
   const theme = useTheme();
@@ -151,13 +152,24 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
         availableFrom: formData.availableFrom
       };
 
+      // Get image URLs for AI analysis (convert File objects to URLs)
+      const imageUrls = formData.images.map(img => {
+        if (img instanceof File) {
+          return URL.createObjectURL(img);
+        }
+        return typeof img === 'string' ? img : null;
+      }).filter(url => url);
+
       const response = await fetch(`${API_ENDPOINTS.PROPERTIES}/generate-listing`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify(propertyInfo),
+        body: JSON.stringify({
+          propertyInfo,
+          imageUrls
+        })
       });
 
       if (!response.ok) {
@@ -172,10 +184,11 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
         title,
         description
       }));
+
+      toast.success('AI-generated listing content applied successfully!');
     } catch (error) {
       console.error('Error generating listing:', error);
-      // TODO: Add proper error notification
-      alert(error.message || 'Failed to generate listing. Please try again.');
+      toast.error(error.message || 'Failed to generate listing content');
     } finally {
       setGenerating(false);
     }
@@ -860,18 +873,21 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <InfoIcon sx={{ color: theme.palette.primary.main, mr: 1 }} />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <Typography variant="h6" color="primary">
                 Listing Details
               </Typography>
+              <Tooltip title="AI analyzes your property details and images to generate compelling title and description. Works best when you've uploaded property photos!">
+                <IconButton size="small" sx={{ color: 'primary.main' }}>
+                  <InfoIcon />
+                </IconButton>
+              </Tooltip>
             </Box>
             <Button
               variant="outlined"
-              color="primary"
-              startIcon={generating ? <CircularProgress size={20} /> : <AutoAwesomeIcon />}
               onClick={handleGenerateListing}
-              disabled={generating || loading}
+              disabled={generating || !formData.type || !formData.price || !formData.location.city || !formData.features.bedrooms}
+              startIcon={generating ? <CircularProgress size={20} /> : <AutoAwesomeIcon />}
               sx={{
                 minWidth: 150,
                 background: 'linear-gradient(135deg, #ffffff 0%, #b1f0ee 100%)',
