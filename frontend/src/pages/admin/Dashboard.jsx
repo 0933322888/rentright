@@ -4,12 +4,33 @@ import axios from 'axios';
 import { API_ENDPOINTS } from '../../config/api';
 import { toast } from 'react-hot-toast';
 import { adminButtonStyles } from '../../utils/uiUtils';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 export default function Dashboard() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [stats, setStats] = useState({
+  const [stats, setStats] = useState({
         totalApplications: 0,
         approvedApplications: 0,
         declinedApplications: 0,
@@ -18,26 +39,59 @@ export default function Dashboard() {
         newEscalations: 0,
         urgentEscalations: 0,
         recentEscalations: [],
-        pendingProperties: 0,
+    pendingProperties: 0,
         openTickets: 0,
         lastUpdated: null
     });
+    const [dateRange, setDateRange] = useState('7');
 
-    useEffect(() => {
+    // Generate date labels based on selected range
+    const generateDateLabels = (days) => {
+        const labels = [];
+        const today = new Date();
+        
+        for (let i = days - 1; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            labels.push(date.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric' 
+            }));
+        }
+        
+        return labels;
+    };
+
+    // Generate sample data points (replace with real data)
+    const generateDataPoints = (days, maxValue) => {
+        const points = [];
+        for (let i = 0; i < days; i++) {
+            const x = 20 + (i * 360 / (days - 1));
+            const y = 180 - (Math.random() * maxValue * 4);
+            points.push(`${x},${y}`);
+        }
+        return points.join(' ');
+    };
+
+    const dateLabels = generateDateLabels(parseInt(dateRange));
+    const propertiesData = generateDataPoints(parseInt(dateRange), 40);
+    const escalationsData = generateDataPoints(parseInt(dateRange), 20);
+
+  useEffect(() => {
         const fetchDashboardStats = async () => {
             try {
                 setLoading(true);
                 const response = await axios.get(API_ENDPOINTS.ADMIN + '/dashboard/stats', {
-                    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
                 });
                 setStats(response.data);
                 setError(null);
-            } catch (err) {
+    } catch (err) {
                 console.error('Error fetching dashboard stats:', err);
                 setError(err.response?.data?.message || 'Error fetching dashboard statistics');
-            } finally {
-                setLoading(false);
-            }
+    } finally {
+      setLoading(false);
+    }
         };
 
         fetchDashboardStats();
@@ -68,9 +122,9 @@ export default function Dashboard() {
             hour: '2-digit',
             minute: '2-digit'
         });
-    };
+  };
 
-    if (loading) {
+  if (loading) {
         return (
             <div className="p-6">
                 <div className="animate-pulse">
@@ -86,9 +140,9 @@ export default function Dashboard() {
                 </div>
             </div>
         );
-    }
+  }
 
-    if (error) {
+  if (error) {
         return (
             <div className="p-6">
                 <div className="bg-red-50 border border-red-200 rounded-md p-4">
@@ -96,10 +150,93 @@ export default function Dashboard() {
                 </div>
             </div>
         );
-    }
+  }
 
-    return (
-        <div className="p-6">
+  // Chart options
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+      },
+    },
+    scales: {
+      x: {
+        display: true,
+        title: {
+          display: false,
+        },
+        grid: {
+          display: false,
+        },
+      },
+      y: {
+        display: true,
+        title: {
+          display: false,
+        },
+        grid: {
+          color: '#f3f4f6',
+        },
+        beginAtZero: true,
+      },
+    },
+    interaction: {
+      mode: 'nearest',
+      axis: 'x',
+      intersect: false,
+    },
+  };
+
+  // Properties chart data
+  const propertiesChartData = {
+    labels: dateLabels,
+    datasets: [
+      {
+        label: 'Properties',
+        data: propertiesData,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#3b82f6',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+      },
+    ],
+  };
+
+  // Escalations chart data
+  const escalationsChartData = {
+    labels: dateLabels,
+    datasets: [
+      {
+        label: 'Escalations',
+        data: escalationsData,
+        borderColor: '#ef4444',
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: '#ef4444',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+      },
+    ],
+  };
+
+  return (
+    <div className="p-6">
             {/* Priority Alerts */}
             {(stats.urgentEscalations > 0 || stats.newEscalations > 0 || stats.pendingProperties > 0) && (
                 <div className="mb-8">
@@ -179,15 +316,15 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
                 {/* Escalations Card - Most Important */}
                 <div className="bg-gradient-to-r from-red-500 to-red-600 text-white overflow-hidden shadow rounded-lg">
-                    <div className="p-5">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
                                 <svg className="h-6 w-6 text-red-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                </svg>
-                            </div>
-                            <div className="ml-5 w-0 flex-1">
-                                <dl>
+                </svg>
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
                                     <dt className="text-sm font-medium text-red-200 truncate">Escalations</dt>
                                     <dd className="text-2xl font-bold">{stats.escalations}</dd>
                                     <div className="flex items-center space-x-4 mt-1">
@@ -202,10 +339,10 @@ export default function Dashboard() {
                                             </dd>
                                         )}
                                     </div>
-                                </dl>
-                            </div>
-                        </div>
-                    </div>
+                </dl>
+              </div>
+            </div>
+          </div>
                     <div className="bg-red-600 px-5 py-3">
                         <button
                             onClick={() => navigate('/admin/escalations')}
@@ -214,25 +351,25 @@ export default function Dashboard() {
                             View All →
                         </button>
                     </div>
-                </div>
+        </div>
 
-                {/* Pending Properties Card */}
+        {/* Pending Properties Card */}
                 <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white overflow-hidden shadow rounded-lg">
-                    <div className="p-5">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
                                 <svg className="h-6 w-6 text-yellow-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <div className="ml-5 w-0 flex-1">
-                                <dl>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
                                     <dt className="text-sm font-medium text-yellow-200 truncate">Pending Properties</dt>
                                     <dd className="text-2xl font-bold">{stats.pendingProperties}</dd>
-                                </dl>
-                            </div>
-                        </div>
-                    </div>
+                </dl>
+              </div>
+            </div>
+          </div>
                     <div className="bg-yellow-600 px-5 py-3">
                         <button
                             onClick={() => navigate('/admin/properties')}
@@ -241,25 +378,25 @@ export default function Dashboard() {
                             Review All →
                         </button>
                     </div>
-                </div>
+        </div>
 
                 {/* Open Tickets Card */}
                 <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white overflow-hidden shadow rounded-lg">
-                    <div className="p-5">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
                                 <svg className="h-6 w-6 text-blue-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                                </svg>
-                            </div>
-                            <div className="ml-5 w-0 flex-1">
-                                <dl>
+                </svg>
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
                                     <dt className="text-sm font-medium text-blue-200 truncate">Open Tickets</dt>
                                     <dd className="text-2xl font-bold">{stats.openTickets}</dd>
-                                </dl>
-                            </div>
-                        </div>
-                    </div>
+                </dl>
+              </div>
+            </div>
+          </div>
                     <div className="bg-blue-600 px-5 py-3">
                         <button
                             onClick={() => navigate('/admin/tickets')}
@@ -268,25 +405,25 @@ export default function Dashboard() {
                             View All →
                         </button>
                     </div>
-                </div>
+        </div>
 
                 {/* Pending Applications Card */}
                 <div className="bg-gradient-to-r from-green-500 to-green-600 text-white overflow-hidden shadow rounded-lg">
-                    <div className="p-5">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
                                 <svg className="h-6 w-6 text-green-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                </svg>
-                            </div>
-                            <div className="ml-5 w-0 flex-1">
-                                <dl>
+                </svg>
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
                                     <dt className="text-sm font-medium text-green-200 truncate">Pending Applications</dt>
                                     <dd className="text-2xl font-bold">{stats.pendingApplications}</dd>
-                                </dl>
-                            </div>
-                        </div>
-                    </div>
+                </dl>
+              </div>
+            </div>
+          </div>
                     <div className="bg-green-600 px-5 py-3">
                         <button
                             onClick={() => navigate('/admin/applications')}
@@ -294,6 +431,55 @@ export default function Dashboard() {
                         >
                             Review All →
                         </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Charts Section */}
+            <div className="mb-8">
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold text-gray-900">Analytics</h2>
+                    <div className="flex space-x-2">
+                        <select 
+                            className="px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            onChange={(e) => setDateRange(e.target.value)}
+                            value={dateRange}
+                        >
+                            <option value="7">Last 7 days</option>
+                            <option value="30">Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                            <option value="365">Last year</option>
+                        </select>
+                    </div>
+        </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Properties Chart */}
+                    <div className="bg-white rounded-lg shadow-sm p-6">
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">Properties</h3>
+                        {loading ? (
+                            <div className="h-64 flex items-center justify-center">
+                                <div className="animate-pulse bg-gray-200 h-48 w-full rounded"></div>
+                            </div>
+                        ) : (
+                            <div className="h-64">
+                                <Line options={chartOptions} data={propertiesChartData} />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Escalations Chart */}
+                    <div className="bg-white rounded-lg shadow-sm p-6">
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">Escalations</h3>
+                        {loading ? (
+                            <div className="h-64 flex items-center justify-center">
+                                <div className="animate-pulse bg-gray-200 h-48 w-full rounded"></div>
+                            </div>
+                        ) : (
+                            <div className="h-64">
+                                <Line options={chartOptions} data={escalationsChartData} />
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -317,13 +503,13 @@ export default function Dashboard() {
                                 <li key={escalation._id}>
                                     <div className="px-4 py-4 sm:px-6">
                                         <div className="flex items-center justify-between">
-                                            <div className="flex items-center">
-                                                <div className="flex-shrink-0">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
                                                     <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
                                                         <svg className="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                                        </svg>
-                                                    </div>
+                </svg>
+              </div>
                                                 </div>
                                                 <div className="ml-4">
                                                     <div className="flex items-center">
@@ -366,16 +552,11 @@ export default function Dashboard() {
                 )}
             </div>
 
-            {/* Total Applications Section */}
+            {/* Totals Section */}
             <div className="mb-8">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold text-gray-900">Total Applications</h2>
-                    
-                </div>
-
                 {loading ? (
                     <div className="bg-white shadow overflow-hidden sm:rounded-md">
-                        <div className="px-4 py-5 sm:p-6">
+                        <div className="py-5 sm:p-6">
                             <dl className="grid grid-cols-1 gap-5 sm:grid-cols-3">
                                 {[...Array(4)].map((_, i) => (
                                     <div key={i} className="px-4 py-5 bg-white shadow rounded-lg overflow-hidden sm:p-6">
@@ -385,11 +566,11 @@ export default function Dashboard() {
                                         </div>
                                     </div>
                                 ))}
-                            </dl>
-                        </div>
-                    </div>
+                </dl>
+              </div>
+            </div>
                 ) : (
-                    <div className="px-4 py-4 sm:p-6">
+                    <div className="">
                         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-4">
                             <div className="px-4 py-5 bg-white shadow rounded-lg overflow-hidden sm:p-6">
                                 <dt className="text-sm font-medium text-gray-500 truncate">Total/Approved Applications</dt>
@@ -447,7 +628,7 @@ export default function Dashboard() {
                         </dl>
                     </div>
                 )}
-            </div>
-        </div>
-    );
+      </div>
+    </div>
+  );
 } 
