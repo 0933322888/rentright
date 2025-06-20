@@ -14,6 +14,8 @@ import {
 import { geocodeExistingProperties } from '../utils/geocoding.js';
 import fs from 'fs';
 import jwt from 'jsonwebtoken';
+import Escalation from '../models/escalationModel.js';
+import Ticket from '../models/ticketModel.js';
 
 // Get all properties for admin
 export const getAllProperties = async (req, res) => {
@@ -694,5 +696,91 @@ export const geocodeProperties = async (req, res) => {
       message: 'Failed to geocode properties',
       error: error.message 
     });
+  }
+};
+
+// Get dashboard statistics
+export const getDashboardStats = async (req, res) => {
+  try {
+    // Get application statistics
+    const [
+      totalApplications,
+      approvedApplications,
+      declinedApplications,
+      pendingApplications
+    ] = await Promise.all([
+      Application.countDocuments(),
+      Application.countDocuments({ status: 'approved' }),
+      Application.countDocuments({ status: 'declined' }),
+      Application.countDocuments({ status: 'pending' })
+    ]);
+
+    // Get user statistics
+    const [
+      totalLandlords,
+      totalTenants
+    ] = await Promise.all([
+      User.countDocuments({ role: 'landlord' }),
+      User.countDocuments({ role: 'tenant' })
+    ]);
+
+    // Get property and ticket statistics
+    const [
+      totalProperties,
+      pendingProperties,
+      openTickets
+    ] = await Promise.all([
+      Property.countDocuments(),
+      Property.countDocuments({ status: 'pending' }),
+      Ticket.countDocuments({ status: { $nin: ['closed', 'resolved'] } })
+    ]);
+
+    // Get escalation statistics
+    const [
+      escalations,
+      newEscalations,
+      urgentEscalations,
+      recentEscalations
+    ] = await Promise.all([
+      Escalation.countDocuments(),
+      Escalation.countDocuments({ status: 'new' }),
+      Escalation.countDocuments({ status: 'new', priority: 'urgent' }),
+      Escalation.find()
+        .populate('property', 'title location')
+        .populate('tenant', 'name email phone')
+        .sort('-createdAt')
+        .limit(5)
+    ]);
+
+    res.json({
+      // User stats
+      totalLandlords,
+      totalTenants,
+      
+      // Property stats
+      totalProperties,
+      pendingProperties,
+      
+      // Application stats
+      totalApplications,
+      approvedApplications,
+      declinedApplications,
+      pendingApplications,
+      
+      // Escalation stats
+      escalations,
+      newEscalations,
+      urgentEscalations,
+      recentEscalations,
+      
+      // Ticket stats
+      openTickets,
+      
+      // Last updated timestamp
+      lastUpdated: new Date()
+    });
+  } catch (error) {
+    console.error('Error getting dashboard stats:', error);
+    res.status(500).json({ message: error.message });
   }
 }; 

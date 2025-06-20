@@ -4,6 +4,7 @@ import axios from 'axios';
 import { API_ENDPOINTS } from '../../config/api';
 import { toast } from 'react-hot-toast';
 import React from 'react';
+import { adminButtonStyles } from '../../utils/uiUtils';
 
 export default function AdminTickets() {
   const navigate = useNavigate();
@@ -204,7 +205,7 @@ export default function AdminTickets() {
 
   if (error) {
     return (
-      <div className="text-center py-12">
+      <div className="p-6">
         <p className="text-red-600">{error}</p>
       </div>
     );
@@ -212,264 +213,257 @@ export default function AdminTickets() {
 
   return (
     <div className="bg-white">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl py-16 sm:py-24 lg:max-w-none lg:py-32">
-          <h1 className="text-3xl font-bold text-gray-900">Tickets</h1>
-
-          {/* Filters */}
-          <div className="mt-8 bg-white p-4 rounded-lg shadow">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-                  Status
-                </label>
-                <select
-                  name="status"
-                  id="status"
-                  value={filters.status}
-                  onChange={handleFilterChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                >
-                  <option value="all">All Statuses</option>
-                  <option value="new">New</option>
-                  <option value="review">Review</option>
-                  <option value="approved">Approved</option>
-                  <option value="declined">Declined</option>
-                  <option value="closed">Closed</option>
-                </select>
-              </div>
-              <div>
-                <label htmlFor="priority" className="block text-sm font-medium text-gray-700">
-                  Priority
-                </label>
-                <select
-                  name="priority"
-                  id="priority"
-                  value={filters.priority}
-                  onChange={handleFilterChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                >
-                  <option value="all">All Priorities</option>
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="urgent">Urgent</option>
-                </select>
-              </div>
-              <div>
-                <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
-                  Start Date
-                </label>
-                <input
-                  type="date"
-                  name="startDate"
-                  id="startDate"
-                  value={filters.startDate}
-                  onChange={handleFilterChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                />
-              </div>
-              <div>
-                <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  name="endDate"
-                  id="endDate"
-                  value={filters.endDate}
-                  onChange={handleFilterChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                />
-              </div>
+      <div className="p-6">
+        {/* Filters */}
+        <div className="mt-8 bg-white shadow">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4">
+            <div>
+              <label htmlFor="status" className="block text-sm font-medium text-gray-700">
+                Status
+              </label>
+              <select
+                name="status"
+                id="status"
+                value={filters.status}
+                onChange={handleFilterChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              >
+                <option value="all">All Statuses</option>
+                <option value="new">New</option>
+                <option value="review">Review</option>
+                <option value="approved">Approved</option>
+                <option value="declined">Declined</option>
+                <option value="closed">Closed</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="priority" className="block text-sm font-medium text-gray-700">
+                Priority
+              </label>
+              <select
+                name="priority"
+                id="priority"
+                value={filters.priority}
+                onChange={handleFilterChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              >
+                <option value="all">All Priorities</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
+                Start Date
+              </label>
+              <input
+                type="date"
+                name="startDate"
+                id="startDate"
+                value={filters.startDate}
+                onChange={handleFilterChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              />
+            </div>
+            <div>
+              <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">
+                End Date
+              </label>
+              <input
+                type="date"
+                name="endDate"
+                id="endDate"
+                value={filters.endDate}
+                onChange={handleFilterChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              />
             </div>
           </div>
+        </div>
 
-          {loading ? (
-            <div className="mt-8 text-center">Loading...</div>
-          ) : error ? (
-            <div className="mt-8 text-center text-red-600">{error}</div>
-          ) : (
-            <div className="mt-8">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Property
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tenant
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Description
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Priority
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Created
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredTickets.map((ticket) => (
-                    <React.Fragment key={ticket._id}>
-                      <tr>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {ticket.property?.title || 'N/A'}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {ticket.property ? `${ticket.property.location?.street || ''}, ${ticket.property.location?.city || ''}` : 'No location data'}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{ticket.tenant?.name || 'N/A'}</div>
-                          <div className="text-sm text-gray-500">{ticket.tenant?.email || 'N/A'}</div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-gray-900">{ticket.description}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(ticket.status)}`}
-                          >
-                            {ticket.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <select
-                            value={ticket.priority}
-                            onChange={(e) => handlePriorityChange(ticket._id, e.target.value)}
-                            disabled={updatingPriority}
-                            className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm ${
-                              ticket.priority === 'urgent' ? 'bg-red-100' :
-                              ticket.priority === 'high' ? 'bg-orange-100' :
-                              ticket.priority === 'medium' ? 'bg-yellow-100' :
-                              'bg-green-100'
-                            }`}
-                          >
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                            <option value="urgent">Urgent</option>
-                          </select>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(ticket.createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex flex-col space-y-2">
-                            <div className="flex space-x-2">
-                              {ticket.status !== 'closed' && (
-                                <>
-                                  {ticket.status === 'new' && (
+        {/* Tickets Table */}
+        <div className="mt-8">
+          <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Property
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Tenant
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Description
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Priority
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Created
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredTickets.map((ticket) => (
+                  <React.Fragment key={ticket._id}>
+                    <tr>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {ticket.property?.title || 'N/A'}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {ticket.property ? `${ticket.property.location?.street || ''}, ${ticket.property.location?.city || ''}` : 'No location data'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{ticket.tenant?.name || 'N/A'}</div>
+                        <div className="text-sm text-gray-500">{ticket.tenant?.email || 'N/A'}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900">{ticket.description}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(ticket.status)}`}
+                        >
+                          {ticket.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <select
+                          value={ticket.priority}
+                          onChange={(e) => handlePriorityChange(ticket._id, e.target.value)}
+                          disabled={updatingPriority}
+                          className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm ${
+                            ticket.priority === 'urgent' ? 'bg-red-100' :
+                            ticket.priority === 'high' ? 'bg-orange-100' :
+                            ticket.priority === 'medium' ? 'bg-yellow-100' :
+                            'bg-green-100'
+                          }`}
+                        >
+                          <option value="low">Low</option>
+                          <option value="medium">Medium</option>
+                          <option value="high">High</option>
+                          <option value="urgent">Urgent</option>
+                        </select>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(ticket.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex flex-col space-y-2">
+                          <div className="flex space-x-2">
+                            {ticket.status !== 'closed' && (
+                              <>
+                                {ticket.status === 'new' && (
+                                  <button
+                                    onClick={() => handleStatusUpdate(ticket._id, 'review')}
+                                    className="text-yellow-600 hover:text-yellow-800"
+                                  >
+                                    Review
+                                  </button>
+                                )}
+                                {ticket.status === 'review' && (
+                                  <>
                                     <button
-                                      onClick={() => handleStatusUpdate(ticket._id, 'review')}
-                                      className="text-yellow-600 hover:text-yellow-800"
+                                      onClick={() => handleStatusUpdate(ticket._id, 'approved')}
+                                      className="text-green-600 hover:text-green-800"
                                     >
-                                      Review
+                                      Approve
                                     </button>
-                                  )}
-                                  {ticket.status === 'review' && (
-                                    <>
-                                      <button
-                                        onClick={() => handleStatusUpdate(ticket._id, 'approved')}
-                                        className="text-green-600 hover:text-green-800"
-                                      >
-                                        Approve
-                                      </button>
-                                      <button
-                                        onClick={() => handleStatusUpdate(ticket._id, 'declined')}
-                                        className="text-red-600 hover:text-red-800"
-                                      >
-                                        Decline
-                                      </button>
-                                    </>
-                                  )}
-                                  {(ticket.status === 'approved' || ticket.status === 'declined') && (
                                     <button
-                                      onClick={() => handleStatusUpdate(ticket._id, 'closed')}
-                                      className="text-gray-600 hover:text-gray-800"
+                                      onClick={() => handleStatusUpdate(ticket._id, 'declined')}
+                                      className="text-red-600 hover:text-red-800"
                                     >
-                                      Close
+                                      Decline
                                     </button>
-                                  )}
-                                </>
-                              )}
-                            </div>
-                            <div className="flex space-x-2">
+                                  </>
+                                )}
+                                {(ticket.status === 'approved' || ticket.status === 'declined') && (
+                                  <button
+                                    onClick={() => handleStatusUpdate(ticket._id, 'closed')}
+                                    className="text-gray-600 hover:text-gray-800"
+                                  >
+                                    Close
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </div>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => setCommentingTicketId(ticket._id)}
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              Add Comment
+                            </button>
+                            {ticket.comments && ticket.comments.length > 0 && (
                               <button
-                                onClick={() => setCommentingTicketId(ticket._id)}
-                                className="text-blue-600 hover:text-blue-800"
+                                onClick={() => toggleComments(ticket._id)}
+                                className="text-gray-600 hover:text-gray-800"
                               >
-                                Add Comment
+                                {expandedComments[ticket._id] ? 'Hide Comments' : 'Show Comments'}
                               </button>
-                              {ticket.comments && ticket.comments.length > 0 && (
-                                <button
-                                  onClick={() => toggleComments(ticket._id)}
-                                  className="text-gray-600 hover:text-gray-800"
-                                >
-                                  {expandedComments[ticket._id] ? 'Hide Comments' : 'Show Comments'}
-                                </button>
-                              )}
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                    {/* Comments Section */}
+                    {ticket.comments && ticket.comments.length > 0 && expandedComments[ticket._id] && (
+                      <tr>
+                        <td colSpan="7" className="px-6 py-4">
+                          <div className="bg-gray-50 p-4 rounded-lg">
+                            <h4 className="text-sm font-medium text-gray-900 mb-2">Comments</h4>
+                            <div className="space-y-3">
+                              {ticket.comments.map((comment, index) => (
+                                <div key={`${ticket._id}-${index}`} className="bg-white p-3 rounded-lg shadow-sm">
+                                  <div className="flex justify-between items-start">
+                                    <div className="flex items-center space-x-2">
+                                      <div className="text-sm font-medium text-gray-900">
+                                        {comment.user.name}
+                                      </div>
+                                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                                        comment.user.role === 'admin' 
+                                          ? 'bg-purple-100 text-purple-800' 
+                                          : 'bg-blue-100 text-blue-800'
+                                      }`}>
+                                        {comment.user.role}
+                                      </span>
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                      {new Date(comment.createdAt).toLocaleString()}
+                                    </div>
+                                  </div>
+                                  <p className="mt-1 text-sm text-gray-700">{comment.text}</p>
+                                </div>
+                              ))}
                             </div>
                           </div>
                         </td>
                       </tr>
-                      {/* Comments Section */}
-                      {ticket.comments && ticket.comments.length > 0 && expandedComments[ticket._id] && (
-                        <tr>
-                          <td colSpan="7" className="px-6 py-4">
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                              <h4 className="text-sm font-medium text-gray-900 mb-2">Comments</h4>
-                              <div className="space-y-3">
-                                {ticket.comments.map((comment, index) => (
-                                  <div key={`${ticket._id}-${index}`} className="bg-white p-3 rounded-lg shadow-sm">
-                                    <div className="flex justify-between items-start">
-                                      <div className="flex items-center space-x-2">
-                                        <div className="text-sm font-medium text-gray-900">
-                                          {comment.user.name}
-                                        </div>
-                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                                          comment.user.role === 'admin' 
-                                            ? 'bg-purple-100 text-purple-800' 
-                                            : 'bg-blue-100 text-blue-800'
-                                        }`}>
-                                          {comment.user.role}
-                                        </span>
-                                      </div>
-                                      <div className="text-xs text-gray-500">
-                                        {new Date(comment.createdAt).toLocaleString()}
-                                      </div>
-                                    </div>
-                                    <p className="mt-1 text-sm text-gray-700">{comment.text}</p>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                    )}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       {/* Comment Modal */}
       {commentingTicketId && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 max-w-lg w-full">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Add Comment</h3>
             <textarea
               value={newComment}
@@ -484,13 +478,13 @@ export default function AdminTickets() {
                   setCommentingTicketId(null);
                   setNewComment('');
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                className={adminButtonStyles.outline}
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleAddComment(commentingTicketId)}
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                className={adminButtonStyles.primaryMd}
               >
                 Add Comment
               </button>

@@ -1,4 +1,6 @@
 import User from '../models/userModel.js';
+import Application from '../models/applicationModel.js';
+import Property from '../models/propertyModel.js';
 import jwt from 'jsonwebtoken';
 import path from 'path';
 import fs from 'fs/promises';
@@ -101,5 +103,169 @@ export const updateProfile = async (req, res) => {
     }
   } catch (error) {
     res.status(400).json({ message: error.message });
+  }
+};
+
+export const addComment = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { text } = req.body;
+    const adminId = req.user._id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.comments.push({
+      text,
+      createdBy: adminId,
+      createdAt: new Date()
+    });
+
+    await user.save();
+
+    // Populate the createdBy field of the newly added comment
+    const populatedUser = await User.findById(userId)
+      .populate({
+        path: 'comments.createdBy',
+        select: 'name email'
+      });
+
+    const newComment = populatedUser.comments[populatedUser.comments.length - 1];
+
+    res.status(201).json(newComment);
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    res.status(500).json({ message: 'Error adding comment' });
+  }
+};
+
+export const getComments = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await User.findById(userId)
+      .populate({
+        path: 'comments.createdBy',
+        select: 'name email'
+      });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json(user.comments);
+  } catch (error) {
+    console.error('Error fetching comments:', error);
+    res.status(500).json({ message: 'Error fetching comments' });
+  }
+};
+
+export const getUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Only allow admins to update users
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    user.name = req.body.name || user.name;
+    user.email = req.body.email || user.email;
+    user.phone = req.body.phone || user.phone;
+    user.role = req.body.role || user.role;
+    user.tenantScoring = req.body.tenantScoring !== undefined ? req.body.tenantScoring : user.tenantScoring;
+
+    if (req.body.password) {
+      user.password = req.body.password;
+    }
+
+    const updatedUser = await user.save();
+    res.json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      phone: updatedUser.phone,
+      tenantScoring: updatedUser.tenantScoring
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const deleteUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Only allow admins to delete users
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const { role } = req.query;
+    let query = {};
+    
+    if (role) {
+      query.role = role;
+    }
+
+    const users = await User.find(query)
+      .select('-password')
+      .populate('comments.createdBy', 'name email')
+      .sort({ createdAt: -1 });
+
+    // Calculate additional details based on user role
+    const usersWithDetails = await Promise.all(
+      users.map(async (user) => {
+        if (user.role === 'tenant') {
+          const applicationCount = await Application.countDocuments({ tenant: user._id });
+          return {
+            ...user.toObject(),
+            applicationCount
+          };
+        } else if (user.role === 'landlord') {
+          const propertyCount = await Property.countDocuments({ landlord: user._id });
+          return {
+            ...user.toObject(),
+            properties: [], // We'll populate this if needed
+            propertyCount
+          };
+        }
+        return user.toObject();
+      })
+    );
+
+    res.json(usersWithDetails);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 }; 

@@ -6,6 +6,7 @@ import { toast } from 'react-hot-toast';
 import ImageCarousel from '../../components/ImageCarousel';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
+import { adminButtonStyles } from '../../utils/uiUtils';
 
 export default function AdminPropertyDetails() {
   const { id } = useParams();
@@ -365,7 +366,7 @@ export default function AdminPropertyDetails() {
               {!editingDate && (
                 <button
                   onClick={() => setShowAddDates(!showAddDates)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  className={adminButtonStyles.primary}
                 >
                   {showAddDates ? 'Cancel' : 'Add Viewing Dates'}
                 </button>
@@ -379,7 +380,7 @@ export default function AdminPropertyDetails() {
                   <h3 className="font-medium">Edit Viewing Date</h3>
                   <button
                     onClick={handleCancelEdit}
-                    className="text-gray-600 hover:text-gray-800"
+                    className={adminButtonStyles.secondary}
                   >
                     Cancel
                   </button>
@@ -432,7 +433,7 @@ export default function AdminPropertyDetails() {
                   <div className="flex justify-end mt-4">
                     <button
                       onClick={handleUpdateViewingDate}
-                      className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+                      className={adminButtonStyles.primary}
                     >
                       Update Viewing Date
                     </button>
@@ -451,7 +452,7 @@ export default function AdminPropertyDetails() {
                         <h3 className="font-medium">Date {dateIndex + 1}</h3>
                         <button
                           onClick={() => handleRemoveDate(dateIndex)}
-                          className="text-red-600 hover:text-red-800"
+                          className={adminButtonStyles.secondary}
                         >
                           Remove Date
                         </button>
@@ -476,7 +477,7 @@ export default function AdminPropertyDetails() {
                           </label>
                           <button
                             onClick={() => handleAddTimeSlot(dateIndex)}
-                            className="text-blue-600 hover:text-blue-800"
+                            className={adminButtonStyles.secondary}
                           >
                             + Add Time Slot
                           </button>
@@ -498,7 +499,7 @@ export default function AdminPropertyDetails() {
                             />
                             <button
                               onClick={() => handleRemoveTimeSlot(dateIndex, slotIndex)}
-                              className="text-red-600 hover:text-red-800"
+                              className={adminButtonStyles.secondary}
                             >
                               Remove
                             </button>
@@ -510,7 +511,7 @@ export default function AdminPropertyDetails() {
 
                   <button
                     onClick={handleAddDate}
-                    className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-gray-600 hover:border-gray-400 hover:text-gray-800"
+                    className={adminButtonStyles.secondary}
                   >
                     + Add Another Date
                   </button>
@@ -518,7 +519,7 @@ export default function AdminPropertyDetails() {
                   <div className="flex justify-end mt-4">
                     <button
                       onClick={handleAddViewingDates}
-                      className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
+                      className={adminButtonStyles.primary}
                     >
                       Save All Viewing Dates
                     </button>
@@ -539,13 +540,13 @@ export default function AdminPropertyDetails() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleEditDate(date)}
-                          className="text-blue-600 hover:text-blue-800"
+                          className={adminButtonStyles.secondary}
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDeleteViewingDate(date._id)}
-                          className="text-red-600 hover:text-red-800"
+                          className={adminButtonStyles.secondary}
                         >
                           Delete
                         </button>
@@ -635,7 +636,7 @@ export default function AdminPropertyDetails() {
                 {property.status !== 'active' && (
                   <button
                     onClick={handleApprove}
-                    className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
+                    className={adminButtonStyles.successMd}
                   >
                     Approve for Listing
                   </button>
@@ -643,7 +644,7 @@ export default function AdminPropertyDetails() {
                 {property.status !== 'active' && (
                   <button
                     onClick={handleReject}
-                    className="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700"
+                    className={adminButtonStyles.dangerMd}
                   >
                     Reject Property
                   </button>

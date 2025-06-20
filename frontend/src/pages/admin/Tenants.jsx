@@ -3,6 +3,15 @@ import axios from 'axios';
 import { API_ENDPOINTS } from '../../config/api';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import CommentSection from '../../components/CommentSection';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  IconButton
+} from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
+import { adminButtonStyles } from '../../utils/uiUtils';
 
 export default function AdminTenants() {
   const [tenants, setTenants] = useState([]);
@@ -14,6 +23,9 @@ export default function AdminTenants() {
     name: '',
     profileStatus: 'all'
   });
+  const [selectedTenant, setSelectedTenant] = useState(null);
+  const [isCommentsModalOpen, setIsCommentsModalOpen] = useState(false);
+  const [isAddingComment, setIsAddingComment] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,14 +38,13 @@ export default function AdminTenants() {
 
   const fetchTenants = async () => {
     try {
-      const response = await axios.get(`${API_ENDPOINTS.ADMIN_TENANTS}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      setLoading(true);
+      const response = await axios.get(`${API_ENDPOINTS.USERS}?role=tenant`);
       setTenants(response.data);
-      console.log(response.data);
-    } catch (err) {
+    } catch (error) {
+      console.error('Error fetching tenants:', error);
       setError('Failed to fetch tenants');
-      console.error('Error fetching tenants:', err);
+      toast.error('Failed to fetch tenants');
     } finally {
       setLoading(false);
     }
@@ -71,10 +82,6 @@ export default function AdminTenants() {
     }));
   };
 
-  const handleEdit = (tenantId) => {
-    navigate(`/admin/tenants/${tenantId}/edit`);
-  };
-
   const handleDelete = async (tenantId) => {
     if (!window.confirm('Are you sure you want to delete this tenant? This will also delete all their applications.')) {
       return;
@@ -95,6 +102,52 @@ export default function AdminTenants() {
     }
   };
 
+  const handleOpenComments = async (tenant) => {
+    setSelectedTenant(tenant);
+    setIsCommentsModalOpen(true);
+    
+    try {
+      const response = await axios.get(`${API_ENDPOINTS.USERS}/${tenant._id}/comments`);
+      setSelectedTenant(prev => ({
+        ...prev,
+        comments: response.data
+      }));
+    } catch (error) {
+      toast.error('Failed to fetch comments');
+      console.error('Error fetching comments:', error);
+    }
+  };
+
+  const handleAddComment = async (text) => {
+    if (!selectedTenant) return;
+
+    setIsAddingComment(true);
+    try {
+      const response = await axios.post(`${API_ENDPOINTS.USERS}/${selectedTenant._id}/comments`, {
+        text
+      });
+
+      setSelectedTenant(prev => ({
+        ...prev,
+        comments: [...(prev.comments || []), response.data]
+      }));
+
+      // Update the tenant in the main list to reflect the new comment count
+      setTenants(prev => prev.map(tenant => 
+        tenant._id === selectedTenant._id 
+          ? { ...tenant, comments: [...(tenant.comments || []), response.data] }
+          : tenant
+      ));
+
+      toast.success('Comment added successfully');
+    } catch (error) {
+      toast.error('Failed to add comment');
+      console.error('Error adding comment:', error);
+    } finally {
+      setIsAddingComment(false);
+    }
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -104,16 +157,7 @@ export default function AdminTenants() {
   }
 
   return (
-    <div>
-      <div className="sm:flex sm:items-center">
-        <div className="sm:flex-auto">
-          <h1 className="text-2xl font-semibold text-gray-900">Tenants</h1>
-          <p className="mt-2 text-sm text-gray-700">
-            A list of all tenants registered in the system.
-          </p>
-        </div>
-      </div>
-
+    <div className="p-6">
       {/* Filters */}
       <div className="mt-4 bg-white p-4 rounded-lg shadow">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -187,10 +231,10 @@ export default function AdminTenants() {
                       Joined
                     </th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Rating
+                      Tenant Score
                     </th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Applicant Profile Status
+                      Comments
                     </th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                       Actions
@@ -200,14 +244,14 @@ export default function AdminTenants() {
                 <tbody className="divide-y divide-gray-200 bg-white">
                   {filteredTenants.map((tenant) => (
                     <tr key={tenant._id}>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         {tenant.email}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-900">
                         {tenant.name}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {tenant.phone}
+                        {tenant.phone || 'N/A'}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         {tenant.applicationCount || 0}
@@ -215,57 +259,55 @@ export default function AdminTenants() {
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         {new Date(tenant.createdAt).toLocaleDateString()}
                       </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                      <td className="whitespace-nowrap px-3 py-4 text-sm">
                         <div className="flex items-center">
-                          {Array.from({ length: 5 }).map((_, i) => {
-                            const getStarColor = () => {
-                              if (i < (tenant.rating || 0)) {
-                                if (tenant.rating === 5) return 'text-green-500';
-                                if (tenant.rating >= 3) return 'text-yellow-400';
-                                return 'text-red-500';
-                              }
-                              return 'text-gray-300';
-                            };
-                            
-                            return (
-                              <svg
-                                key={i}
-                                className={`h-5 w-5 ${getStarColor()}`}
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                              </svg>
-                            );
-                          })}
+                          <span className={`${
+                            tenant.tenantScoring >= 80 ? 'text-green-600' :
+                            tenant.tenantScoring >= 60 ? 'text-yellow-600' :
+                            'text-red-600'
+                          }`}>
+                            {tenant.tenantScoring || 0}%
+                          </span>
+                          <div className="ml-2 w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full ${
+                                tenant.tenantScoring >= 80 ? 'bg-green-500' :
+                                tenant.tenantScoring >= 60 ? 'bg-yellow-500' :
+                                'bg-red-500'
+                              }`}
+                              style={{ width: `${tenant.tenantScoring || 0}%` }}
+                            />
+                          </div>
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        <div className="flex items-center space-x-2">
-                          <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
-                            tenant.tenantDocument?.hasBeenEvicted ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {tenant.tenantDocument?.hasBeenEvicted ? 'Complete' : 'Incomplete'}
-                          </span>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          (tenant.comments?.length || 0) > 0 
+                            ? 'bg-blue-100 text-blue-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {tenant.comments?.length || 0} comment{(tenant.comments?.length || 0) !== 1 ? 's' : ''}
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        <div className="flex items-center gap-2">
                           <button
                             onClick={() => navigate(`/admin/tenants/${tenant._id}/profile`)}
-                            className="inline-flex items-center rounded-md border border-transparent bg-primary-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                            className="text-blue-600 hover:text-blue-900 text-xs"
                           >
                             View
                           </button>
-                        </div>
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        <div className="flex space-x-2">
+                          <span className="text-gray-300">|</span>
                           <button
-                            onClick={() => handleEdit(tenant._id)}
-                            className="inline-flex items-center rounded-md border border-transparent bg-primary-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                            onClick={() => handleOpenComments(tenant)}
+                            className="text-indigo-600 hover:text-indigo-900 text-xs"
                           >
-                            Edit
+                            Comments
                           </button>
+                          <span className="text-gray-300">|</span>
                           <button
                             onClick={() => handleDelete(tenant._id)}
-                            className="inline-flex items-center rounded-md border border-transparent bg-primary-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                            className="text-xs text-red-600 hover:text-red-900"
                           >
                             Delete
                           </button>
@@ -279,6 +321,37 @@ export default function AdminTenants() {
           </div>
         </div>
       </div>
+
+      {/* Comments Modal */}
+      <Dialog
+        open={isCommentsModalOpen}
+        onClose={() => setIsCommentsModalOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <div className="flex justify-between items-center">
+            <span>Comments for {selectedTenant?.name}</span>
+            <IconButton
+              edge="end"
+              color="inherit"
+              onClick={() => setIsCommentsModalOpen(false)}
+              aria-label="close"
+            >
+              <CloseIcon />
+            </IconButton>
+          </div>
+        </DialogTitle>
+        <DialogContent dividers>
+          {selectedTenant && (
+            <CommentSection
+              comments={selectedTenant.comments || []}
+              onAddComment={handleAddComment}
+              isLoading={isAddingComment}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 

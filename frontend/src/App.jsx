@@ -22,7 +22,7 @@ import AdminTickets from './pages/admin/Tickets';
 import AdminLandlords from './pages/admin/Landlords';
 import AdminTenants from './pages/admin/Tenants';
 import AdminTenantProfile from './pages/admin/AdminTenantProfile';
-import Escalations from './pages/Escalations';
+import Escalations from './pages/admin/Escalations';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import Layout from './components/Layout';

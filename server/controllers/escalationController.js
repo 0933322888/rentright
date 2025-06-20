@@ -185,7 +185,7 @@ export const getActiveEscalation = async (req, res) => {
     // Find the most recent active escalation for the property
     const escalation = await Escalation.findOne({
       property: propertyId,
-      status: { $in: ['pending', 'in_review'] }
+      status: { $in: ['new', 'in_review'] }
     })
     .populate('property', 'title location')
     .populate('tenant', 'name email phone')

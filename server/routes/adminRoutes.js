@@ -20,7 +20,8 @@ import {
   uploadLeaseAgreementFile,
   deleteLeaseAgreementFile,
   getLeaseAgreementFile,
-  geocodeProperties
+  geocodeProperties,
+  getDashboardStats
 } from '../controllers/adminController.js';
 import { protect, restrictTo } from '../middleware/authMiddleware.js';
 import { isAdmin } from '../middleware/adminMiddleware.js';
@@ -32,6 +33,9 @@ const router = express.Router();
 // Protect all admin routes
 router.use(protect);
 router.use(isAdmin);
+
+// Dashboard routes
+router.get('/dashboard/stats', getDashboardStats);
 
 // Property routes
 router.get('/properties', getAllProperties);
