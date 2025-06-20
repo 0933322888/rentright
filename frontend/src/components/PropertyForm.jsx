@@ -207,9 +207,11 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
-          type: formData.type,
+          propertyInfo: {
+            type: formData.type,
+            features: formData.features
+          },
           location: formData.location,
-          features: formData.features
         }),
       });
 
@@ -614,7 +616,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
                 {priceError}
               </Alert>
             )}
-            {priceSuggestion && (
+            {priceSuggestion && priceSuggestion.suggestedPrice && (
               <Box>
                 <Typography variant="subtitle2" color="primary" sx={{ mb: 1, fontWeight: 600 }}>
                   AI Price Suggestion
@@ -624,36 +626,12 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
                     Suggested Price: <strong>${priceSuggestion.suggestedPrice.toLocaleString()}</strong>
                   </Typography>
                   <Typography variant="body2" sx={{ mt: 0.5 }}>
-                    Price Range: ${priceSuggestion.priceRange.min.toLocaleString()} - ${priceSuggestion.priceRange.max.toLocaleString()}
+                    Based on the provided property information, the suggested price range is ${priceSuggestion.priceRange?.min.toLocaleString()} - ${priceSuggestion.priceRange?.max.toLocaleString()}
+                  </Typography>
+                  <Typography variant="body2" sx={{ mt: 0.5 }}>
+                    Comment: {priceSuggestion.comment} {priceSuggestion.justification}
                   </Typography>
                 </Alert>
-                <Box sx={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-                  gap: 2,
-                  p: 2,
-                  bgcolor: 'background.paper',
-                  borderRadius: 1,
-                  border: '1px solid',
-                  borderColor: 'divider'
-                }}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">Base Price</Typography>
-                    <Typography variant="body2" fontWeight={500}>${priceSuggestion.breakdown.basePrice.toLocaleString()}</Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">Location Multiplier</Typography>
-                    <Typography variant="body2" fontWeight={500}>{priceSuggestion.breakdown.locationMultiplier}x</Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">Feature Adjustment</Typography>
-                    <Typography variant="body2" fontWeight={500}>+{priceSuggestion.breakdown.featureAdjustment}%</Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">Location</Typography>
-                    <Typography variant="body2" fontWeight={500}>{priceSuggestion.breakdown.location}</Typography>
-                  </Box>
-                </Box>
               </Box>
             )}
           </Paper>
