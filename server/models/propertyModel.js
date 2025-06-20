@@ -29,6 +29,7 @@ const propertySchema = new mongoose.Schema({
   }],
   location: {
     street: String,
+    unit: String,
     city: {
       type: String,
       required: true
