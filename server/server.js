@@ -41,6 +41,9 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/docusign', docusignRoutes);
 app.use('/api/escalations', escalationRoutes);
 
+// Serve uploaded files statically (for local storage fallback)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Error handling middleware for multer errors
 app.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {

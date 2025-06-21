@@ -142,7 +142,33 @@ const AddProperty = () => {
     }
   };
 
-  const handleNext = () => {
+  const handleNext = (propertyData) => {
+    // Validate required fields
+    const requiredFields = {
+      'Property Type': propertyData.type,
+      'Available From': propertyData.availableFrom,
+      'Street Address': propertyData.location?.street,
+      'City': propertyData.location?.city,
+      'State': propertyData.location?.state,
+      'Bedrooms': propertyData.features?.bedrooms,
+      'Bathrooms': propertyData.features?.bathrooms,
+      'Square Footage': propertyData.features?.squareFootage,
+      'Price': propertyData.price,
+      'Title': propertyData.title,
+      'Description': propertyData.description
+    };
+
+    const missingFields = Object.entries(requiredFields)
+      .filter(([field, value]) => !value || (typeof value === 'string' && value.trim() === ''))
+      .map(([field]) => field);
+
+    if (missingFields.length > 0) {
+      setError(`Please fill in the following required fields: ${missingFields.join(', ')}`);
+      return;
+    }
+
+    setError(''); // Clear any existing errors
+    setPropertyData(propertyData);
     setActiveStep((prevStep) => prevStep + 1);
   };
 
@@ -228,7 +254,7 @@ const AddProperty = () => {
       const token = localStorage.getItem('token');
       const formData = new FormData();
 
-      // Append property data
+      // Append property data from the saved state
       Object.entries(propertyData).forEach(([key, value]) => {
         if (key === 'location') {
           // Handle location fields individually
@@ -352,7 +378,7 @@ const AddProperty = () => {
 
         {activeStep === 0 ? (
           <PropertyForm 
-            onSubmit={handlePropertySubmit} 
+            onSubmit={handleNext} 
             loading={loading}
             isFirstStep={true}
             initialData={propertyData}

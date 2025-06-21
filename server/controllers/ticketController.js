@@ -19,7 +19,6 @@ if (!fs.existsSync(uploadsDir)) {
 export const createTicket = async (req, res) => {
   try {
     const { propertyId, description } = req.body;
-    console.log('Request body:', req.body);
     const tenantId = req.user._id;
     const imageUrls = [];
 
@@ -42,27 +41,14 @@ export const createTicket = async (req, res) => {
     }
 
     // First find the property to check if user is the current tenant
-    console.log('PropertyId:', propertyId);
     const property = await Property.findById(propertyId).populate('tenant');
-    console.log('Property:', property);
 
     if (!property) {
-      console.log('Property not found:', propertyId);
       return res.status(404).json({ message: 'Property not found' });
     }
 
-    console.log('Property found:', {
-      id: property._id,
-      title: property.title,
-      tenant: property.tenant
-    });
-
     // Check if user is the current tenant of the property
     if (!property.tenant || property.tenant._id.toString() !== tenantId.toString()) {
-      console.log('User is not the tenant of the property:', {
-        propertyTenant: property.tenant,
-        currentUser: tenantId
-      });
       return res.status(403).json({ message: 'You must be the current tenant of the property to create a ticket' });
     }
 

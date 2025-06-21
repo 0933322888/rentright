@@ -11,6 +11,7 @@ const __dirname = path.dirname(__filename);
 export const uploadPropertyDocuments = async (req, res) => {
   try {
     const { propertyId } = req.params;
+    console.log("");
 
     // Check if property exists and belongs to the landlord
     const property = await Property.findById(propertyId);
@@ -48,6 +49,7 @@ export const uploadPropertyDocuments = async (req, res) => {
           const key = generateS3Key('property-documents', file.originalname);
           // Upload to S3
           const url = await uploadFileToS3(fileBuffer, key, file.mimetype);
+          console.log("S3 Upload Complete");
 
           // Clean up the temporary file
           fs.unlinkSync(file.path);

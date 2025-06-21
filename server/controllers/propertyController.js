@@ -445,13 +445,6 @@ const updateApplicationStatus = async (req, res) => {
       return res.status(404).json({ message: 'Application not found' });
     }
 
-    console.log('Current property state:', {
-      id: property._id,
-      tenant: property.tenant,
-      available: property.available,
-      application: application
-    });
-
     // Update application status
     application.status = status;
     await application.save();
@@ -470,11 +463,6 @@ const updateApplicationStatus = async (req, res) => {
         { status: 'rejected' }
       );
 
-      console.log('After approval:', {
-        id: property._id,
-        tenant: property.tenant,
-        available: property.available
-      });
     } else if (status === 'declined') {
       // If the application is declined, remove the tenant if it was this application
       if (property.tenant && property.tenant.toString() === application.tenant.toString()) {
@@ -815,6 +803,9 @@ const generatePropertyPrice = async (req, res) => {
 
 export const uploadPropertyImages = async (req, res) => {
   try {
+    console.log('uploadPropertyImages called');
+    console.log('Files received:', req.files);
+    
     const property = await Property.findById(req.params.id);
     if (!property) return res.status(404).json({ message: 'Property not found' });
 
@@ -823,23 +814,41 @@ export const uploadPropertyImages = async (req, res) => {
     }
 
     const files = Array.isArray(req.files) ? req.files : [req.files];
-    const newImages = await Promise.all(files.map(async (file) => {
-      // Read file data from disk since we're using disk storage
-      const fileBuffer = fs.readFileSync(file.path);
-      const key = `property-images/${property._id}/${file.originalname}`;
-      const url = await uploadFileToS3(fileBuffer, key, file.mimetype);
+    console.log('Processing files:', files.length);
+    
+    const newImages = await Promise.all(files.map(async (file, index) => {
+      console.log(`Processing file ${index + 1}:`, file.originalname);
+      
+      try {
+        // Read file data from disk since we're using disk storage
+        const fileBuffer = fs.readFileSync(file.path);
+        console.log(`File ${index + 1} buffer size:`, fileBuffer.length);
+        
+        const key = `property-images/${property._id}/${file.originalname}`;
+        console.log(`File ${index + 1} S3 key:`, key);
+        
+        const url = await uploadFileToS3(fileBuffer, key, file.mimetype);
+        console.log(`File ${index + 1} uploaded successfully:`, url);
 
-      // Clean up the temporary file
-      fs.unlinkSync(file.path);
+        // Clean up the temporary file
+        fs.unlinkSync(file.path);
+        console.log(`File ${index + 1} temporary file cleaned up`);
 
-      return url;
+        return url;
+      } catch (fileError) {
+        console.error(`Error processing file ${index + 1}:`, fileError);
+        throw fileError;
+      }
     }));
 
+    console.log('All files processed, updating property');
     property.images = property.images.concat(newImages);
     await property.save();
+    console.log('Property updated successfully');
 
     res.json(property);
   } catch (error) {
+    console.error('Error in uploadPropertyImages:', error);
     res.status(400).json({ message: error.message });
   }
 };

@@ -9,8 +9,6 @@ export const updateTenantProfile = async (req, res) => {
       return res.status(403).json({ message: 'Only tenants can update their profile' });
     }
 
-    console.log('Files received:', req.files);
-    console.log('Body received:', req.body);
 
     const documentFields = [
       'proofOfIdentity',
@@ -129,7 +127,6 @@ export const updateTenantProfile = async (req, res) => {
     });
 
     const savedDocument = await tenantDocument.save();
-    console.log('Saved document:', savedDocument);
 
     // Format the response data with URLs
     const responseData = savedDocument.toObject();
@@ -173,7 +170,6 @@ export const getTenantProfile = async (req, res) => {
 
     // Create a copy of the document to modify
     const profileData = tenantDocument.toObject();
-    console.log('Profile data before URL addition:', profileData);
 
     // Add URLs for each document
     const documentFields = ['proofOfIdentity', 'proofOfIncome', 'creditHistory', 'rentalHistory', 'additionalDocuments'];
@@ -194,7 +190,6 @@ export const getTenantProfile = async (req, res) => {
     delete profileData.createdAt;
     delete profileData.updatedAt;
 
-    console.log('Profile data with URLs:', profileData);
     res.json(profileData);
   } catch (error) {
     console.error('Error in getTenantProfile:', error);
@@ -205,11 +200,9 @@ export const getTenantProfile = async (req, res) => {
 export const deleteDocument = async (req, res) => {
   try {
     const { field, index } = req.params;
-    console.log('Deleting document:', { field, index });
 
     const tenantDocument = await TenantDocument.findOne({ tenant: req.user._id });
     if (!tenantDocument) {
-      console.log('Tenant document not found');
       return res.status(404).json({ message: 'Tenant profile not found' });
     }
 
@@ -242,7 +235,6 @@ export const deleteDocument = async (req, res) => {
     // Remove the document from the array
     tenantDocument[field].splice(index, 1);
     await tenantDocument.save();
-    console.log('Document removed from database');
 
     res.json({ message: 'Document deleted successfully' });
   } catch (error) {
