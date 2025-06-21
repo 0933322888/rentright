@@ -25,7 +25,8 @@ export const getProfile = async (req, res) => {
         email: user.email,
         role: user.role,
         phone: user.phone,
-        profilePicture: user.profilePicture
+        profilePicture: user.profilePicture,
+        socialMedia: user.socialMedia || {}
       });
     } else {
       res.status(404).json({ message: 'User not found' });
@@ -46,6 +47,20 @@ export const updateProfile = async (req, res) => {
       user.name = req.body.name || user.name;
       user.email = req.body.email || user.email;
       user.phone = req.body.phone || user.phone;
+
+      // Update social media fields
+      if (req.body.socialMedia) {
+        try {
+          const socialMediaData = JSON.parse(req.body.socialMedia);
+          user.socialMedia = {
+            ...user.socialMedia,
+            ...socialMediaData
+          };
+        } catch (error) {
+          console.error('Error parsing social media data:', error);
+          // If parsing fails, ignore the social media update
+        }
+      }
 
       if (req.files && req.files.profilePicture) {
         const file = req.files.profilePicture;
@@ -96,6 +111,7 @@ export const updateProfile = async (req, res) => {
         role: updatedUser.role,
         phone: updatedUser.phone,
         profilePicture: updatedUser.profilePicture,
+        socialMedia: updatedUser.socialMedia || {},
         token: generateToken(updatedUser._id),
       });
     } else {
@@ -192,6 +208,21 @@ export const updateUser = async (req, res) => {
     user.role = req.body.role || user.role;
     user.tenantScoring = req.body.tenantScoring !== undefined ? req.body.tenantScoring : user.tenantScoring;
 
+    // Update social media fields
+    if (req.body.socialMedia) {
+      try {
+        const socialMediaData = typeof req.body.socialMedia === 'string' 
+          ? JSON.parse(req.body.socialMedia) 
+          : req.body.socialMedia;
+        user.socialMedia = {
+          ...user.socialMedia,
+          ...socialMediaData
+        };
+      } catch (error) {
+        console.error('Error parsing social media data:', error);
+      }
+    }
+
     if (req.body.password) {
       user.password = req.body.password;
     }
@@ -203,6 +234,7 @@ export const updateUser = async (req, res) => {
       email: updatedUser.email,
       role: updatedUser.role,
       phone: updatedUser.phone,
+      socialMedia: updatedUser.socialMedia || {},
       tenantScoring: updatedUser.tenantScoring
     });
   } catch (error) {

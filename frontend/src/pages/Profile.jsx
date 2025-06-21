@@ -20,11 +20,17 @@ import {
   CardContent,
   CardActions,
   IconButton,
-  MenuItem
+  MenuItem,
+  InputAdornment
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import ImageIcon from '@mui/icons-material/Image';
+import FacebookIcon from '@mui/icons-material/Facebook';
+import LinkedInIcon from '@mui/icons-material/LinkedIn';
+import InstagramIcon from '@mui/icons-material/Instagram';
+import TwitterIcon from '@mui/icons-material/Twitter';
+import LanguageIcon from '@mui/icons-material/Language';
 
 // Document preview component similar to AddProperty
 const DocumentPreview = ({ file, onDelete }) => {
@@ -90,7 +96,14 @@ export default function Profile() {
     name: '',
     email: '',
     phone: '',
-    profilePicture: null
+    profilePicture: null,
+    socialMedia: {
+      facebook: '',
+      linkedin: '',
+      instagram: '',
+      twitter: '',
+      website: ''
+    }
   });
   const [profilePreview, setProfilePreview] = useState(null);
   const [error, setError] = useState('');
@@ -141,6 +154,13 @@ export default function Profile() {
             name: user.name || '',
             email: user.email || '',
             phone: user.phone || '',
+            socialMedia: user.socialMedia || {
+              facebook: '',
+              linkedin: '',
+              instagram: '',
+              twitter: '',
+              website: ''
+            }
           });
 
           // Fetch tenant data if user is a tenant
@@ -219,10 +239,23 @@ export default function Profile() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    // Handle nested social media fields
+    if (name.startsWith('socialMedia.')) {
+      const socialMediaField = name.split('.')[1];
+      setFormData(prev => ({
+        ...prev,
+        socialMedia: {
+          ...prev.socialMedia,
+          [socialMediaField]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleAnswerChange = (e) => {
@@ -246,6 +279,9 @@ export default function Profile() {
       formDataToSend.append('name', formData.name);
       formDataToSend.append('email', formData.email);
       formDataToSend.append('phone', formData.phone);
+      
+      // Add social media data as JSON string
+      formDataToSend.append('socialMedia', JSON.stringify(formData.socialMedia));
       
       if (formData.profilePicture) {
         // Validate file type
@@ -500,17 +536,179 @@ export default function Profile() {
                 />
               </Grid>
             </Grid>
-            <Box sx={{ mt: 2 }}>
+
+            {/* Social Media Section */}
+            <Box sx={{ mt: 4 }}>
+              <Typography variant="h6" gutterBottom>
+                Social Media Links
+              </Typography>
+              <Grid container spacing={2} sx={{ mt: 1 }}>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Facebook"
+                    name="socialMedia.facebook"
+                    value={formData.socialMedia.facebook}
+                    onChange={handleChange}
+                    placeholder="https://facebook.com/yourprofile"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <FacebookIcon />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="LinkedIn"
+                    name="socialMedia.linkedin"
+                    value={formData.socialMedia.linkedin}
+                    onChange={handleChange}
+                    placeholder="https://linkedin.com/in/yourprofile"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <LinkedInIcon />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Instagram"
+                    name="socialMedia.instagram"
+                    value={formData.socialMedia.instagram}
+                    onChange={handleChange}
+                    placeholder="https://instagram.com/yourprofile"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <InstagramIcon />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Twitter"
+                    name="socialMedia.twitter"
+                    value={formData.socialMedia.twitter}
+                    onChange={handleChange}
+                    placeholder="https://twitter.com/yourprofile"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <TwitterIcon />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Website"
+                    name="socialMedia.website"
+                    value={formData.socialMedia.website}
+                    onChange={handleChange}
+                    placeholder="https://yourwebsite.com"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <LanguageIcon />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+              </Grid>
+            </Box>
+
+            <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
               <Button
                 type="submit"
                 variant="contained"
                 disabled={loading}
+                sx={{ minWidth: 200 }}
               >
                 {loading ? 'Updating...' : 'Update Profile'}
               </Button>
             </Box>
           </Box>
         </Paper>
+
+        {/* Current Social Media Links Display */}
+        {formData.socialMedia && Object.keys(formData.socialMedia).some(key => formData.socialMedia[key]) && (
+          <Paper sx={{ p: 3, mb: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Current Social Media Links
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {formData.socialMedia.facebook && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1, borderRadius: 1, bgcolor: 'blue.50' }}>
+                  <FacebookIcon sx={{ color: 'blue.600' }} />
+                  <Typography variant="body2" sx={{ color: 'blue.600' }}>
+                    Facebook
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'text.secondary', ml: 'auto' }}>
+                    {formData.socialMedia.facebook}
+                  </Typography>
+                </Box>
+              )}
+              {formData.socialMedia.linkedin && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1, borderRadius: 1, bgcolor: 'blue.50' }}>
+                  <LinkedInIcon sx={{ color: 'blue.700' }} />
+                  <Typography variant="body2" sx={{ color: 'blue.700' }}>
+                    LinkedIn
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'text.secondary', ml: 'auto' }}>
+                    {formData.socialMedia.linkedin}
+                  </Typography>
+                </Box>
+              )}
+              {formData.socialMedia.instagram && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1, borderRadius: 1, bgcolor: 'pink.50' }}>
+                  <InstagramIcon sx={{ color: 'pink.600' }} />
+                  <Typography variant="body2" sx={{ color: 'pink.600' }}>
+                    Instagram
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'text.secondary', ml: 'auto' }}>
+                    {formData.socialMedia.instagram}
+                  </Typography>
+                </Box>
+              )}
+              {formData.socialMedia.twitter && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1, borderRadius: 1, bgcolor: 'sky.50' }}>
+                  <TwitterIcon sx={{ color: 'sky.500' }} />
+                  <Typography variant="body2" sx={{ color: 'sky.500' }}>
+                    Twitter
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'text.secondary', ml: 'auto' }}>
+                    {formData.socialMedia.twitter}
+                  </Typography>
+                </Box>
+              )}
+              {formData.socialMedia.website && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1, borderRadius: 1, bgcolor: 'grey.50' }}>
+                  <LanguageIcon sx={{ color: 'grey.700' }} />
+                  <Typography variant="body2" sx={{ color: 'grey.700' }}>
+                    Website
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'text.secondary', ml: 'auto' }}>
+                    {formData.socialMedia.website}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          </Paper>
+        )}
 
         {/* Tenant Profile Section */}
         {user?.role === 'tenant' && (
