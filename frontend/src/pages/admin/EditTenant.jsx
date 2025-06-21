@@ -14,7 +14,14 @@ export default function EditTenant() {
     email: '',
     phone: '',
     hasProfile: false,
-    rating: 0
+    rating: 0,
+    socialMedia: {
+      facebook: '',
+      linkedin: '',
+      instagram: '',
+      twitter: '',
+      website: ''
+    }
   });
 
   useEffect(() => {
@@ -33,7 +40,14 @@ export default function EditTenant() {
         email: response.data.email || '',
         phone: response.data.phone || '',
         hasProfile: response.data.hasProfile || false,
-        rating: response.data.rating || 0
+        rating: response.data.rating || 0,
+        socialMedia: response.data.socialMedia || {
+          facebook: '',
+          linkedin: '',
+          instagram: '',
+          twitter: '',
+          website: ''
+        }
       });
     } catch (err) {
       setError('Failed to fetch tenant details');
@@ -63,10 +77,23 @@ export default function EditTenant() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setTenant(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    
+    // Handle nested social media fields
+    if (name.startsWith('socialMedia.')) {
+      const socialMediaField = name.split('.')[1];
+      setTenant(prev => ({
+        ...prev,
+        socialMedia: {
+          ...prev.socialMedia,
+          [socialMediaField]: value
+        }
+      }));
+    } else {
+      setTenant(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+      }));
+    }
   };
 
   if (loading) {
@@ -127,6 +154,87 @@ export default function EditTenant() {
                     onChange={handleChange}
                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   />
+                </div>
+
+                {/* Social Media Fields */}
+                <div>
+                  <h4 className="text-md font-medium text-gray-900 mb-3">Social Media Links (Optional)</h4>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <label htmlFor="facebook" className="block text-sm font-medium text-gray-700">
+                        Facebook
+                      </label>
+                      <input
+                        type="url"
+                        name="socialMedia.facebook"
+                        id="facebook"
+                        value={tenant.socialMedia.facebook}
+                        onChange={handleChange}
+                        placeholder="https://facebook.com/yourprofile"
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="linkedin" className="block text-sm font-medium text-gray-700">
+                        LinkedIn
+                      </label>
+                      <input
+                        type="url"
+                        name="socialMedia.linkedin"
+                        id="linkedin"
+                        value={tenant.socialMedia.linkedin}
+                        onChange={handleChange}
+                        placeholder="https://linkedin.com/in/yourprofile"
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="instagram" className="block text-sm font-medium text-gray-700">
+                        Instagram
+                      </label>
+                      <input
+                        type="url"
+                        name="socialMedia.instagram"
+                        id="instagram"
+                        value={tenant.socialMedia.instagram}
+                        onChange={handleChange}
+                        placeholder="https://instagram.com/yourprofile"
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="twitter" className="block text-sm font-medium text-gray-700">
+                        Twitter
+                      </label>
+                      <input
+                        type="url"
+                        name="socialMedia.twitter"
+                        id="twitter"
+                        value={tenant.socialMedia.twitter}
+                        onChange={handleChange}
+                        placeholder="https://twitter.com/yourprofile"
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <label htmlFor="website" className="block text-sm font-medium text-gray-700">
+                      Website
+                    </label>
+                    <input
+                      type="url"
+                      name="socialMedia.website"
+                      id="website"
+                      value={tenant.socialMedia.website}
+                      onChange={handleChange}
+                      placeholder="https://yourwebsite.com"
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    />
+                  </div>
                 </div>
 
                 <div>
