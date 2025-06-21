@@ -40,9 +40,6 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/docusign', docusignRoutes);
 app.use('/api/escalations', escalationRoutes);
 
-// Serve uploads directory
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
 // Serve frontend static files - these must come AFTER API routes
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../frontend/dist')));

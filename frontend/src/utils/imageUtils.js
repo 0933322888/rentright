@@ -15,15 +15,13 @@ export const getImageUrl = (imagePath) => {
     return FALLBACK_IMAGE_DATA_URL;
   }
 
-  if (imagePath.startsWith('http')) {
+  // If it's already a full URL (starts with http/https), return as is
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
     return imagePath;
   }
 
-  if (imagePath.startsWith('/uploads/')) {
-    return `${import.meta.env.VITE_API_URL}${imagePath}`;
-  }
-
-  return `${import.meta.env.VITE_API_URL}/uploads/${imagePath}`;
+  // For S3 keys or relative paths, return as is (they should already be full URLs)
+  return imagePath;
 };
 
 /**
@@ -78,4 +76,16 @@ export const validateImage = (file) => {
     isValid: true,
     message: 'File is valid'
   };
+};
+
+export const getProfilePictureUrl = (profilePicture) => {
+  if (!profilePicture) return null;
+
+  // If it's already a full URL (starts with http/https), return as is
+  if (profilePicture.startsWith('http://') || profilePicture.startsWith('https://')) {
+    return profilePicture;
+  }
+
+  // For S3 keys or relative paths, return as is (they should already be full URLs)
+  return profilePicture;
 }; 

@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { API_ENDPOINTS } from '../config/api';
 import { useDropzone } from 'react-dropzone';
 import { toast, Toaster } from 'react-hot-toast';
+import { getProfilePictureUrl } from '../utils/imageUtils';
 
 // Separate component for document upload
 function DocumentUpload({ field, documents, previews, onDrop, onDelete }) {
@@ -500,10 +501,10 @@ export default function Profile() {
                 <div className="mt-2 flex items-center space-x-4">
                   <div className="h-24 w-24 overflow-hidden rounded-full bg-gray-100">
                     {(profilePreview || user.profilePicture) ? (
-                      <img 
-                        src={profilePreview || `${import.meta.env.VITE_API_URL}${user.profilePicture}`} 
-                        alt="Profile" 
-                        className="h-full w-full object-cover"
+                      <img
+                        src={profilePreview || getProfilePictureUrl(user.profilePicture)}
+                        alt="Profile Preview"
+                        className="h-32 w-32 rounded-full object-cover border-4 border-white shadow-lg"
                       />
                     ) : (
                       <svg className="h-full w-full text-gray-300" fill="currentColor" viewBox="0 0 24 24">

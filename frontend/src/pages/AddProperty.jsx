@@ -150,9 +150,73 @@ const AddProperty = () => {
     setActiveStep((prevStep) => prevStep - 1);
   };
 
-  const handlePropertySubmit = (propertyData) => {
-    setPropertyData(propertyData);
-    handleNext();
+  const handlePropertySubmit = async (propertyData) => {
+    setLoading(true);
+    setError('');
+    try {
+      const token = localStorage.getItem('token');
+      // Only include string URLs in the images array for property creation
+      const propertyDataForCreate = {
+        ...propertyData,
+        images: (propertyData.images || []).filter(img => typeof img === 'string')
+      };
+      // Step 1: Create property with JSON (no files)
+      const response = await axios.post(
+        API_ENDPOINTS.PROPERTIES,
+        propertyDataForCreate,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      const createdProperty = response.data;
+      
+      // Step 2: Upload images (if any)
+      const imageFiles = propertyData.images ? propertyData.images.filter(img => img instanceof File) : [];
+      
+      if (imageFiles.length > 0) {
+        const uploadFormData = new FormData();
+        imageFiles.forEach(file => uploadFormData.append('images', file));
+        
+        await axios.post(
+          `${API_ENDPOINTS.PROPERTIES}/${createdProperty._id}/images`,
+          uploadFormData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data',
+            },
+          }
+        );
+      }
+      // Step 3: Upload documents (if any)
+      for (const [field, files] of Object.entries(documents)) {
+        if (files && files.length > 0) {
+          const docFormData = new FormData();
+          files.forEach(file => docFormData.append(field, file));
+          await axios.post(
+            `${API_ENDPOINTS.PROPERTIES}/${createdProperty._id}/documents`,
+            docFormData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data',
+              },
+            }
+          );
+        }
+      }
+      setShowSuccessModal(true);
+    } catch (error) {
+      console.error('Error creating property:', error);
+      console.error('Error response data:', error.response?.data);
+      console.error('Error response status:', error.response?.status);
+      setError(error.response?.data?.message || 'Error creating property');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleFinalSubmit = async (event) => {
@@ -210,6 +274,8 @@ const AddProperty = () => {
       setShowSuccessModal(true);
     } catch (error) {
       console.error('Error creating property:', error);
+      console.error('Error response data:', error.response?.data);
+      console.error('Error response status:', error.response?.status);
       setError(error.response?.data?.message || 'Error creating property');
     } finally {
       setLoading(false);

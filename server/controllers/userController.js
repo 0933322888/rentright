@@ -4,7 +4,9 @@ import Property from '../models/propertyModel.js';
 import jwt from 'jsonwebtoken';
 import path from 'path';
 import fs from 'fs/promises';
+import fsSync from 'fs';
 import { fileURLToPath } from 'url';
+import { uploadFileToS3, deleteFileFromS3, generateS3Key } from '../utils/s3.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -47,41 +49,38 @@ export const updateProfile = async (req, res) => {
       user.email = req.body.email || user.email;
       user.phone = req.body.phone || user.phone;
 
-      if (req.files && req.files.profilePicture) {
-        const file = req.files.profilePicture;
-        
+      // Handle profile picture upload - support both req.files and req.file
+      const profilePictureFile = req.file || (req.files && req.files.profilePicture);
+
+      if (profilePictureFile) {
         // Validate file type
         const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-        if (!allowedTypes.includes(file.mimetype)) {
+        if (!allowedTypes.includes(profilePictureFile.mimetype)) {
           return res.status(400).json({ message: 'Invalid file type. Only JPEG, PNG and GIF are allowed.' });
         }
 
         // Validate file size (max 5MB)
         const maxSize = 5 * 1024 * 1024; // 5MB
-        if (file.size > maxSize) {
+        if (profilePictureFile.size > maxSize) {
           return res.status(400).json({ message: 'File size too large. Maximum size is 5MB.' });
         }
 
-        const filename = `${user._id}-${Date.now()}${path.extname(file.name)}`;
-        const uploadPath = path.join(__dirname, '../uploads/profile-pictures', filename);
-        
-        // Ensure directory exists
-        await fs.mkdir(path.dirname(uploadPath), { recursive: true });
-        
-        // Move the file
-        await file.mv(uploadPath);
+        const key = `profile-pictures/${user._id}/${profilePictureFile.originalname}`;
+        // Read file data from disk since we're using disk storage
+        const fileBuffer = fsSync.readFileSync(profilePictureFile.path);
+        // Upload to S3
+        const url = await uploadFileToS3(fileBuffer, key, profilePictureFile.mimetype);
 
-        // Delete old profile picture if it exists
-        if (user.profilePicture) {
-          const oldPath = path.join(__dirname, '..', user.profilePicture);
-          try {
-            await fs.unlink(oldPath);
-          } catch (error) {
-            console.error('Error deleting old profile picture:', error);
-          }
+        // Clean up the temporary file
+        fsSync.unlinkSync(profilePictureFile.path);
+
+        // Delete old profile picture from S3 if it exists
+        if (user.profilePicture && user.profilePicture.startsWith('https://rentright-data.s3.ca-central-1.amazonaws.com/')) {
+          const oldKey = user.profilePicture.replace('https://rentright-data.s3.ca-central-1.amazonaws.com/', '');
+          try { await deleteFileFromS3(oldKey); } catch (e) { /* ignore */ }
         }
 
-        user.profilePicture = `/uploads/profile-pictures/${filename}`;
+        user.profilePicture = url;
       }
 
       if (req.body.password) {
@@ -233,7 +232,7 @@ export const getAllUsers = async (req, res) => {
   try {
     const { role } = req.query;
     let query = {};
-    
+
     if (role) {
       query.role = role;
     }

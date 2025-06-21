@@ -7,6 +7,7 @@ import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api';
 import '../styles/navbar.css';
 import logo from '../assets/RR_logo.png';
+import { getProfilePictureUrl } from '../utils/imageUtils';
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
@@ -137,7 +138,7 @@ export default function Navbar() {
                           <span className="mr-3 text-gray-700 font-medium">{user.name} ({user.role.charAt(0).toUpperCase() + user.role.slice(1)})</span>
                           {user.profilePicture ? (
                             <img
-                              src={`${import.meta.env.VITE_API_URL}${user.profilePicture}`}
+                              src={getProfilePictureUrl(user.profilePicture)}
                               alt="Profile"
                               className="h-10 w-10 rounded-full object-cover border-2 border-white shadow-sm"
                             />
@@ -245,7 +246,7 @@ export default function Navbar() {
                   <div className="flex-shrink-0">
                     {user.profilePicture ? (
                       <img
-                        src={`${import.meta.env.VITE_API_URL}${user.profilePicture}`}
+                        src={getProfilePictureUrl(user.profilePicture)}
                         alt="Profile"
                         className="h-12 w-12 rounded-full object-cover border-2 border-white shadow-sm"
                       />

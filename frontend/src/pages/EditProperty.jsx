@@ -72,40 +72,59 @@ export default function EditProperty() {
     setError('');
     setLoading(true);
 
-    // Debug: Log user information
-    console.log('Current user:', user);
-    console.log('Property ID:', id);
+    // Separate existing images (strings) from new images (File objects)
+    const existingImages = formData.images.filter(image => typeof image === 'string');
+    const newImages = formData.images.filter(image => image instanceof File);
 
-    // Prepare JSON data
+    // Prepare JSON data (only existing images)
     const submitData = {
       title: formData.title,
       description: formData.description,
       type: formData.type,
       price: formData.price,
-      status: 'New',
+      status: 'new', // Use lowercase to match enum values
       location: formData.location,
       features: formData.features,
-      // Keep existing images (don't send new images in JSON update)
-      images: formData.images.filter(image => typeof image === 'string')
+      images: existingImages // Only include existing images in JSON update
     };
-
-    console.log('Submitting data:', submitData);
 
     try {
       const token = localStorage.getItem('token');
-      console.log('Using token:', token ? 'Token exists' : 'No token');
       
+      // Step 1: Update property data
       await axios.patch(`${API_ENDPOINTS.PROPERTIES}/${id}`, submitData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
+
+      // Step 2: Upload new images if any
+      if (newImages.length > 0) {
+        const formDataForImages = new FormData();
+        newImages.forEach((image, index) => {
+          formDataForImages.append('images', image);
+        });
+
+        await axios.post(`${API_ENDPOINTS.PROPERTIES}/${id}/images`, formDataForImages, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      }
+
       navigate('/my-properties');
     } catch (error) {
       console.error('Error updating property:', error);
-      console.error('Error response:', error.response?.data);
-      setError(error.response?.data?.message || 'Error updating property');
+      
+      if (error.response?.data?.message) {
+        setError(error.response.data.message);
+      } else if (error.message) {
+        setError(error.message);
+      } else {
+        setError('Error updating property');
+      }
     } finally {
       setLoading(false);
     }
