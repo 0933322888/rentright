@@ -48,6 +48,58 @@ const userSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  socialMedia: {
+    facebook: {
+      type: String,
+      trim: true,
+      validate: {
+        validator: function(v) {
+          return !v || /^https?:\/\/(www\.)?facebook\.com\/.+/.test(v);
+        },
+        message: 'Please provide a valid Facebook URL'
+      }
+    },
+    linkedin: {
+      type: String,
+      trim: true,
+      validate: {
+        validator: function(v) {
+          return !v || /^https?:\/\/(www\.)?linkedin\.com\/.+/.test(v);
+        },
+        message: 'Please provide a valid LinkedIn URL'
+      }
+    },
+    instagram: {
+      type: String,
+      trim: true,
+      validate: {
+        validator: function(v) {
+          return !v || /^https?:\/\/(www\.)?instagram\.com\/.+/.test(v);
+        },
+        message: 'Please provide a valid Instagram URL'
+      }
+    },
+    twitter: {
+      type: String,
+      trim: true,
+      validate: {
+        validator: function(v) {
+          return !v || /^https?:\/\/(www\.)?twitter\.com\/.+/.test(v);
+        },
+        message: 'Please provide a valid Twitter URL'
+      }
+    },
+    website: {
+      type: String,
+      trim: true,
+      validate: {
+        validator: function(v) {
+          return !v || /^https?:\/\/.+/.test(v);
+        },
+        message: 'Please provide a valid website URL'
+      }
+    }
+  },
   rating: {
     type: Number,
     default: 5

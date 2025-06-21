@@ -4,6 +4,11 @@ import axios from 'axios';
 import { API_ENDPOINTS } from '../../config/api';
 import { toast } from 'react-hot-toast';
 import { adminButtonStyles } from '../../utils/uiUtils';
+import FacebookIcon from '@mui/icons-material/Facebook';
+import LinkedInIcon from '@mui/icons-material/LinkedIn';
+import InstagramIcon from '@mui/icons-material/Instagram';
+import TwitterIcon from '@mui/icons-material/Twitter';
+import LanguageIcon from '@mui/icons-material/Language';
 
 export default function AdminTenantProfile() {
   const { id } = useParams();
@@ -158,6 +163,74 @@ export default function AdminTenantProfile() {
                 </span>
               </dd>
             </div>
+
+            {/* Social Media Links */}
+            {tenant.socialMedia && Object.keys(tenant.socialMedia).some(key => tenant.socialMedia[key]) && (
+              <>
+                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                  <dt className="text-sm font-medium text-gray-500">Social Media Links</dt>
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                    <div className="flex flex-col gap-3">
+                      {tenant.socialMedia.facebook && (
+                        <a
+                          href={tenant.socialMedia.facebook}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors px-2 py-1 rounded hover:bg-blue-50"
+                        >
+                          <FacebookIcon fontSize="medium" />
+                          <span>Facebook</span>
+                        </a>
+                      )}
+                      {tenant.socialMedia.linkedin && (
+                        <a
+                          href={tenant.socialMedia.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-blue-700 hover:text-blue-900 transition-colors px-2 py-1 rounded hover:bg-blue-50"
+                        >
+                          <LinkedInIcon fontSize="medium" />
+                          <span>LinkedIn</span>
+                        </a>
+                      )}
+                      {tenant.socialMedia.instagram && (
+                        <a
+                          href={tenant.socialMedia.instagram}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-pink-600 hover:text-pink-800 transition-colors px-2 py-1 rounded hover:bg-pink-50"
+                        >
+                          <InstagramIcon fontSize="medium" />
+                          <span>Instagram</span>
+                        </a>
+                      )}
+                      {tenant.socialMedia.twitter && (
+                        <a
+                          href={tenant.socialMedia.twitter}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-sky-500 hover:text-sky-700 transition-colors px-2 py-1 rounded hover:bg-sky-50"
+                        >
+                          <TwitterIcon fontSize="medium" />
+                          <span>Twitter</span>
+                        </a>
+                      )}
+                      {tenant.socialMedia.website && (
+                        <a
+                          href={tenant.socialMedia.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors px-2 py-1 rounded hover:bg-gray-100"
+                        >
+                          <LanguageIcon fontSize="medium" />
+                          <span>Website</span>
+                        </a>
+                      )}
+                    </div>
+                  </dd>
+                </div>
+              </>
+            )}
 
             {/* Tenant Document Information */}
             {tenant.tenantDocument ? (
