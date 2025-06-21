@@ -476,11 +476,11 @@ export const uploadTenantDocument = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to upload documents for this application' });
     }
 
-    if (!req.files || !req.files.document) {
+    if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    const file = req.files.document;
+    const file = req.file;
 
     // Validate file type
     if (!file.mimetype.includes('pdf')) {
@@ -730,11 +730,11 @@ export const uploadStandardLeaseDocument = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to upload lease agreement for this application' });
     }
 
-    if (!req.files || !req.files.document) {
+    if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    const file = req.files.document;
+    const file = req.file;
 
     // Validate file type
     if (!file.mimetype.includes('pdf')) {

@@ -23,36 +23,21 @@ export const createTicket = async (req, res) => {
     const tenantId = req.user._id;
     const imageUrls = [];
 
-    // Handle image upload
-    if (req.files && req.files.images) {
-      let imageFiles = req.files.images;
-      // Ensure imageFiles is an array
-      if (!Array.isArray(imageFiles)) {
-        imageFiles = [imageFiles];
-      }
-
-      if (imageFiles.length > 5) {
+    // Handle image upload - now using multer format
+    if (req.files && req.files.length > 0) {
+      if (req.files.length > 5) {
         return res.status(400).json({ message: 'You can upload a maximum of 5 images.' });
       }
 
-      for (const imageFile of imageFiles) {
+      for (const imageFile of req.files) {
         // Basic validation
         if (!imageFile.mimetype.startsWith('image')) {
           // Skip non-image files if you want to be lenient, or return an error
           continue; 
         }
 
-        // Generate unique filename
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const fileExt = path.extname(imageFile.name);
-        const filename = `${uniqueSuffix}${fileExt}`;
-        const filepath = path.join(uploadsDir, filename);
-
-        // Move file to uploads directory
-        await imageFile.mv(filepath);
-
-        // Add the URL to the array
-        imageUrls.push(`/uploads/ticket-images/${filename}`);
+        // Add the URL to the array - multer already saved the file
+        imageUrls.push(`/uploads/ticket-images/${imageFile.filename}`);
       }
     }
 

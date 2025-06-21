@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import fileUpload from 'express-fileupload';
 import connectDB from './config/db.js';
 import userRoutes from './routes/userRoutes.js';
 import propertyRoutes from './routes/propertyRoutes.js';
@@ -15,6 +14,7 @@ import escalationRoutes from './routes/escalationRoutes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import multer from 'multer';
 
 dotenv.config();
 
@@ -29,12 +29,6 @@ connectDB();
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(fileUpload({
-  createParentPath: true,
-  limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit
-  },
-}));
 
 // API Routes - these must come BEFORE static file serving
 app.use('/api/auth', authRoutes);
@@ -46,6 +40,34 @@ app.use('/api/tickets', ticketRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/docusign', docusignRoutes);
 app.use('/api/escalations', escalationRoutes);
+
+// Error handling middleware for multer errors
+app.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ message: 'File too large. Maximum size is 10MB.' });
+    }
+    if (error.code === 'LIMIT_FILE_COUNT') {
+      return res.status(400).json({ message: 'Too many files uploaded.' });
+    }
+    if (error.code === 'LIMIT_UNEXPECTED_FILE') {
+      return res.status(400).json({ message: 'Unexpected file field.' });
+    }
+    return res.status(400).json({ message: 'File upload error: ' + error.message });
+  }
+  
+  if (error.message === 'Only image files are allowed' || error.message === 'Only PDF files are allowed') {
+    return res.status(400).json({ message: error.message });
+  }
+  
+  next(error);
+});
+
+// General error handling middleware
+app.use((error, req, res, next) => {
+  console.error('Error:', error);
+  res.status(500).json({ message: 'Internal server error' });
+});
 
 // Serve frontend static files - these must come AFTER API routes
 if (process.env.NODE_ENV === 'production') {
