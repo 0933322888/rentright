@@ -252,41 +252,7 @@ const PropertyForm = ({ onSubmit, loading, initialData = {}, isFirstStep = true,
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Separate existing image URLs and new files
-    const existingImages = formData.images.filter(img => typeof img === 'string');
-    const newImageFiles = formData.images.filter(img => img instanceof File);
-    let uploadedImageUrls = [];
-
-    if (newImageFiles.length > 0) {
-      const uploadFormData = new FormData();
-      newImageFiles.forEach(file => uploadFormData.append('images', file));
-      try {
-        const token = localStorage.getItem('token');
-        const uploadRes = await axios.post(
-          API_ENDPOINTS.IMAGES,
-          uploadFormData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        uploadedImageUrls = (uploadRes.data.images || []).map(img => `/uploads/${img}`);
-      } catch (err) {
-        alert('Failed to upload images.');
-        return;
-      }
-    }
-
-    // Prepare the final data to submit
-    const submitData = {
-      ...formData,
-      images: [...existingImages, ...uploadedImageUrls],
-    };
-
-    onSubmit(submitData);
+    onSubmit(formData);
   };
 
   return (

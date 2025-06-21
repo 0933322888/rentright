@@ -1,46 +1,6 @@
 import TenantDocument from '../models/tenantDocumentModel.js';
+import { uploadFileToS3, deleteFileFromS3, generateS3Key } from '../utils/s3.js';
 import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import Jimp from 'jimp';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const uploadsDir = path.join(__dirname, '../uploads/tenant-documents');
-const thumbnailsDir = path.join(__dirname, '../uploads/tenant-documents/thumbnails');
-
-// Ensure directories exist
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-if (!fs.existsSync(thumbnailsDir)) {
-  fs.mkdirSync(thumbnailsDir, { recursive: true });
-}
-
-const generateThumbnail = async (filepath, filename) => {
-  try {
-    const thumbnailPath = path.join(thumbnailsDir, filename);
-    
-    // Ensure the thumbnails directory exists
-    if (!fs.existsSync(thumbnailsDir)) {
-      fs.mkdirSync(thumbnailsDir, { recursive: true });
-    }
-
-    // Generate thumbnail with Jimp
-    const image = await Jimp.read(filepath);
-    await image
-      .resize(300, 300, Jimp.RESIZE_INSIDE) // Maintain aspect ratio
-      .quality(80) // Set JPEG quality
-      .writeAsync(thumbnailPath);
-
-    console.log('Thumbnail generated successfully:', thumbnailPath);
-    return `/uploads/tenant-documents/thumbnails/${filename}`;
-  } catch (error) {
-    console.error('Error generating thumbnail:', error);
-    return null;
-  }
-};
 
 export const updateTenantProfile = async (req, res) => {
   try {
@@ -70,41 +30,29 @@ export const updateTenantProfile = async (req, res) => {
     for (const field of documentFields) {
       if (req.files && req.files[field]) {
         const files = Array.isArray(req.files[field]) ? req.files[field] : [req.files[field]];
-        
+
         for (const file of files) {
-          console.log(`Processing ${field}:`, file);
-          
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-          
-          // Get the file extension with dot
-          const fileExt = path.extname(file.originalname);
-          // Get the filename without extension
-          const baseName = path.basename(file.originalname, fileExt);
-          // Create sanitized filename with proper extension
-          const sanitizedName = baseName.replace(/[^a-zA-Z0-9]/g, '_');
-          const filename = `${uniqueSuffix}-${sanitizedName}${fileExt}`;
-          
-          const filepath = path.join(uploadsDir, filename);
+          // Read file data from disk since we're using disk storage
+          const fileBuffer = fs.readFileSync(file.path);
 
-          console.log('File already saved by multer at:', file.path);
+          // Generate S3 key
+          const key = generateS3Key('tenant-documents', file.originalname);
+          // Upload to S3
+          const url = await uploadFileToS3(fileBuffer, key, file.mimetype);
 
-          // Generate thumbnail for image files
-          let thumbnailUrl = null;
-          if (file.mimetype.startsWith('image/')) {
-            thumbnailUrl = await generateThumbnail(filepath, filename);
-          }
+          // Clean up the temporary file
+          fs.unlinkSync(file.path);
 
           // Update document record
           if (!tenantDocument[field]) {
             tenantDocument[field] = [];
           }
-          
           tenantDocument[field].push({
-            path: filepath,
-            filename: filename,
+            s3Key: key,
+            filename: file.originalname,
             uploadedAt: new Date(),
-            thumbnailUrl: thumbnailUrl,
             mimeType: file.mimetype,
+            url: url,
             originalName: file.originalname
           });
         }
@@ -119,21 +67,21 @@ export const updateTenantProfile = async (req, res) => {
       monthlyNetIncome: req.body.monthlyNetIncome,
       hasAdditionalIncome: req.body.hasAdditionalIncome,
       additionalIncomeDescription: req.body.additionalIncomeDescription,
-      
+
       // Expenses & Debts
       monthlyDebtRepayment: req.body.monthlyDebtRepayment,
       paysChildSupport: req.body.paysChildSupport,
       childSupportAmount: req.body.childSupportAmount,
-      
+
       // Rental History
       hasBeenEvicted: req.body.hasBeenEvicted,
       currentlyPaysRent: req.body.currentlyPaysRent,
       currentRentAmount: req.body.currentRentAmount,
-      
+
       // Financial Preparedness
       hasTwoMonthsRentSavings: req.body.hasTwoMonthsRentSavings,
       canShareFinancialDocuments: req.body.canShareFinancialDocuments,
-      
+
       // Existing fields
       canPayMoreThanOneMonth: req.body.canPayMoreThanOneMonth,
       monthsAheadCanPay: req.body.monthsAheadCanPay
@@ -185,14 +133,14 @@ export const updateTenantProfile = async (req, res) => {
 
     // Format the response data with URLs
     const responseData = savedDocument.toObject();
-    
+
     // Add URLs for each document
     documentFields.forEach(field => {
       if (responseData[field] && Array.isArray(responseData[field])) {
         responseData[field] = responseData[field].map(doc => ({
           ...doc,
-          url: `/uploads/tenant-documents/${doc.filename}`,
-          thumbnailUrl: doc.thumbnailUrl || `/uploads/tenant-documents/${doc.filename}`
+          url: doc.url,
+          thumbnailUrl: doc.url // No thumbnail for now
         }));
       }
     });
@@ -233,8 +181,8 @@ export const getTenantProfile = async (req, res) => {
       if (profileData[field] && Array.isArray(profileData[field])) {
         profileData[field] = profileData[field].map(doc => ({
           ...doc,
-          url: `/uploads/tenant-documents/${doc.filename}`,
-          thumbnailUrl: doc.thumbnailUrl || `/uploads/tenant-documents/${doc.filename}`
+          url: doc.url || doc.s3Key, // Use S3 URL if available, fallback to s3Key
+          thumbnailUrl: doc.thumbnailUrl || doc.url || doc.s3Key
         }));
       }
     });
@@ -286,27 +234,9 @@ export const deleteDocument = async (req, res) => {
     const document = tenantDocument[field][index];
     console.log('Document to delete:', document);
 
-    // Delete the original file from the filesystem
-    const filepath = path.join(uploadsDir, document.filename);
-    console.log('Attempting to delete file:', filepath);
-    if (fs.existsSync(filepath)) {
-      fs.unlinkSync(filepath);
-      console.log('Original file deleted successfully');
-    } else {
-      console.log('Original file not found:', filepath);
-    }
-
-    // Delete the thumbnail file if it exists
-    if (document.thumbnailUrl) {
-      const thumbnailFilename = path.basename(document.thumbnailUrl);
-      const thumbnailPath = path.join(thumbnailsDir, thumbnailFilename);
-      console.log('Attempting to delete thumbnail:', thumbnailPath);
-      if (fs.existsSync(thumbnailPath)) {
-        fs.unlinkSync(thumbnailPath);
-        console.log('Thumbnail deleted successfully');
-      } else {
-        console.log('Thumbnail file not found:', thumbnailPath);
-      }
+    // Delete the original file from S3
+    if (document && document.s3Key) {
+      try { await deleteFileFromS3(document.s3Key); } catch (e) { /* ignore */ }
     }
 
     // Remove the document from the array
@@ -322,9 +252,9 @@ export const deleteDocument = async (req, res) => {
       code: error.code,
       path: error.path
     });
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Failed to delete document',
-      error: error.message 
+      error: error.message
     });
   }
 }; 

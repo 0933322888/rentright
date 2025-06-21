@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { API_ENDPOINTS } from '../config/api';
 import DocumentUpload from '../components/DocumentUpload';
 import { toast, Toaster } from 'react-hot-toast';
+import { getProfilePictureUrl } from '../utils/imageUtils';
 import { 
   Box, 
   Typography, 
