@@ -45,14 +45,11 @@ const PropertyDetails = () => {
         // If user is a tenant, check their application status and profile
         if (user && user.role === 'tenant') {
           const token = localStorage.getItem('token');
-          const [applicationsResponse, profileResponse] = await Promise.all([
-            axios.get(API_ENDPOINTS.APPLICATIONS, {
-              headers: { 'Authorization': `Bearer ${token}` }
-            }),
-            axios.get(API_ENDPOINTS.GET_TENANT_PROFILE, {
-              headers: { 'Authorization': `Bearer ${token}` }
-            })
-          ]);
+          
+          // Fetch applications
+          const applicationsResponse = await axios.get(API_ENDPOINTS.APPLICATIONS, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
           
           // Check if user has already applied for this property
           const hasExistingApplication = applicationsResponse.data.some(
@@ -60,8 +57,22 @@ const PropertyDetails = () => {
           );
           setHasApplied(hasExistingApplication);
 
-          // Store tenant profile data
-          setTenantProfile(profileResponse.data);
+          // Fetch tenant profile - handle 404 gracefully
+          try {
+            const profileResponse = await axios.get(API_ENDPOINTS.GET_TENANT_PROFILE, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            setTenantProfile(profileResponse.data);
+          } catch (profileError) {
+            if (profileError.response && profileError.response.status === 404) {
+              // No tenant profile yet - set empty profile
+              console.log('No tenant profile found, setting empty profile');
+              setTenantProfile({});
+            } else {
+              // Re-throw other errors
+              throw profileError;
+            }
+          }
         }
         
         setError(null);

@@ -226,8 +226,38 @@ export default function Profile() {
                 setDocuments(initialDocuments);
               }
             } catch (error) {
-              console.error('Error fetching tenant profile:', error);
-              setError('Failed to load tenant profile');
+              // Don't show error for 404 (no tenant profile yet) - this is normal for new users
+              if (error.response?.status === 404) {
+                console.log('No tenant profile found yet - this is normal for new users');
+                // Initialize empty answers for new tenant
+                setAnswers({
+                  isCurrentlyEmployed: '',
+                  employmentType: '',
+                  monthlyNetIncome: '',
+                  hasAdditionalIncome: '',
+                  additionalIncomeDescription: '',
+                  monthlyDebtRepayment: '',
+                  paysChildSupport: '',
+                  childSupportAmount: '',
+                  hasBeenEvicted: '',
+                  currentlyPaysRent: '',
+                  currentRentAmount: '',
+                  hasTwoMonthsRentSavings: '',
+                  canShareFinancialDocuments: '',
+                  canPayMoreThanOneMonth: '',
+                  monthsAheadCanPay: ''
+                });
+                setDocuments({
+                  proofOfIdentity: [],
+                  proofOfIncome: [],
+                  creditHistory: [],
+                  rentalHistory: [],
+                  additionalDocuments: []
+                });
+              } else {
+                console.error('Error fetching tenant profile:', error);
+                setError('Failed to load tenant profile');
+              }
             }
           }
         } catch (error) {
@@ -502,6 +532,37 @@ export default function Profile() {
           width: '100%'
         }}
       >
+        <Toaster position="top-right" />
+        
+        {/* OAuth Social Media Notification */}
+        {user?.socialProfile?.provider && user?.socialMedia && Object.keys(user.socialMedia).length > 0 && (
+          <Alert 
+            severity="info" 
+            sx={{ mb: 3 }}
+            action={
+              <Button color="inherit" size="small" onClick={() => setSuccess('')}>
+                Dismiss
+              </Button>
+            }
+          >
+            <Typography variant="body2">
+              <strong>Social Media Connected!</strong> Your {user.socialProfile.provider} account has been linked to your profile. 
+              You can edit these links below or add additional social media accounts.
+            </Typography>
+          </Alert>
+        )}
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {error}
+          </Alert>
+        )}
+
+        {success && (
+          <Alert severity="success" sx={{ mb: 3 }}>
+            {success}
+          </Alert>
+        )}
 
         {/* Basic Profile Form */}
         <Paper sx={{ p: 3, mb: 3 }}>
@@ -1298,21 +1359,7 @@ export default function Profile() {
             </Box>
           </Paper>
         )}
-
-        {error && (
-          <Alert severity="error" sx={{ mt: 2 }} onClose={() => setError('')}>
-            {error}
-          </Alert>
-        )}
-
-        {success && (
-          <Alert severity="success" sx={{ mt: 2 }} onClose={() => setSuccess('')}>
-            {success}
-          </Alert>
-        )}
       </Paper>
-
-      <Toaster />
     </Box>
   );
 } 
