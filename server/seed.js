@@ -32,7 +32,8 @@ const sampleLandlords = [
     password: '123',
     role: 'landlord',
     isVerified: true,
-    phone: '555-0101'
+    phone: '555-0101',
+    termsAccepted: true
   },
   {
     name: 'Sarah Johnson',
@@ -40,7 +41,8 @@ const sampleLandlords = [
     password: '123',
     role: 'landlord',
     isVerified: true,
-    phone: '555-0102'
+    phone: '555-0102',
+    termsAccepted: true
   },
   {
     name: 'Michael Brown',
@@ -48,7 +50,8 @@ const sampleLandlords = [
     password: '123',
     role: 'landlord',
     isVerified: false,
-    phone: '555-0103'
+    phone: '555-0103',
+    termsAccepted: true
   }
 ];
 
@@ -59,7 +62,8 @@ const sampleTenants = [
     password: '123',
     role: 'tenant',
     hasProfile: true,
-    phone: '555-0201'
+    phone: '555-0201',
+    termsAccepted: true
   },
   {
     name: 'David Wilson',
@@ -67,7 +71,8 @@ const sampleTenants = [
     password: '123',
     role: 'tenant',
     hasProfile: true,
-    phone: '555-0202'
+    phone: '555-0202',
+    termsAccepted: true
   },
   {
     name: 'Lisa Anderson',
@@ -75,7 +80,8 @@ const sampleTenants = [
     password: '123',
     role: 'tenant',
     hasProfile: false,
-    phone: '555-0203'
+    phone: '555-0203',
+    termsAccepted: true
   },
   {
     name: 'Lisa Anderson',
@@ -83,7 +89,8 @@ const sampleTenants = [
     password: '123',
     role: 'admin',
     hasProfile: true,
-    phone: '111-0203'
+    phone: '111-0203',
+    termsAccepted: true
   }
 ];
 

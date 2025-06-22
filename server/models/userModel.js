@@ -37,16 +37,57 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true
+    required: function() {
+      return !this.googleId && !this.facebookId && !this.linkedinId;
+    }
   },
   role: {
     type: String,
-    enum: ['tenant', 'landlord', 'admin'],
-    required: true
+    enum: ['tenant', 'landlord', 'admin', null],
+    required: false
   },
   phone: {
     type: String,
     trim: true
+  },
+  // Social authentication fields
+  googleId: {
+    type: String,
+    sparse: true,
+    unique: true
+  },
+  facebookId: {
+    type: String,
+    sparse: true,
+    unique: true
+  },
+  linkedinId: {
+    type: String,
+    sparse: true,
+    unique: true
+  },
+  // Social authentication profile data
+  socialProfile: {
+    provider: {
+      type: String,
+      enum: ['google', 'facebook', 'linkedin', 'local'],
+      default: 'local'
+    },
+    providerData: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
+    }
+  },
+  termsAccepted: {
+    type: Boolean,
+    required: true,
+    default: false,
+    validate: {
+      validator: function(v) {
+        return v === true;
+      },
+      message: 'Terms and conditions must be accepted to register'
+    }
   },
   socialMedia: {
     facebook: {
@@ -122,6 +163,11 @@ const userSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  // Registration completion flag for OAuth users
+  registrationComplete: {
+    type: Boolean,
+    default: false
   }
 });
 

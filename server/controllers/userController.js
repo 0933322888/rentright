@@ -57,8 +57,6 @@ export const updateProfile = async (req, res) => {
             ? JSON.parse(req.body.socialMedia) 
             : req.body.socialMedia;
 
-          const socialMediaData = JSON.parse(req.body.socialMedia);
-
           user.socialMedia = {
             ...user.socialMedia,
             ...socialMediaData
