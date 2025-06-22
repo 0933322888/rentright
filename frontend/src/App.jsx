@@ -7,6 +7,10 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
+import OAuthSuccess from './pages/OAuthSuccess';
+import OAuthError from './pages/OAuthError';
 import Home from './pages/Home';
 import PropertyList from './pages/PropertyList';
 import AddProperty from './pages/AddProperty';
@@ -86,6 +90,8 @@ function AppRoutes() {
           <Route path="tenant-benefits" element={<TenantBenefits />} />
           <Route path="contact" element={<Contact />} />
           <Route path="about" element={<About />} />
+          <Route path="terms" element={<Terms />} />
+          <Route path="privacy" element={<Privacy />} />
         </Route>
 
         {/* Protected routes */}
@@ -124,6 +130,10 @@ function AppRoutes() {
             <Route path="admin/lease-agreements" element={<LeaseAgreements />} />
           </Route>
         </Route>
+
+        {/* OAuth routes */}
+        <Route path="oauth-success" element={<OAuthSuccess />} />
+        <Route path="oauth-error" element={<OAuthError />} />
 
         {/* Catch all route */}
         <Route path="*" element={<Navigate to="/" replace />} />

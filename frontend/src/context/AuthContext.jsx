@@ -53,6 +53,22 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const oauthLogin = async (user, token) => {
+    try {
+      // For OAuth login, we already have the user data and token
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      setUser(user);
+      return { success: true, ...user };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'An error occurred',
+      };
+    }
+  };
+
   const register = async (userData) => {
     try {
       const { data } = await axios.post(API_ENDPOINTS.REGISTER, userData);
@@ -94,6 +110,7 @@ export const AuthProvider = ({ children }) => {
         user,
         loading,
         login,
+        oauthLogin,
         register,
         logout,
         updateProfile,
