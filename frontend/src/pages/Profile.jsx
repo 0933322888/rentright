@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { API_ENDPOINTS } from '../config/api';
 import DocumentUpload from '../components/DocumentUpload';
 import { toast, Toaster } from 'react-hot-toast';
+import { getProfilePictureUrl } from '../utils/imageUtils';
 import { 
   Box, 
   Typography, 
@@ -21,7 +22,9 @@ import {
   CardActions,
   IconButton,
   MenuItem,
-  InputAdornment
+  InputAdornment,
+  Avatar,
+  Stack
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
@@ -31,6 +34,8 @@ import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import LanguageIcon from '@mui/icons-material/Language';
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
 // Document preview component similar to AddProperty
 const DocumentPreview = ({ file, onDelete }) => {
@@ -536,6 +541,110 @@ export default function Profile() {
                 />
               </Grid>
             </Grid>
+
+            {/* Profile Picture Upload Section */}
+            <Box sx={{ mt: 4 }}>
+              <Typography variant="h6" gutterBottom>
+                Profile Picture
+              </Typography>
+              <Grid container spacing={3} alignItems="center">
+                <Grid item xs={12} sm={4}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                    {/* Current Profile Picture Display */}
+                    <Avatar
+                      src={profilePreview ? URL.createObjectURL(profilePreview) : (user?.profilePicture ? getProfilePictureUrl(user.profilePicture) : null)}
+                      sx={{ 
+                        width: 120, 
+                        height: 120,
+                        border: '3px solid',
+                        borderColor: 'primary.main',
+                        boxShadow: 3
+                      }}
+                    >
+                      {!profilePreview && !user?.profilePicture && (
+                        <Typography variant="h3" sx={{ color: 'white' }}>
+                          {user?.name?.charAt(0).toUpperCase()}
+                        </Typography>
+                      )}
+                    </Avatar>
+                    
+                    {/* Upload Button */}
+                    <Button
+                      variant="outlined"
+                      component="label"
+                      startIcon={<PhotoCameraIcon />}
+                      sx={{ minWidth: 150 }}
+                    >
+                      Upload Photo
+                      <input
+                        type="file"
+                        hidden
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            // Validate file type
+                            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                            if (!allowedTypes.includes(file.type)) {
+                              setUploadError('Invalid file type. Only JPEG, PNG and GIF are allowed.');
+                              return;
+                            }
+
+                            // Validate file size (max 5MB)
+                            const maxSize = 5 * 1024 * 1024; // 5MB
+                            if (file.size > maxSize) {
+                              setUploadError('File size too large. Maximum size is 5MB.');
+                              return;
+                            }
+
+                            setFormData(prev => ({ ...prev, profilePicture: file }));
+                            setProfilePreview(file);
+                            setUploadError('');
+                          }
+                        }}
+                      />
+                    </Button>
+                    
+                    {/* Remove Button */}
+                    {(profilePreview || user?.profilePicture) && (
+                      <Button
+                        variant="text"
+                        color="error"
+                        size="small"
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, profilePicture: null }));
+                          setProfilePreview(null);
+                          setUploadError('');
+                        }}
+                      >
+                        Remove Photo
+                      </Button>
+                    )}
+                  </Box>
+                </Grid>
+                
+                <Grid item xs={12} sm={8}>
+                  <Stack spacing={2}>
+                    <Typography variant="body2" color="text.secondary">
+                      Upload a profile picture to personalize your account. 
+                      Supported formats: JPEG, PNG, GIF. Maximum size: 5MB.
+                    </Typography>
+                    
+                    {uploadError && (
+                      <Alert severity="error" onClose={() => setUploadError('')}>
+                        {uploadError}
+                      </Alert>
+                    )}
+                    
+                    {profilePreview && (
+                      <Alert severity="info">
+                        New profile picture selected: {profilePreview.name}
+                      </Alert>
+                    )}
+                  </Stack>
+                </Grid>
+              </Grid>
+            </Box>
 
             {/* Social Media Section */}
             <Box sx={{ mt: 4 }}>

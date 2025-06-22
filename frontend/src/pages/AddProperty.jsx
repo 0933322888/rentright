@@ -142,7 +142,33 @@ const AddProperty = () => {
     }
   };
 
-  const handleNext = () => {
+  const handleNext = (propertyData) => {
+    // Validate required fields
+    const requiredFields = {
+      'Property Type': propertyData.type,
+      'Available From': propertyData.availableFrom,
+      'Street Address': propertyData.location?.street,
+      'City': propertyData.location?.city,
+      'State': propertyData.location?.state,
+      'Bedrooms': propertyData.features?.bedrooms,
+      'Bathrooms': propertyData.features?.bathrooms,
+      'Square Footage': propertyData.features?.squareFootage,
+      'Price': propertyData.price,
+      'Title': propertyData.title,
+      'Description': propertyData.description
+    };
+
+    const missingFields = Object.entries(requiredFields)
+      .filter(([field, value]) => !value || (typeof value === 'string' && value.trim() === ''))
+      .map(([field]) => field);
+
+    if (missingFields.length > 0) {
+      setError(`Please fill in the following required fields: ${missingFields.join(', ')}`);
+      return;
+    }
+
+    setError(''); // Clear any existing errors
+    setPropertyData(propertyData);
     setActiveStep((prevStep) => prevStep + 1);
   };
 
@@ -150,9 +176,73 @@ const AddProperty = () => {
     setActiveStep((prevStep) => prevStep - 1);
   };
 
-  const handlePropertySubmit = (propertyData) => {
-    setPropertyData(propertyData);
-    handleNext();
+  const handlePropertySubmit = async (propertyData) => {
+    setLoading(true);
+    setError('');
+    try {
+      const token = localStorage.getItem('token');
+      // Only include string URLs in the images array for property creation
+      const propertyDataForCreate = {
+        ...propertyData,
+        images: (propertyData.images || []).filter(img => typeof img === 'string')
+      };
+      // Step 1: Create property with JSON (no files)
+      const response = await axios.post(
+        API_ENDPOINTS.PROPERTIES,
+        propertyDataForCreate,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      const createdProperty = response.data;
+      
+      // Step 2: Upload images (if any)
+      const imageFiles = propertyData.images ? propertyData.images.filter(img => img instanceof File) : [];
+      
+      if (imageFiles.length > 0) {
+        const uploadFormData = new FormData();
+        imageFiles.forEach(file => uploadFormData.append('images', file));
+        
+        await axios.post(
+          `${API_ENDPOINTS.PROPERTIES}/${createdProperty._id}/images`,
+          uploadFormData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data',
+            },
+          }
+        );
+      }
+      // Step 3: Upload documents (if any)
+      for (const [field, files] of Object.entries(documents)) {
+        if (files && files.length > 0) {
+          const docFormData = new FormData();
+          files.forEach(file => docFormData.append(field, file));
+          await axios.post(
+            `${API_ENDPOINTS.PROPERTIES}/${createdProperty._id}/documents`,
+            docFormData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data',
+              },
+            }
+          );
+        }
+      }
+      setShowSuccessModal(true);
+    } catch (error) {
+      console.error('Error creating property:', error);
+      console.error('Error response data:', error.response?.data);
+      console.error('Error response status:', error.response?.status);
+      setError(error.response?.data?.message || 'Error creating property');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleFinalSubmit = async (event) => {
@@ -164,7 +254,7 @@ const AddProperty = () => {
       const token = localStorage.getItem('token');
       const formData = new FormData();
 
-      // Append property data
+      // Append property data from the saved state
       Object.entries(propertyData).forEach(([key, value]) => {
         if (key === 'location') {
           // Handle location fields individually
@@ -210,6 +300,8 @@ const AddProperty = () => {
       setShowSuccessModal(true);
     } catch (error) {
       console.error('Error creating property:', error);
+      console.error('Error response data:', error.response?.data);
+      console.error('Error response status:', error.response?.status);
       setError(error.response?.data?.message || 'Error creating property');
     } finally {
       setLoading(false);
@@ -286,7 +378,7 @@ const AddProperty = () => {
 
         {activeStep === 0 ? (
           <PropertyForm 
-            onSubmit={handlePropertySubmit} 
+            onSubmit={handleNext} 
             loading={loading}
             isFirstStep={true}
             initialData={propertyData}

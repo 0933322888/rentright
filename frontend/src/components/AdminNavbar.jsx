@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Disclosure, Menu, Transition } from '@headlessui/react';
 import { Bars3Icon, XMarkIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../context/AuthContext';
+import { getProfilePictureUrl } from '../utils/imageUtils';
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
@@ -68,9 +69,9 @@ export default function AdminNavbar() {
                         <span className="mr-2 text-gray-700">{user?.name}</span>
                         {user?.profilePicture ? (
                           <img
-                            src={`${import.meta.env.VITE_API_URL}${user.profilePicture}`}
+                            src={getProfilePictureUrl(user.profilePicture)}
                             alt="Profile"
-                            className="h-8 w-8 rounded-full object-cover"
+                            className="h-10 w-10 rounded-full object-cover border-2 border-white shadow-sm"
                           />
                         ) : (
                           <UserCircleIcon className="h-8 w-8 text-gray-400" aria-hidden="true" />
@@ -143,9 +144,9 @@ export default function AdminNavbar() {
                 <div className="flex-shrink-0">
                   {user?.profilePicture ? (
                     <img
-                      src={`${import.meta.env.VITE_API_URL}${user.profilePicture}`}
+                      src={getProfilePictureUrl(user.profilePicture)}
                       alt="Profile"
-                      className="h-8 w-8 rounded-full object-cover"
+                      className="h-12 w-12 rounded-full object-cover border-2 border-white shadow-sm"
                     />
                   ) : (
                     <UserCircleIcon className="h-8 w-8 text-gray-400" aria-hidden="true" />

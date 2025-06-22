@@ -569,11 +569,11 @@ export const uploadLeaseAgreementFile = async (req, res) => {
   try {
     const { countryCode, region } = req.params;
     
-    if (!req.files || !req.files.file) {
+    if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    const file = req.files.file;
+    const file = req.file;
     
     // Validate file type
     if (!file.mimetype.includes('pdf')) {

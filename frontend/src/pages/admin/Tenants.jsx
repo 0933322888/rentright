@@ -4,6 +4,7 @@ import { API_ENDPOINTS } from '../../config/api';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import CommentSection from '../../components/CommentSection';
+import { getProfilePictureUrl } from '../../utils/imageUtils';
 import {
   Dialog,
   DialogTitle,
@@ -216,6 +217,9 @@ export default function AdminTenants() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      Profile
+                    </th>
+                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                       Email
                     </th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
@@ -244,6 +248,21 @@ export default function AdminTenants() {
                 <tbody className="divide-y divide-gray-200 bg-white">
                   {filteredTenants.map((tenant) => (
                     <tr key={tenant._id}>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        <div className="flex items-center">
+                          {tenant.profilePicture ? (
+                            <img
+                              src={getProfilePictureUrl(tenant.profilePicture)}
+                              alt="Profile"
+                              className="h-10 w-10 rounded-full object-cover border-2 border-gray-200 shadow-sm"
+                            />
+                          ) : (
+                            <div className="h-10 w-10 rounded-full bg-gradient-to-r from-gray-400 to-gray-500 flex items-center justify-center text-white font-semibold text-sm">
+                              {tenant.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                      </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         {tenant.email}
                       </td>

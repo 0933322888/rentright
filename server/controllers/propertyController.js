@@ -6,36 +6,15 @@ import User from '../models/userModel.js';
 import { geocodeAddressWithRetry } from '../utils/geocoding.js';
 import { generatePriceSuggestion } from '../utils/aiPricingService.js';
 import { generateListingContent } from '../utils/aiImageRecognition.js';
+import { uploadFileToS3, generateS3Key } from '../utils/s3.js';
+import fs from 'fs';
 
 const createProperty = async (req, res) => {
   try {
-    // Handle images for both form-data and JSON
-    let images = [];
-    let imageBuffers = [];
-    
-    if (req.files && req.files.images) {
-      if (Array.isArray(req.files.images)) {
-        images = req.files.images
-          .filter(file => file && file.path)
-          .map(file => file.path.replace(/\\/g, '/').split('uploads/')[1]);
-        imageBuffers = req.files.images
-          .filter(file => file && file.data)
-          .map(file => file.data);
-      } else if (req.files.images && req.files.images.path) {
-        images = [req.files.images.path.replace(/\\/g, '/').split('uploads/')[1]];
-        if (req.files.images.data) {
-          imageBuffers = [req.files.images.data];
-        }
-      }
-    } else if (req.body.images) {
-      images = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
-    }
-
-    // Prepare property data
+    // Prepare property data (without images)
     const propertyData = {
       ...req.body,
       landlord: req.user._id,
-      images: images,
       status: 'pending' // Set status to pending for admin approval
     };
 
@@ -53,36 +32,9 @@ const createProperty = async (req, res) => {
       }
     }
 
-    // Auto-generate title and description if not provided or empty
-    if (!propertyData.title || !propertyData.description || 
-        propertyData.title.trim() === '' || propertyData.description.trim() === '') {
-      try {
-        console.log('Auto-generating listing content using AI...');
-        const aiResult = await generateListingContent(propertyData, imageBuffers);
-        
-        if (!aiResult.error) {
-          propertyData.title = aiResult.title || propertyData.title;
-          propertyData.description = aiResult.description || propertyData.description;
-          console.log('AI-generated content applied successfully');
-        } else {
-          console.warn('AI generation failed, using fallback:', aiResult.error);
-          const fallbackResult = generateListingText(propertyData);
-          propertyData.title = fallbackResult.title || propertyData.title;
-          propertyData.description = fallbackResult.description || propertyData.description;
-        }
-      } catch (aiError) {
-        console.error('Error in AI content generation:', aiError);
-        // Use fallback generation
-        const fallbackResult = generateListingText(propertyData);
-        propertyData.title = fallbackResult.title || propertyData.title;
-        propertyData.description = fallbackResult.description || propertyData.description;
-      }
-    }
-
-    // Geocode the address to get coordinates
+       // Geocode the address to get coordinates
     if (req.body.location) {
       try {
-        console.log('Geocoding address for property creation...');
         const coordinates = await geocodeAddressWithRetry(req.body.location);
 
         if (coordinates) {
@@ -90,9 +42,6 @@ const createProperty = async (req, res) => {
             ...req.body.location,
             coordinates: coordinates
           };
-          console.log('Coordinates added to property:', coordinates);
-        } else {
-          console.log('Could not geocode address, creating property without coordinates');
         }
       } catch (geocodingError) {
         console.error('Geocoding failed, creating property without coordinates:', geocodingError.message);
@@ -100,10 +49,33 @@ const createProperty = async (req, res) => {
       }
     }
 
-    // Create property with images and coordinates
+    // Step 1: Create property without images
     const property = new Property(propertyData);
-
     const createdProperty = await property.save();
+
+    // Step 2: Upload images to S3 using property ID as folder
+    let images = [];
+    if (req.files && req.files.images) {
+      const files = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
+      images = await Promise.all(files.map(async (file) => {
+        // Read file data from disk since we're using disk storage
+        const fileBuffer = fs.readFileSync(file.path);
+        const key = `property-images/${createdProperty._id}/${file.originalname}`;
+        const url = await uploadFileToS3(fileBuffer, key, file.mimetype);
+
+        // Clean up the temporary file
+        fs.unlinkSync(file.path);
+
+        return url;
+      }));
+      // Step 3: Update property with image URLs
+      createdProperty.images = images;
+      await createdProperty.save();
+    } else if (req.body.images) {
+      images = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
+      createdProperty.images = images;
+      await createdProperty.save();
+    }
 
     // Handle documents if any were uploaded
     if (req.files && Object.keys(req.files).some(key => key !== 'images')) {
@@ -254,14 +226,8 @@ const updateProperty = async (req, res) => {
       return res.status(404).json({ message: 'Property not found' });
     }
 
-
     // Check if user is authorized to update this property
     if (property.landlord.toString() !== req.user._id.toString()) {
-      console.log('Authorization failed:', {
-        propertyLandlord: property.landlord.toString(),
-        userId: req.user._id.toString(),
-        userRole: req.user.role
-      });
       return res.status(403).json({ message: 'Not authorized to update this property' });
     }
 
@@ -281,10 +247,9 @@ const updateProperty = async (req, res) => {
     }
 
     // Handle new images from form data
-    const newImages = req.files?.images ?
-      (Array.isArray(req.files.images) ? req.files.images : [req.files.images])
-        .map(file => file.path.replace(/\\/g, '/').split('uploads/')[1])
-      : [];
+    // Note: New images are now uploaded to S3 separately via the uploadPropertyImages endpoint
+    // This endpoint only handles JSON updates, not file uploads
+    const newImages = [];
 
     // Combine existing and new images, or use images from JSON
     const updatedImages = req.body.images || [...existingImages, ...newImages];
@@ -312,7 +277,6 @@ const updateProperty = async (req, res) => {
     // Geocode the address if location is being updated
     if (req.body.location) {
       try {
-        console.log('Geocoding address for property update...');
         const coordinates = await geocodeAddressWithRetry(req.body.location);
 
         if (coordinates) {
@@ -320,9 +284,6 @@ const updateProperty = async (req, res) => {
             ...req.body.location,
             coordinates: coordinates
           };
-          console.log('Updated coordinates for property:', coordinates);
-        } else {
-          console.log('Could not geocode address, updating property without coordinates');
         }
       } catch (geocodingError) {
         console.error('Geocoding failed during property update:', geocodingError.message);
@@ -484,13 +445,6 @@ const updateApplicationStatus = async (req, res) => {
       return res.status(404).json({ message: 'Application not found' });
     }
 
-    console.log('Current property state:', {
-      id: property._id,
-      tenant: property.tenant,
-      available: property.available,
-      application: application
-    });
-
     // Update application status
     application.status = status;
     await application.save();
@@ -509,11 +463,6 @@ const updateApplicationStatus = async (req, res) => {
         { status: 'rejected' }
       );
 
-      console.log('After approval:', {
-        id: property._id,
-        tenant: property.tenant,
-        available: property.available
-      });
     } else if (status === 'declined') {
       // If the application is declined, remove the tenant if it was this application
       if (property.tenant && property.tenant.toString() === application.tenant.toString()) {
@@ -698,7 +647,7 @@ const generatePropertyListing = async (req, res) => {
 
     // Use AI to generate listing content
     const aiResult = await generateListingContent(propertyInfo, imageBuffers);
-    
+
     if (aiResult.error) {
       // Fallback to simple generation if AI fails
       console.warn('AI generation failed, using fallback:', aiResult.error);
@@ -712,7 +661,7 @@ const generatePropertyListing = async (req, res) => {
     }
   } catch (error) {
     console.error('Error generating property listing:', error);
-    
+
     // Fallback to simple generation if AI fails
     try {
       const fallbackResult = generateListingText(req.body.propertyInfo || req.body);
@@ -854,44 +803,58 @@ const generatePropertyPrice = async (req, res) => {
 
 export const uploadPropertyImages = async (req, res) => {
   try {
+    console.log('uploadPropertyImages called');
+    console.log('Files received:', req.files);
+    
     const property = await Property.findById(req.params.id);
     if (!property) return res.status(404).json({ message: 'Property not found' });
 
-    if (!req.files || !req.files.images) {
+    if (!req.files || req.files.length === 0) {
       return res.status(400).json({ message: 'No images uploaded' });
     }
 
-    let newImages = [];
-    if (Array.isArray(req.files.images)) {
-      newImages = req.files.images
-        .filter(file => file && file.path)
-        .map(file => file.path.replace(/\\/g, '/').split('uploads/')[1]);
-    } else if (req.files.images && req.files.images.path) {
-      newImages = [req.files.images.path.replace(/\\/g, '/').split('uploads/')[1]];
-    }
+    const files = Array.isArray(req.files) ? req.files : [req.files];
+    console.log('Processing files:', files.length);
+    
+    const newImages = await Promise.all(files.map(async (file, index) => {
+      console.log(`Processing file ${index + 1}:`, file.originalname);
+      
+      try {
+        // Read file data from disk since we're using disk storage
+        const fileBuffer = fs.readFileSync(file.path);
+        console.log(`File ${index + 1} buffer size:`, fileBuffer.length);
+        
+        const key = `property-images/${property._id}/${file.originalname}`;
+        console.log(`File ${index + 1} S3 key:`, key);
+        
+        const url = await uploadFileToS3(fileBuffer, key, file.mimetype);
+        console.log(`File ${index + 1} uploaded successfully:`, url);
 
+        // Clean up the temporary file
+        fs.unlinkSync(file.path);
+        console.log(`File ${index + 1} temporary file cleaned up`);
+
+        return url;
+      } catch (fileError) {
+        console.error(`Error processing file ${index + 1}:`, fileError);
+        throw fileError;
+      }
+    }));
+
+    console.log('All files processed, updating property');
     property.images = property.images.concat(newImages);
     await property.save();
+    console.log('Property updated successfully');
 
     res.json(property);
   } catch (error) {
+    console.error('Error in uploadPropertyImages:', error);
     res.status(400).json({ message: error.message });
   }
 };
 
-export const uploadImages = async (req, res) => {
-  try {
-    // Multer's upload.array puts files in req.files (array)
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ message: 'No images uploaded' });
-    }
-    const images = req.files
-      .filter(file => file && file.filename)
-      .map(file => file.filename);
-    res.json({ images });
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
+export const uploadImages = (req, res) => {
+  res.status(400).json({ message: 'Please use /api/properties/:id/images to upload property images.' });
 };
 
 export {

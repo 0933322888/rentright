@@ -3,20 +3,16 @@ import Property from '../models/propertyModel.js';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { uploadFileToS3, deleteFileFromS3, generateS3Key } from '../utils/s3.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, '../uploads/property-documents');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
 export const uploadPropertyDocuments = async (req, res) => {
   try {
     const { propertyId } = req.params;
-    
+    console.log("");
+
     // Check if property exists and belongs to the landlord
     const property = await Property.findById(propertyId);
     if (!property) {
@@ -44,29 +40,31 @@ export const uploadPropertyDocuments = async (req, res) => {
     for (const field of documentFields) {
       if (req.files && req.files[field]) {
         const files = Array.isArray(req.files[field]) ? req.files[field] : [req.files[field]];
-        
-        for (const file of files) {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-          const fileExt = path.extname(file.name);
-          const baseName = path.basename(file.name, fileExt);
-          const sanitizedName = baseName.replace(/[^a-zA-Z0-9]/g, '_');
-          const filename = `${uniqueSuffix}-${sanitizedName}${fileExt}`;
-          
-          const filepath = path.join(uploadsDir, filename);
 
-          // Move file to uploads directory
-          await file.mv(filepath);
+        for (const file of files) {
+          // Read file data from disk since we're using disk storage
+          const fileBuffer = fs.readFileSync(file.path);
+
+          // Generate S3 key
+          const key = generateS3Key('property-documents', file.originalname);
+          // Upload to S3
+          const url = await uploadFileToS3(fileBuffer, key, file.mimetype);
+          console.log("S3 Upload Complete");
+
+          // Clean up the temporary file
+          fs.unlinkSync(file.path);
 
           // Update document record
           if (!propertyDocument[field]) {
             propertyDocument[field] = [];
           }
-          
+
           propertyDocument[field].push({
-            path: filepath,
-            filename: filename,
+            s3Key: key,
+            filename: file.originalname,
             uploadedAt: new Date(),
-            mimeType: file.mimetype
+            mimeType: file.mimetype,
+            url: url
           });
         }
       }
@@ -76,13 +74,13 @@ export const uploadPropertyDocuments = async (req, res) => {
 
     // Format the response data with URLs
     const responseData = savedDocument.toObject();
-    
+
     // Add URLs for each document
     documentFields.forEach(field => {
       if (responseData[field] && Array.isArray(responseData[field])) {
         responseData[field] = responseData[field].map(doc => ({
           ...doc,
-          url: `/uploads/property-documents/${doc.filename}`
+          url: doc.url
         }));
       }
     });
@@ -97,7 +95,7 @@ export const uploadPropertyDocuments = async (req, res) => {
 export const getPropertyDocuments = async (req, res) => {
   try {
     const { propertyId } = req.params;
-    
+
     // Check if property exists
     const property = await Property.findById(propertyId);
     if (!property) {
@@ -116,14 +114,14 @@ export const getPropertyDocuments = async (req, res) => {
 
     // Format the response data with URLs
     const responseData = propertyDocument.toObject();
-    
+
     // Add URLs for each document
     const documentFields = ['proofOfOwnership', 'governmentId', 'condoBoardRules', 'utilityBills'];
     documentFields.forEach(field => {
       if (responseData[field] && Array.isArray(responseData[field])) {
         responseData[field] = responseData[field].map(doc => ({
           ...doc,
-          url: `/uploads/property-documents/${doc.filename}`
+          url: doc.url
         }));
       }
     });
@@ -138,7 +136,7 @@ export const getPropertyDocuments = async (req, res) => {
 export const deletePropertyDocument = async (req, res) => {
   try {
     const { propertyId, documentId, field } = req.params;
-    
+
     // Check if property exists and belongs to the landlord
     const property = await Property.findById(propertyId);
     if (!property) {
@@ -155,15 +153,14 @@ export const deletePropertyDocument = async (req, res) => {
     }
 
     // Find and remove the document
-    const document = propertyDocument[field].find(doc => doc._id.toString() === documentId);
-    if (!document) {
+    const doc = propertyDocument[field].find(doc => doc._id.toString() === documentId);
+    if (!doc) {
       return res.status(404).json({ message: 'Document not found' });
     }
 
-    // Delete the file from the filesystem
-    const filepath = path.join(uploadsDir, document.filename);
-    if (fs.existsSync(filepath)) {
-      fs.unlinkSync(filepath);
+    // Delete the file from S3
+    if (doc && doc.s3Key) {
+      try { await deleteFileFromS3(doc.s3Key); } catch (e) { /* ignore */ }
     }
 
     // Remove the document from the array

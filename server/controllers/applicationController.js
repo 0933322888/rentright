@@ -5,28 +5,23 @@ import User from '../models/userModel.js';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { 
-  getLeaseAgreementPath, 
-  getLeaseAgreementUrl, 
+import {
+  getLeaseAgreementPath,
+  getLeaseAgreementUrl,
   leaseAgreementExists,
-  VALID_LOCATIONS 
+  VALID_LOCATIONS
 } from '../utils/leaseAgreementUtils.js';
+import { uploadFileToS3, generateS3Key } from '../utils/s3.js';
 
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Create uploads directory if it doesn't exist
-const uploadsDir = path.join(__dirname, '../uploads/lease-documents');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
 // Get all applications (filtered by user role)
 export const getApplications = async (req, res) => {
   try {
     let query = {};
-    
+
     // If user is a tenant, show only their applications
     if (req.user.role === 'tenant') {
       query.tenant = req.user._id;
@@ -105,7 +100,7 @@ export const createApplication = async (req, res) => {
     // Find the viewing date and time slot in the property
     const viewingDateObj = new Date(viewingDate);
     const [startTime] = viewingTime.split('-');
-    
+
     const viewingDateEntry = propertyDoc.viewingDates.find(
       date => date.date.toISOString().split('T')[0] === viewingDateObj.toISOString().split('T')[0]
     );
@@ -251,7 +246,7 @@ export const deleteApplication = async (req, res) => {
 export const getPropertyApplications = async (req, res) => {
   try {
     const propertyId = req.params.id;
-    
+
     // Check if property exists and belongs to the landlord
     const property = await Property.findById(propertyId);
     if (!property) {
@@ -275,13 +270,13 @@ export const getPropertyApplications = async (req, res) => {
           // Format the document data to include URLs
           const formattedDocument = tenantDocument.toObject();
           const documentFields = ['proofOfIdentity', 'proofOfIncome', 'creditHistory', 'rentalHistory', 'additionalDocuments'];
-          
+
           documentFields.forEach(field => {
             if (formattedDocument[field] && Array.isArray(formattedDocument[field])) {
               formattedDocument[field] = formattedDocument[field].map(doc => ({
                 ...doc,
-                url: `/uploads/tenant-documents/${doc.filename}`,
-                thumbnailUrl: `/uploads/tenant-documents/thumbnails/${doc.filename}`
+                url: doc.url || doc.s3Key,
+                thumbnailUrl: doc.thumbnailUrl || doc.url || doc.s3Key
               }));
             }
           });
@@ -328,7 +323,7 @@ export const updateApplicationViewing = async (req, res) => {
     if (application.viewingDate && application.viewingTime) {
       const oldDate = new Date(application.viewingDate);
       const [oldStartTime] = application.viewingTime.split('-');
-      
+
       const oldViewingDateEntry = property.viewingDates.find(
         date => date.date.toISOString().split('T')[0] === oldDate.toISOString().split('T')[0]
       );
@@ -413,8 +408,8 @@ export const promoteApplication = async (req, res) => {
 
     // Only allow promoting from viewing status
     if (application.status !== 'viewing') {
-      return res.status(400).json({ 
-        message: 'Only applications in viewing status can be promoted to pending' 
+      return res.status(400).json({
+        message: 'Only applications in viewing status can be promoted to pending'
       });
     }
 
@@ -470,7 +465,7 @@ export const terminateLease = async (req, res) => {
 export const uploadTenantDocument = async (req, res) => {
   try {
     const { applicationId } = req.params;
-    
+
     // Check if application exists and belongs to the tenant
     const application = await Application.findById(applicationId);
     if (!application) {
@@ -481,36 +476,36 @@ export const uploadTenantDocument = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to upload documents for this application' });
     }
 
-    if (!req.files || !req.files.document) {
+    if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    const file = req.files.document;
-    
+    const file = req.file;
+
     // Validate file type
     if (!file.mimetype.includes('pdf')) {
       return res.status(400).json({ message: 'Only PDF files are allowed' });
     }
 
-    // Generate unique filename
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const fileExt = path.extname(file.name);
-    const baseName = path.basename(file.name, fileExt);
-    const sanitizedName = baseName.replace(/[^a-zA-Z0-9]/g, '_');
-    const filename = `${uniqueSuffix}-${sanitizedName}${fileExt}`;
-    
-    const filepath = path.join(uploadsDir, filename);
+    // Read file data from disk since we're using disk storage
+    const fileBuffer = fs.readFileSync(file.path);
 
-    // Move file to uploads directory
-    await file.mv(filepath);
+    // Generate S3 key
+    const key = generateS3Key('lease-documents', file.originalname);
+    // Upload to S3
+    const url = await uploadFileToS3(fileBuffer, key, file.mimetype);
+
+    // Clean up the temporary file
+    fs.unlinkSync(file.path);
 
     // Add document to application
     application.tenantDocuments.push({
-      path: filepath,
-      filename: filename,
+      s3Key: key,
+      filename: file.originalname,
       uploadedAt: new Date(),
       mimeType: file.mimetype,
-      originalName: file.name
+      originalName: file.originalname,
+      url: url
     });
 
     await application.save();
@@ -519,7 +514,7 @@ export const uploadTenantDocument = async (req, res) => {
     const document = application.tenantDocuments[application.tenantDocuments.length - 1];
     const response = {
       ...document.toObject(),
-      url: `/uploads/lease-documents/${document.filename}`
+      url: document.url
     };
 
     res.json(response);
@@ -532,7 +527,7 @@ export const uploadTenantDocument = async (req, res) => {
 export const deleteTenantDocument = async (req, res) => {
   try {
     const { applicationId, documentId } = req.params;
-    
+
     // Check if application exists and belongs to the tenant
     const application = await Application.findById(applicationId);
     if (!application) {
@@ -721,11 +716,11 @@ export const getLeaseAgreementDetails = async (req, res) => {
 export const uploadStandardLeaseDocument = async (req, res) => {
   try {
     const { applicationId } = req.params;
-    
+
     // Check if application exists
     const application = await Application.findById(applicationId)
       .populate('property', 'landlord');
-    
+
     if (!application) {
       return res.status(404).json({ message: 'Application not found' });
     }
@@ -735,36 +730,35 @@ export const uploadStandardLeaseDocument = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to upload lease agreement for this application' });
     }
 
-    if (!req.files || !req.files.document) {
+    if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    const file = req.files.document;
-    
+    const file = req.file;
+
     // Validate file type
     if (!file.mimetype.includes('pdf')) {
       return res.status(400).json({ message: 'Only PDF files are allowed' });
     }
 
-    // Generate unique filename
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const fileExt = path.extname(file.name);
-    const baseName = path.basename(file.name, fileExt);
-    const sanitizedName = baseName.replace(/[^a-zA-Z0-9]/g, '_');
-    const filename = `${uniqueSuffix}-${sanitizedName}${fileExt}`;
-    
-    const filepath = path.join(uploadsDir, filename);
+    // Generate S3 key
+    const key = generateS3Key('lease-documents', file.originalname);
+    // Read file data from disk since we're using disk storage
+    const fileBuffer = fs.readFileSync(file.path);
+    // Upload to S3
+    const url = await uploadFileToS3(fileBuffer, key, file.mimetype);
 
-    // Move file to uploads directory
-    await file.mv(filepath);
+    // Clean up the temporary file
+    fs.unlinkSync(file.path);
 
     // Update application with standard lease document
     application.leaseAgreement.standardLeaseDocument = {
-      path: filepath,
-      filename: filename,
+      s3Key: key,
+      filename: file.originalname,
       uploadedAt: new Date(),
       mimeType: file.mimetype,
-      originalName: file.name
+      originalName: file.originalname,
+      url: url
     };
 
     // Reset status to pending when new document is uploaded
@@ -780,7 +774,7 @@ export const uploadStandardLeaseDocument = async (req, res) => {
     // Format response with URL
     const response = {
       ...application.leaseAgreement.standardLeaseDocument.toObject(),
-      url: `/uploads/lease-documents/${filename}`
+      url: application.leaseAgreement.standardLeaseDocument.url
     };
 
     res.json(response);
@@ -794,19 +788,19 @@ export const uploadStandardLeaseDocument = async (req, res) => {
 export const getLeaseAgreementDocument = async (req, res) => {
   try {
     const { applicationId } = req.params;
-    
+
     const application = await Application.findById(applicationId)
       .populate('property', 'location');
-    
+
     if (!application) {
       return res.status(404).json({ message: 'Application not found' });
     }
 
     const { countryCode, region } = application.property.location;
-    
+
     if (!leaseAgreementExists(countryCode, region)) {
-      return res.status(404).json({ 
-        message: `No standard lease agreement available for ${countryCode}/${region}` 
+      return res.status(404).json({
+        message: `No standard lease agreement available for ${countryCode}/${region}`
       });
     }
 
@@ -839,10 +833,10 @@ export const getLeaseAgreementDocument = async (req, res) => {
 export const serveLeaseAgreementFile = async (req, res) => {
   try {
     const { applicationId } = req.params;
-    
+
     const application = await Application.findById(applicationId)
       .populate('property', 'location');
-    
+
     if (!application) {
       return res.status(404).json({ message: 'Application not found' });
     }
@@ -854,7 +848,7 @@ export const serveLeaseAgreementFile = async (req, res) => {
 
     // Determine country code and region based on location data
     let countryCode, region;
-    
+
     // Check if state is a valid US state code
     if (location.state && VALID_LOCATIONS.US.includes(location.state)) {
       countryCode = 'US';
@@ -881,15 +875,15 @@ export const serveLeaseAgreementFile = async (req, res) => {
     try {
       const filePath = getLeaseAgreementPath(countryCode, region);
       if (!fs.existsSync(filePath)) {
-        return res.status(404).json({ 
-          message: `No standard lease agreement available for ${countryCode}/${region}` 
+        return res.status(404).json({
+          message: `No standard lease agreement available for ${countryCode}/${region}`
         });
       }
 
       // Set appropriate headers for PDF viewing
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', 'inline');
-      
+
       res.sendFile(filePath);
     } catch (error) {
       if (error.message === 'Invalid location') {
@@ -907,15 +901,15 @@ export const serveLeaseAgreementFile = async (req, res) => {
 export const getMyLease = async (req, res) => {
   try {
     const userId = req.user._id;
-    
+
     // Find the tenant's approved application
     const application = await Application.findOne({
       tenant: userId,
       status: 'approved'
     })
-    .populate('property', 'title location price images landlord')
-    .populate('tenant', 'firstName lastName email')
-    .populate('leaseAgreement.comments.user', 'firstName lastName email');
+      .populate('property', 'title location price images landlord')
+      .populate('tenant', 'firstName lastName email')
+      .populate('leaseAgreement.comments.user', 'firstName lastName email');
 
     if (!application) {
       return res.status(404).json({ message: 'No active lease found' });
@@ -968,17 +962,17 @@ export const updateLeaseStartDate = async (req, res) => {
         approvedBy: null, // Reset approval when date is changed
         lastUpdatedAt: new Date()
       };
-      
+
       // Add a system comment about the date update
       application.leaseAgreement.comments.push({
         user: userId,
         role: userRole,
         text: `${userRole === 'tenant' ? 'Tenant' : 'Landlord'} set lease start date to ${startDate.toLocaleDateString()}`
       });
-    } 
+    }
     else if (action === 'approve_date') {
       const currentDate = application.leaseAgreement.leaseStartDate;
-      
+
       // Check if there's a date to approve
       if (!currentDate || !currentDate.date) {
         return res.status(400).json({ message: 'No lease start date set to approve' });
@@ -996,7 +990,7 @@ export const updateLeaseStartDate = async (req, res) => {
 
       // Approve the date
       application.leaseAgreement.leaseStartDate.approvedBy = userRole;
-      
+
       // Add a system comment about the approval
       application.leaseAgreement.comments.push({
         user: userId,
