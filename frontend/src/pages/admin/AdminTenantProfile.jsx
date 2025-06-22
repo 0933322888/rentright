@@ -4,6 +4,7 @@ import axios from 'axios';
 import { API_ENDPOINTS } from '../../config/api';
 import { toast } from 'react-hot-toast';
 import { adminButtonStyles } from '../../utils/uiUtils';
+import { getProfilePictureUrl } from '../../utils/imageUtils';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import InstagramIcon from '@mui/icons-material/Instagram';
@@ -121,6 +122,41 @@ export default function AdminTenantProfile() {
               <dt className="text-sm font-medium text-gray-500">Joined Date</dt>
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{formatDate(tenant.createdAt)}</dd>
             </div>
+
+            {/* Profile Picture */}
+            <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+              <dt className="text-sm font-medium text-gray-500">Profile Picture</dt>
+              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                {tenant.profilePicture ? (
+                  <div className="flex items-center space-x-4">
+                    <img
+                      src={getProfilePictureUrl(tenant.profilePicture)}
+                      alt="Profile"
+                      className="h-16 w-16 rounded-full object-cover border-2 border-gray-200 shadow-sm"
+                    />
+                    <div>
+                      <p className="text-sm text-gray-600">Profile picture uploaded</p>
+                      <a
+                        href={getProfilePictureUrl(tenant.profilePicture)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-indigo-600 hover:text-indigo-500 text-sm"
+                      >
+                        View full size
+                      </a>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-4">
+                    <div className="h-16 w-16 rounded-full bg-gradient-to-r from-gray-400 to-gray-500 flex items-center justify-center text-white font-semibold text-xl">
+                      {tenant.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="text-gray-500">No profile picture uploaded</span>
+                  </div>
+                )}
+              </dd>
+            </div>
+
             <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
               <dt className="text-sm font-medium text-gray-500">Applications</dt>
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{tenant.applicationCount || 0}</dd>

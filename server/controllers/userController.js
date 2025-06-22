@@ -53,21 +53,9 @@ export const updateProfile = async (req, res) => {
       // Update social media fields
       if (req.body.socialMedia) {
         try {
-          const socialMediaData = JSON.parse(req.body.socialMedia);
-          user.socialMedia = {
-            ...user.socialMedia,
-            ...socialMediaData
-          };
-        } catch (error) {
-          console.error('Error parsing social media data:', error);
-          // If parsing fails, ignore the social media update
-        }
-      }
-
-      // Update social media fields
-      if (req.body.socialMedia) {
-        try {
-          const socialMediaData = JSON.parse(req.body.socialMedia);
+          const socialMediaData = typeof req.body.socialMedia === 'string' 
+            ? JSON.parse(req.body.socialMedia) 
+            : req.body.socialMedia;
           user.socialMedia = {
             ...user.socialMedia,
             ...socialMediaData
@@ -82,34 +70,49 @@ export const updateProfile = async (req, res) => {
       const profilePictureFile = req.file || (req.files && req.files.profilePicture);
 
       if (profilePictureFile) {
-        // Validate file type
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-        if (!allowedTypes.includes(profilePictureFile.mimetype)) {
-          return res.status(400).json({ message: 'Invalid file type. Only JPEG, PNG and GIF are allowed.' });
+        try {
+          // Validate file type
+          const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+          if (!allowedTypes.includes(profilePictureFile.mimetype)) {
+            return res.status(400).json({ message: 'Invalid file type. Only JPEG, PNG and GIF are allowed.' });
+          }
+
+          // Validate file size (max 5MB)
+          const maxSize = 5 * 1024 * 1024; // 5MB
+          if (profilePictureFile.size > maxSize) {
+            return res.status(400).json({ message: 'File size too large. Maximum size is 5MB.' });
+          }
+
+          const key = `profile-pictures/${user._id}/${profilePictureFile.originalname}`;
+          // Read file data from disk since we're using disk storage
+          const fileBuffer = fsSync.readFileSync(profilePictureFile.path);
+          // Upload to S3
+          const url = await uploadFileToS3(fileBuffer, key, profilePictureFile.mimetype);
+
+          // Clean up the temporary file
+          fsSync.unlinkSync(profilePictureFile.path);
+
+          // Delete old profile picture from S3 if it exists
+          if (user.profilePicture && user.profilePicture.startsWith('https://rentright-data.s3.ca-central-1.amazonaws.com/')) {
+            const oldKey = user.profilePicture.replace('https://rentright-data.s3.ca-central-1.amazonaws.com/', '');
+            try { await deleteFileFromS3(oldKey); } catch (e) { 
+              console.warn('Failed to delete old profile picture:', e.message);
+            }
+          }
+
+          user.profilePicture = url;
+        } catch (error) {
+          console.error('Error uploading profile picture:', error);
+          // Clean up temporary file if it exists
+          if (profilePictureFile.path && fsSync.existsSync(profilePictureFile.path)) {
+            try {
+              fsSync.unlinkSync(profilePictureFile.path);
+            } catch (e) {
+              console.warn('Failed to clean up temporary file:', e.message);
+            }
+          }
+          return res.status(500).json({ message: 'Failed to upload profile picture. Please try again.' });
         }
-
-        // Validate file size (max 5MB)
-        const maxSize = 5 * 1024 * 1024; // 5MB
-        if (profilePictureFile.size > maxSize) {
-          return res.status(400).json({ message: 'File size too large. Maximum size is 5MB.' });
-        }
-
-        const key = `profile-pictures/${user._id}/${profilePictureFile.originalname}`;
-        // Read file data from disk since we're using disk storage
-        const fileBuffer = fsSync.readFileSync(profilePictureFile.path);
-        // Upload to S3
-        const url = await uploadFileToS3(fileBuffer, key, profilePictureFile.mimetype);
-
-        // Clean up the temporary file
-        fsSync.unlinkSync(profilePictureFile.path);
-
-        // Delete old profile picture from S3 if it exists
-        if (user.profilePicture && user.profilePicture.startsWith('https://rentright-data.s3.ca-central-1.amazonaws.com/')) {
-          const oldKey = user.profilePicture.replace('https://rentright-data.s3.ca-central-1.amazonaws.com/', '');
-          try { await deleteFileFromS3(oldKey); } catch (e) { /* ignore */ }
-        }
-
-        user.profilePicture = url;
       }
 
       if (req.body.password) {

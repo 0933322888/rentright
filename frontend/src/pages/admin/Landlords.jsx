@@ -3,6 +3,7 @@ import axios from 'axios';
 import { API_ENDPOINTS } from '../../config/api';
 import { toast } from 'react-hot-toast';
 import CommentSection from '../../components/CommentSection';
+import { getProfilePictureUrl } from '../../utils/imageUtils';
 import {
   Dialog,
   DialogTitle,
@@ -208,6 +209,9 @@ export default function AdminLandlords() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                      Profile
+                    </th>
+                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                       Email
                     </th>
                     <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
@@ -230,6 +234,21 @@ export default function AdminLandlords() {
                 <tbody className="divide-y divide-gray-200 bg-white">
                   {filteredLandlords.map((landlord) => (
                     <tr key={landlord._id}>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        <div className="flex items-center">
+                          {landlord.profilePicture ? (
+                            <img
+                              src={getProfilePictureUrl(landlord.profilePicture)}
+                              alt="Profile"
+                              className="h-10 w-10 rounded-full object-cover border-2 border-gray-200 shadow-sm"
+                            />
+                          ) : (
+                            <div className="h-10 w-10 rounded-full bg-gradient-to-r from-gray-400 to-gray-500 flex items-center justify-center text-white font-semibold text-sm">
+                              {landlord.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                      </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         {landlord.email}
                       </td>
