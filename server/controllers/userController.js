@@ -56,6 +56,9 @@ export const updateProfile = async (req, res) => {
           const socialMediaData = typeof req.body.socialMedia === 'string' 
             ? JSON.parse(req.body.socialMedia) 
             : req.body.socialMedia;
+
+          const socialMediaData = JSON.parse(req.body.socialMedia);
+
           user.socialMedia = {
             ...user.socialMedia,
             ...socialMediaData
@@ -63,6 +66,17 @@ export const updateProfile = async (req, res) => {
         } catch (error) {
           console.error('Error parsing social media data:', error);
           // If parsing fails, ignore the social media update
+        }
+      }
+
+      if (req.files && req.files.profilePicture) {
+        const file = req.files.profilePicture;
+        
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!allowedTypes.includes(file.mimetype)) {
+          return res.status(400).json({ message: 'Invalid file type. Only JPEG, PNG and GIF are allowed.' });
+
         }
       }
 
