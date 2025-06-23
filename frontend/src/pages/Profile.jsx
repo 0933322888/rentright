@@ -24,7 +24,12 @@ import {
   MenuItem,
   InputAdornment,
   Avatar,
-  Stack
+  Stack,
+  FormControl,
+  FormControlLabel,
+  FormHelperText,
+  Radio,
+  RadioGroup
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
@@ -117,6 +122,7 @@ export default function Profile() {
   const [uploadError, setUploadError] = useState('');
   const [tenantData, setTenantData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [validationErrors, setValidationErrors] = useState([]);
   const [answers, setAnswers] = useState({
     // Employment & Income
     isCurrentlyEmployed: '',
@@ -214,10 +220,7 @@ export default function Profile() {
                 // Process each document field
                 ['proofOfIdentity', 'proofOfIncome', 'creditHistory', 'rentalHistory', 'additionalDocuments'].forEach(field => {
                   if (data[field] && Array.isArray(data[field])) {
-                    initialDocuments[field] = data[field].map(doc => ({
-                      name: doc.originalName || 'Document',
-                      type: doc.mimeType || 'application/octet-stream'
-                    }));
+                    initialDocuments[field] = data[field];
                   } else {
                     initialDocuments[field] = [];
                   }
@@ -305,8 +308,44 @@ export default function Profile() {
     e.preventDefault();
     setError('');
     setSuccess('');
-    setUploadError('');
     setLoading(true);
+    setValidationErrors([]);
+
+    // Client-side validation
+    const requiredFields = [
+      'isCurrentlyEmployed',
+      'employmentType',
+      'monthlyNetIncome',
+      'hasAdditionalIncome',
+      'monthlyDebtRepayment',
+      'paysChildSupport',
+      'hasBeenEvicted',
+      'currentlyPaysRent',
+      'hasTwoMonthsRentSavings',
+      'canShareFinancialDocuments',
+      'canPayMoreThanOneMonth'
+    ];
+
+    const missingFields = [];
+    requiredFields.forEach(field => {
+      if (!answers[field] || answers[field] === '') {
+        missingFields.push(field);
+      }
+    });
+
+    const requiredDocuments = ['proofOfIdentity', 'proofOfIncome'];
+    requiredDocuments.forEach(field => {
+        if (!documents[field] || documents[field].length === 0) {
+            missingFields.push(field);
+        }
+    });
+
+    if (missingFields.length > 0) {
+      setError(`Please fill in all required fields and upload required documents.`);
+      setValidationErrors(missingFields);
+      setLoading(false);
+      return;
+    }
 
     try {
       const token = localStorage.getItem('token');
@@ -363,6 +402,33 @@ export default function Profile() {
     }
   };
 
+  const handleDocumentUpload = async (file, field) => {
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+    formData.append('document', file);
+    formData.append('field', field);
+
+    try {
+      const response = await axios.post(API_ENDPOINTS.UPLOAD_TENANT_DOCUMENT, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      // Add the new document metadata to the state
+      setDocuments(prev => ({
+        ...prev,
+        [field]: [...(prev[field] || []), response.data],
+      }));
+      toast.success(`${file.name} uploaded successfully!`);
+
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      toast.error(`Failed to upload ${file.name}.`);
+    }
+  };
+
   const handleTenantSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -399,32 +465,37 @@ export default function Profile() {
       }
 
       const token = localStorage.getItem('token');
-      const formData = new FormData();
 
-      // Add all answers to form data with proper type conversion
-      Object.entries(answers).forEach(([key, value]) => {
-        // Convert boolean radio values to 'yes'/'no' strings
-        if (typeof value === 'string' && (value === 'true' || value === 'false')) {
-          formData.append(key, value === 'true' ? 'yes' : 'no');
-        } else {
-          formData.append(key, value);
-        }
-      });
-
-      // Add documents to form data
+      const documentsToSubmit = {};
       Object.entries(documents).forEach(([field, files]) => {
-        files.forEach((file, index) => {
-          formData.append(`${field}`, file);
-        });
+        documentsToSubmit[field] = files.map(file => ({
+          url: file.url,
+          s3Key: file.s3Key,
+          filename: file.filename,
+          mimeType: file.mimeType,
+          originalName: file.originalName || file.filename,
+          uploadedAt: new Date()
+        }));
       });
+
+      const transformedAnswers = { ...answers };
+      for (const key in transformedAnswers) {
+        if (transformedAnswers[key] === 'true') {
+          transformedAnswers[key] = 'yes';
+        } else if (transformedAnswers[key] === 'false') {
+          transformedAnswers[key] = 'no';
+        }
+      }
+
+      const payload = { ...transformedAnswers, ...documentsToSubmit };
 
       const response = await axios.post(
         API_ENDPOINTS.UPDATE_TENANT_PROFILE,
-        formData,
+        payload,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
+            'Content-Type': 'application/json'
           }
         }
       );
@@ -465,13 +536,9 @@ export default function Profile() {
 
         // Update documents
         const updatedDocuments = {};
-
         ['proofOfIdentity', 'proofOfIncome', 'creditHistory', 'rentalHistory', 'additionalDocuments'].forEach(field => {
           if (data[field] && Array.isArray(data[field])) {
-            updatedDocuments[field] = data[field].map(doc => ({
-              name: doc.originalName || 'Document',
-              type: doc.mimeType || 'application/octet-stream'
-            }));
+            updatedDocuments[field] = data[field];
           } else {
             updatedDocuments[field] = [];
           }
@@ -491,20 +558,28 @@ export default function Profile() {
   };
 
   const handleDocumentDrop = (field) => (acceptedFiles) => {
-    if (!Array.isArray(acceptedFiles)) {
-      acceptedFiles = [acceptedFiles];
-    }
-    setDocuments(prev => ({
-      ...prev,
-      [field]: [...(Array.isArray(prev[field]) ? prev[field] : []), ...acceptedFiles]
-    }));
+    acceptedFiles.forEach(file => {
+      handleDocumentUpload(file, field);
+    });
   };
 
-  const handleDeleteDocument = (field, index) => {
-    setDocuments(prev => ({
-      ...prev,
-      [field]: (Array.isArray(prev[field]) ? prev[field] : []).filter((_, i) => i !== index)
-    }));
+  const handleDeleteDocument = async (field, docId) => {
+    const token = localStorage.getItem('token');
+    try {
+        await axios.delete(`${API_ENDPOINTS.DELETE_TENANT_DOCUMENT}/documents/${docId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        setDocuments(prev => ({
+            ...prev,
+            [field]: (prev[field] || []).filter(doc => doc._id !== docId)
+        }));
+        toast.success('Document deleted successfully.');
+
+    } catch (error) {
+        console.error('Error deleting document:', error);
+        toast.error('Failed to delete document.');
+    }
   };
 
   if (isLoading) {
@@ -903,33 +978,22 @@ export default function Profile() {
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
-                    <Typography variant="subtitle2" gutterBottom>
-                      Are you currently employed? *
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                      <label>
-                        <input
-                          type="radio"
+                    <FormControl required error={validationErrors.includes('isCurrentlyEmployed')} component="fieldset">
+                      <Typography component="legend" variant="subtitle2" gutterBottom>
+                        Are you currently employed? *
+                      </Typography>
+                      <RadioGroup
+                          row
+                          aria-label="is currently employed"
                           name="isCurrentlyEmployed"
-                          value="true"
-                          checked={answers.isCurrentlyEmployed === 'true'}
+                          value={answers.isCurrentlyEmployed}
                           onChange={handleAnswerChange}
-                          required
-                        />
-                        Yes
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name="isCurrentlyEmployed"
-                          value="false"
-                          checked={answers.isCurrentlyEmployed === 'false'}
-                          onChange={handleAnswerChange}
-                          required
-                        />
-                        No
-                      </label>
-                    </Box>
+                      >
+                        <FormControlLabel value="true" control={<Radio />} label="Yes" />
+                        <FormControlLabel value="false" control={<Radio />} label="No" />
+                      </RadioGroup>
+                      {validationErrors.includes('isCurrentlyEmployed') && <FormHelperText>This field is required</FormHelperText>}
+                    </FormControl>
                   </Grid>
 
                   <Grid item xs={12}>
@@ -941,6 +1005,8 @@ export default function Profile() {
                       value={answers.employmentType}
                       onChange={handleAnswerChange}
                       required
+                      error={validationErrors.includes('employmentType')}
+                      helperText={validationErrors.includes('employmentType') ? 'This field is required' : ''}
                     >
                       <MenuItem value="">Select employment type</MenuItem>
                       <MenuItem value="full-time">Full-time</MenuItem>
@@ -963,37 +1029,28 @@ export default function Profile() {
                       onChange={handleAnswerChange}
                       inputProps={{ min: 0, step: 0.01 }}
                       required
+                      error={validationErrors.includes('monthlyNetIncome')}
+                      helperText={validationErrors.includes('monthlyNetIncome') ? 'This field is required' : ''}
                     />
                   </Grid>
 
                   <Grid item xs={12}>
-                    <Typography variant="subtitle2" gutterBottom>
-                      Do you have any additional sources of income? *
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                      <label>
-                        <input
-                          type="radio"
+                    <FormControl required error={validationErrors.includes('hasAdditionalIncome')} component="fieldset">
+                      <Typography component="legend" variant="subtitle2" gutterBottom>
+                        Do you have any additional sources of income? *
+                      </Typography>
+                      <RadioGroup
+                          row
+                          aria-label="has additional income"
                           name="hasAdditionalIncome"
-                          value="true"
-                          checked={answers.hasAdditionalIncome === 'true'}
+                          value={answers.hasAdditionalIncome}
                           onChange={handleAnswerChange}
-                          required
-                        />
-                        Yes
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name="hasAdditionalIncome"
-                          value="false"
-                          checked={answers.hasAdditionalIncome === 'false'}
-                          onChange={handleAnswerChange}
-                          required
-                        />
-                        No
-                      </label>
-                    </Box>
+                      >
+                        <FormControlLabel value="true" control={<Radio />} label="Yes" />
+                        <FormControlLabel value="false" control={<Radio />} label="No" />
+                      </RadioGroup>
+                      {validationErrors.includes('hasAdditionalIncome') && <FormHelperText>This field is required</FormHelperText>}
+                    </FormControl>
                   </Grid>
 
                   {answers.hasAdditionalIncome === 'true' && (
@@ -1028,37 +1085,28 @@ export default function Profile() {
                       onChange={handleAnswerChange}
                       inputProps={{ min: 0, step: 0.01 }}
                       required
+                      error={validationErrors.includes('monthlyDebtRepayment')}
+                      helperText={validationErrors.includes('monthlyDebtRepayment') ? 'This field is required' : ''}
                     />
                   </Grid>
 
                   <Grid item xs={12}>
-                    <Typography variant="subtitle2" gutterBottom>
-                      Do you pay any regular child or spousal support? *
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                      <label>
-                        <input
-                          type="radio"
+                    <FormControl required error={validationErrors.includes('paysChildSupport')} component="fieldset">
+                      <Typography component="legend" variant="subtitle2" gutterBottom>
+                        Do you pay any regular child or spousal support? *
+                      </Typography>
+                      <RadioGroup
+                          row
+                          aria-label="pays child support"
                           name="paysChildSupport"
-                          value="true"
-                          checked={answers.paysChildSupport === 'true'}
+                          value={answers.paysChildSupport}
                           onChange={handleAnswerChange}
-                          required
-                        />
-                        Yes
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name="paysChildSupport"
-                          value="false"
-                          checked={answers.paysChildSupport === 'false'}
-                          onChange={handleAnswerChange}
-                          required
-                        />
-                        No
-                      </label>
-                    </Box>
+                      >
+                        <FormControlLabel value="true" control={<Radio />} label="Yes" />
+                        <FormControlLabel value="false" control={<Radio />} label="No" />
+                      </RadioGroup>
+                      {validationErrors.includes('paysChildSupport') && <FormHelperText>This field is required</FormHelperText>}
+                    </FormControl>
                   </Grid>
 
                   {answers.paysChildSupport === 'true' && (
@@ -1084,63 +1132,41 @@ export default function Profile() {
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
-                    <Typography variant="subtitle2" gutterBottom>
-                      Have you ever been evicted? *
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                      <label>
-                        <input
-                          type="radio"
+                    <FormControl required error={validationErrors.includes('hasBeenEvicted')} component="fieldset">
+                      <Typography component="legend" variant="subtitle2" gutterBottom>
+                        Have you ever been evicted? *
+                      </Typography>
+                      <RadioGroup
+                          row
+                          aria-label="has been evicted"
                           name="hasBeenEvicted"
-                          value="true"
-                          checked={answers.hasBeenEvicted === 'true'}
+                          value={answers.hasBeenEvicted}
                           onChange={handleAnswerChange}
-                          required
-                        />
-                        Yes
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name="hasBeenEvicted"
-                          value="false"
-                          checked={answers.hasBeenEvicted === 'false'}
-                          onChange={handleAnswerChange}
-                          required
-                        />
-                        No
-                      </label>
-                    </Box>
+                      >
+                        <FormControlLabel value="true" control={<Radio />} label="Yes" />
+                        <FormControlLabel value="false" control={<Radio />} label="No" />
+                      </RadioGroup>
+                      {validationErrors.includes('hasBeenEvicted') && <FormHelperText>This field is required</FormHelperText>}
+                    </FormControl>
                   </Grid>
 
                   <Grid item xs={12}>
-                    <Typography variant="subtitle2" gutterBottom>
-                      Do you currently pay rent? *
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                      <label>
-                        <input
-                          type="radio"
+                    <FormControl required error={validationErrors.includes('currentlyPaysRent')} component="fieldset">
+                      <Typography component="legend" variant="subtitle2" gutterBottom>
+                        Do you currently pay rent? *
+                      </Typography>
+                      <RadioGroup
+                          row
+                          aria-label="currently pays rent"
                           name="currentlyPaysRent"
-                          value="true"
-                          checked={answers.currentlyPaysRent === 'true'}
+                          value={answers.currentlyPaysRent}
                           onChange={handleAnswerChange}
-                          required
-                        />
-                        Yes
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name="currentlyPaysRent"
-                          value="false"
-                          checked={answers.currentlyPaysRent === 'false'}
-                          onChange={handleAnswerChange}
-                          required
-                        />
-                        No
-                      </label>
-                    </Box>
+                      >
+                        <FormControlLabel value="true" control={<Radio />} label="Yes" />
+                        <FormControlLabel value="false" control={<Radio />} label="No" />
+                      </RadioGroup>
+                      {validationErrors.includes('currentlyPaysRent') && <FormHelperText>This field is required</FormHelperText>}
+                    </FormControl>
                   </Grid>
 
                   {answers.currentlyPaysRent === 'true' && (
@@ -1166,63 +1192,41 @@ export default function Profile() {
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
-                    <Typography variant="subtitle2" gutterBottom>
-                      Do you have savings equivalent to at least 2 months of rent? *
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                      <label>
-                        <input
-                          type="radio"
+                    <FormControl required error={validationErrors.includes('hasTwoMonthsRentSavings')} component="fieldset">
+                      <Typography component="legend" variant="subtitle2" gutterBottom>
+                        Do you have savings equivalent to at least 2 months of rent? *
+                      </Typography>
+                      <RadioGroup
+                          row
+                          aria-label="has two months rent savings"
                           name="hasTwoMonthsRentSavings"
-                          value="true"
-                          checked={answers.hasTwoMonthsRentSavings === 'true'}
+                          value={answers.hasTwoMonthsRentSavings}
                           onChange={handleAnswerChange}
-                          required
-                        />
-                        Yes
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name="hasTwoMonthsRentSavings"
-                          value="false"
-                          checked={answers.hasTwoMonthsRentSavings === 'false'}
-                          onChange={handleAnswerChange}
-                          required
-                        />
-                        No
-                      </label>
-                    </Box>
+                      >
+                        <FormControlLabel value="true" control={<Radio />} label="Yes" />
+                        <FormControlLabel value="false" control={<Radio />} label="No" />
+                      </RadioGroup>
+                      {validationErrors.includes('hasTwoMonthsRentSavings') && <FormHelperText>This field is required</FormHelperText>}
+                    </FormControl>
                   </Grid>
 
                   <Grid item xs={12}>
-                    <Typography variant="subtitle2" gutterBottom>
-                      Would you be comfortable sharing proof of income or financial statements? *
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                      <label>
-                        <input
-                          type="radio"
+                    <FormControl required error={validationErrors.includes('canShareFinancialDocuments')} component="fieldset">
+                      <Typography component="legend" variant="subtitle2" gutterBottom>
+                        Would you be comfortable sharing proof of income or financial statements? *
+                      </Typography>
+                      <RadioGroup
+                          row
+                          aria-label="can share financial documents"
                           name="canShareFinancialDocuments"
-                          value="true"
-                          checked={answers.canShareFinancialDocuments === 'true'}
+                          value={answers.canShareFinancialDocuments}
                           onChange={handleAnswerChange}
-                          required
-                        />
-                        Yes
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name="canShareFinancialDocuments"
-                          value="false"
-                          checked={answers.canShareFinancialDocuments === 'false'}
-                          onChange={handleAnswerChange}
-                          required
-                        />
-                        No
-                      </label>
-                    </Box>
+                      >
+                        <FormControlLabel value="true" control={<Radio />} label="Yes" />
+                        <FormControlLabel value="false" control={<Radio />} label="No" />
+                      </RadioGroup>
+                      {validationErrors.includes('canShareFinancialDocuments') && <FormHelperText>This field is required</FormHelperText>}
+                    </FormControl>
                   </Grid>
                 </Grid>
               </Paper>
@@ -1234,33 +1238,22 @@ export default function Profile() {
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
-                    <Typography variant="subtitle2" gutterBottom>
-                      Can you pay more than one month's rent at a time? *
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                      <label>
-                        <input
-                          type="radio"
+                    <FormControl required error={validationErrors.includes('canPayMoreThanOneMonth')} component="fieldset">
+                      <Typography component="legend" variant="subtitle2" gutterBottom>
+                        Can you pay more than one month's rent at a time? *
+                      </Typography>
+                      <RadioGroup
+                          row
+                          aria-label="can pay more than one month"
                           name="canPayMoreThanOneMonth"
-                          value="true"
-                          checked={answers.canPayMoreThanOneMonth === 'true'}
+                          value={answers.canPayMoreThanOneMonth}
                           onChange={handleAnswerChange}
-                          required
-                        />
-                        Yes
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name="canPayMoreThanOneMonth"
-                          value="false"
-                          checked={answers.canPayMoreThanOneMonth === 'false'}
-                          onChange={handleAnswerChange}
-                          required
-                        />
-                        No
-                      </label>
-                    </Box>
+                      >
+                        <FormControlLabel value="true" control={<Radio />} label="Yes" />
+                        <FormControlLabel value="false" control={<Radio />} label="No" />
+                      </RadioGroup>
+                      {validationErrors.includes('canPayMoreThanOneMonth') && <FormHelperText>This field is required</FormHelperText>}
+                    </FormControl>
                   </Grid>
 
                   {answers.canPayMoreThanOneMonth === 'true' && (
@@ -1272,7 +1265,7 @@ export default function Profile() {
                         type="number"
                         value={answers.monthsAheadCanPay}
                         onChange={handleAnswerChange}
-                        inputProps={{ min: 1 }}
+                        inputProps={{ min: 2 }}
                       />
                     </Grid>
                   )}
@@ -1292,31 +1285,33 @@ export default function Profile() {
                   <Grid item xs={12}>
                     <DocumentUpload
                       field="proofOfIdentity"
-                      documents={documents}
+                      documents={documents.proofOfIdentity}
                       onDrop={handleDocumentDrop('proofOfIdentity')}
-                      onDelete={handleDeleteDocument}
+                      onDelete={(field, index) => handleDeleteDocument(field, documents.proofOfIdentity[index]._id)}
                       maxFiles={5}
                       required={true}
+                      error={validationErrors.includes('proofOfIdentity')}
                     />
                   </Grid>
 
                   <Grid item xs={12}>
                     <DocumentUpload
                       field="proofOfIncome"
-                      documents={documents}
+                      documents={documents.proofOfIncome}
                       onDrop={handleDocumentDrop('proofOfIncome')}
-                      onDelete={handleDeleteDocument}
+                      onDelete={(field, index) => handleDeleteDocument(field, documents.proofOfIncome[index]._id)}
                       maxFiles={5}
                       required={true}
+                      error={validationErrors.includes('proofOfIncome')}
                     />
                   </Grid>
 
                   <Grid item xs={12}>
                     <DocumentUpload
                       field="creditHistory"
-                      documents={documents}
+                      documents={documents.creditHistory}
                       onDrop={handleDocumentDrop('creditHistory')}
-                      onDelete={handleDeleteDocument}
+                      onDelete={(field, index) => handleDeleteDocument(field, documents.creditHistory[index]._id)}
                       maxFiles={5}
                       required={false}
                     />
@@ -1325,9 +1320,9 @@ export default function Profile() {
                   <Grid item xs={12}>
                     <DocumentUpload
                       field="rentalHistory"
-                      documents={documents}
+                      documents={documents.rentalHistory}
                       onDrop={handleDocumentDrop('rentalHistory')}
-                      onDelete={handleDeleteDocument}
+                      onDelete={(field, index) => handleDeleteDocument(field, documents.rentalHistory[index]._id)}
                       maxFiles={5}
                       required={false}
                     />
@@ -1336,9 +1331,9 @@ export default function Profile() {
                   <Grid item xs={12}>
                     <DocumentUpload
                       field="additionalDocuments"
-                      documents={documents}
+                      documents={documents.additionalDocuments}
                       onDrop={handleDocumentDrop('additionalDocuments')}
-                      onDelete={handleDeleteDocument}
+                      onDelete={(field, index) => handleDeleteDocument(field, documents.additionalDocuments[index]._id)}
                       maxFiles={5}
                       required={false}
                     />
