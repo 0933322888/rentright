@@ -1,7 +1,7 @@
 import express from 'express';
 import { getProfile, updateProfile, getUser, updateUser, deleteUser, getAllUsers, addComment, getComments } from '../controllers/userController.js';
 import { protect, restrictTo } from '../middleware/authMiddleware.js';
-import { updateTenantProfile, getTenantProfile, deleteDocument } from '../controllers/tenantDocumentController.js';
+import { updateTenantProfile, getTenantProfile, deleteDocument, uploadTenantDocument } from '../controllers/tenantDocumentController.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -41,13 +41,21 @@ router.put('/profile', upload.single('profilePicture'), updateProfile);
 // Tenant profile routes
 router.get('/tenant-profile', getTenantProfile);
 router.post('/tenant-profile', upload.fields([
-  { name: 'proofOfIdentity', maxCount: 5 },
-  { name: 'proofOfIncome', maxCount: 5 },
-  { name: 'creditHistory', maxCount: 5 },
-  { name: 'rentalHistory', maxCount: 5 },
-  { name: 'additionalDocuments', maxCount: 5 }
+    { name: 'proofOfIdentity', maxCount: 5 },
+    { name: 'proofOfIncome', maxCount: 5 },
+    { name: 'creditHistory', maxCount: 5 },
+    { name: 'rentalHistory', maxCount: 5 },
+    { name: 'additionalDocuments', maxCount: 5 }
 ]), updateTenantProfile);
-router.delete('/tenant-profile/:field/:index', deleteDocument);
+router.post('/tenant-documents', upload.single('document'), (req, res, next) => {
+    if (!req.file) {
+        return res.status(400).send('No file uploaded.');
+    }
+    // Attach the field name to the request for the controller
+    req.body.field = req.body.field || 'additionalDocuments'; // Default field
+    next();
+}, uploadTenantDocument);
+router.delete('/tenant-profile/documents/:docId', deleteDocument);
 
 // Admin only routes
 router.get('/', restrictTo('admin'), getAllUsers);
