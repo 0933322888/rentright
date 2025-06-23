@@ -1,9 +1,12 @@
 import mongoose from 'mongoose';
 
 const documentSchema = new mongoose.Schema({
-  path: String,
-  filename: String,
-  uploadedAt: Date
+  s3Key: { type: String, required: true },
+  filename: { type: String, required: true },
+  originalName: { type: String, required: true },
+  url: { type: String, required: true },
+  mimeType: { type: String, required: true },
+  uploadedAt: { type: Date, default: Date.now, required: true },
 });
 
 const tenantDocumentSchema = new mongoose.Schema({
@@ -35,7 +38,7 @@ const tenantDocumentSchema = new mongoose.Schema({
   },
   additionalIncomeDescription: {
     type: String,
-    required: function() {
+    required: function () {
       return this.hasAdditionalIncome === 'yes';
     }
   },
@@ -54,7 +57,7 @@ const tenantDocumentSchema = new mongoose.Schema({
   childSupportAmount: {
     type: Number,
     min: 0,
-    required: function() {
+    required: function () {
       return this.paysChildSupport === 'yes';
     }
   },
@@ -73,7 +76,7 @@ const tenantDocumentSchema = new mongoose.Schema({
   currentRentAmount: {
     type: Number,
     min: 0,
-    required: function() {
+    required: function () {
       return this.currentlyPaysRent === 'yes';
     }
   },
@@ -99,7 +102,7 @@ const tenantDocumentSchema = new mongoose.Schema({
   monthsAheadCanPay: {
     type: Number,
     min: 2,
-    required: function() {
+    required: function () {
       return this.canPayMoreThanOneMonth === 'yes';
     }
   },
@@ -110,7 +113,7 @@ const tenantDocumentSchema = new mongoose.Schema({
   creditHistory: [documentSchema],
   rentalHistory: [documentSchema],
   additionalDocuments: [documentSchema],
-  
+
   createdAt: {
     type: Date,
     default: Date.now
@@ -122,7 +125,7 @@ const tenantDocumentSchema = new mongoose.Schema({
 });
 
 // Update the updatedAt timestamp before saving
-tenantDocumentSchema.pre('save', function(next) {
+tenantDocumentSchema.pre('save', function (next) {
   this.updatedAt = new Date();
   next();
 });

@@ -12,6 +12,8 @@ export const API_ENDPOINTS = {
   UPDATE_PROFILE: `${BASE_URL}/api/users/profile`,
   UPDATE_TENANT_PROFILE: `${BASE_URL}/api/users/tenant-profile`,
   GET_TENANT_PROFILE: `${BASE_URL}/api/users/tenant-profile`,
+  UPLOAD_TENANT_DOCUMENT: `${BASE_URL}/api/users/tenant-documents`,
+  DELETE_TENANT_DOCUMENT: `${BASE_URL}/api/users/tenant-profile`,
 
   // Property endpoints
   PROPERTIES: `${BASE_URL}/api/properties`,
@@ -19,6 +21,8 @@ export const API_ENDPOINTS = {
   AVAILABLE_PROPERTIES: `${BASE_URL}/api/properties/available`,
   GENERATE_PROPERTY_PRICE: `${BASE_URL}/api/properties/generate-price`,
   IMAGES: `${BASE_URL}/api/properties/images`,
+  GET_PROPERTIES: `${BASE_URL}/api/properties`,
+  GET_PROPERTY_DETAILS: (id) => `${BASE_URL}/api/properties/${id}`,
 
   // Payment endpoints
   PAYMENTS: `${BASE_URL}/api/payments`,

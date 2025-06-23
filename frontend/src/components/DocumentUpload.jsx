@@ -3,8 +3,9 @@ import { useDropzone } from 'react-dropzone';
 import { Box, Typography, IconButton, Paper } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 
-const DocumentUpload = ({ field, documents = [], onDrop, onDelete, maxFiles = 1, required = false }) => {
+const DocumentUpload = ({ field, documents = [], onDrop, onDelete, maxFiles = 1, required = false, error = false }) => {
   const handleDrop = useCallback((acceptedFiles) => {
     onDrop(acceptedFiles);
   }, [onDrop]);
@@ -44,7 +45,7 @@ const DocumentUpload = ({ field, documents = [], onDrop, onDelete, maxFiles = 1,
           sx={{
             p: 3,
             border: '2px dashed',
-            borderColor: isDragActive ? 'primary.main' : 'grey.300',
+            borderColor: error ? 'error.main' : isDragActive ? 'primary.main' : 'grey.300',
             backgroundColor: isDragActive ? 'action.hover' : 'background.paper',
             cursor: 'pointer',
             '&:hover': {
@@ -67,6 +68,12 @@ const DocumentUpload = ({ field, documents = [], onDrop, onDelete, maxFiles = 1,
           </Box>
         </Paper>
 
+        {error && (!documents || documents.length === 0) && (
+            <Typography variant="caption" color="error" sx={{ pl: 1 }}>
+                This document is required.
+            </Typography>
+        )}
+
         {/* Uploaded documents list */}
         {documents && documents.length > 0 && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -82,15 +89,24 @@ const DocumentUpload = ({ field, documents = [], onDrop, onDelete, maxFiles = 1,
                 }}
               >
                 <Typography variant="body2" noWrap sx={{ flex: 1 }}>
-                  {doc.filename || doc.name}
+                  {doc.originalName || doc.filename || doc.name}
                 </Typography>
-                <IconButton
-                  size="small"
-                  onClick={() => onDelete(field, index)}
-                  color="error"
-                >
-                  <DeleteIcon />
-                </IconButton>
+                <Box>
+                  <IconButton
+                    size="small"
+                    onClick={() => window.open(doc.url, '_blank', 'noopener,noreferrer')}
+                    color="primary"
+                  >
+                    <VisibilityIcon />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() => onDelete(field, index)}
+                    color="error"
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Box>
               </Paper>
             ))}
           </Box>
