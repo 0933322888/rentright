@@ -75,9 +75,15 @@ export const updateTenantProfile = async (req, res) => {
       currentlyPaysRent: req.body.currentlyPaysRent,
       currentRentAmount: req.body.currentRentAmount,
       hasTwoMonthsRentSavings: req.body.hasTwoMonthsRentSavings,
-      canShareFinancialDocuments: req.body.canShareFinancialDocuments,
       canPayMoreThanOneMonth: req.body.canPayMoreThanOneMonth,
-      monthsAheadCanPay: req.body.monthsAheadCanPay
+      monthsAheadCanPay: req.body.monthsAheadCanPay,
+      hasPets: req.body.hasPets,
+      petCount: req.body.petCount,
+      petTypes: req.body.petTypes,
+      smokes: req.body.smokes,
+      adultOccupants: req.body.adultOccupants,
+      childOccupants: req.body.childOccupants,
+      creditScore: req.body.creditScore
     };
 
     // Validate required fields before updating
@@ -91,8 +97,11 @@ export const updateTenantProfile = async (req, res) => {
       'hasBeenEvicted',
       'currentlyPaysRent',
       'hasTwoMonthsRentSavings',
-      'canShareFinancialDocuments',
-      'canPayMoreThanOneMonth'
+      'canPayMoreThanOneMonth',
+      'hasPets',
+      'smokes',
+      'adultOccupants',
+      'childOccupants'
     ];
 
     const missingFields = [];
@@ -113,7 +122,7 @@ export const updateTenantProfile = async (req, res) => {
     Object.entries(fieldsToUpdate).forEach(([field, value]) => {
       if (value !== undefined && value !== '') {
         // Convert numeric fields
-        if (['monthlyNetIncome', 'monthlyDebtRepayment', 'childSupportAmount', 'currentRentAmount', 'monthsAheadCanPay'].includes(field)) {
+        if (['monthlyNetIncome', 'monthlyDebtRepayment', 'childSupportAmount', 'currentRentAmount', 'monthsAheadCanPay', 'petCount', 'adultOccupants', 'childOccupants', 'creditScore'].includes(field)) {
           tenantDocument[field] = Number(value);
         } else {
           tenantDocument[field] = value;

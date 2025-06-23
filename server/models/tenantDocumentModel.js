@@ -87,11 +87,6 @@ const tenantDocumentSchema = new mongoose.Schema({
     enum: ['yes', 'no'],
     required: true
   },
-  canShareFinancialDocuments: {
-    type: String,
-    enum: ['yes', 'no'],
-    required: true
-  },
 
   // Existing fields
   canPayMoreThanOneMonth: {
@@ -105,6 +100,47 @@ const tenantDocumentSchema = new mongoose.Schema({
     required: function () {
       return this.canPayMoreThanOneMonth === 'yes';
     }
+  },
+
+  // New fields for pets, smoking, occupants, and credit score
+  hasPets: {
+    type: String,
+    enum: ['yes', 'no'],
+    required: true
+  },
+  petCount: {
+    type: Number,
+    min: 0,
+    required: function () {
+      return this.hasPets === 'yes';
+    }
+  },
+  petTypes: {
+    type: String,
+    required: function () {
+      return this.hasPets === 'yes';
+    }
+  },
+  smokes: {
+    type: String,
+    enum: ['yes', 'no'],
+    required: true
+  },
+  adultOccupants: {
+    type: Number,
+    min: 1,
+    required: true
+  },
+  childOccupants: {
+    type: Number,
+    min: 0,
+    required: true
+  },
+  creditScore: {
+    type: Number,
+    min: 300,
+    max: 850,
+    required: false
   },
 
   // Document fields

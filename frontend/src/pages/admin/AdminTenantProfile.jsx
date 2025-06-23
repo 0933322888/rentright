@@ -292,6 +292,67 @@ export default function AdminTenantProfile() {
                   </div>
                 )}
 
+                {/* New fields */}
+                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                  <dt className="text-sm font-medium text-gray-500">Has Pets</dt>
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                    {tenant.tenantDocument.hasPets === 'yes' ? 'Yes' : 'No'}
+                  </dd>
+                </div>
+                {tenant.tenantDocument.hasPets === 'yes' && (
+                  <>
+                    <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                      <dt className="text-sm font-medium text-gray-500">Number of Pets</dt>
+                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                        {tenant.tenantDocument.petCount || 'Not specified'}
+                      </dd>
+                    </div>
+                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                      <dt className="text-sm font-medium text-gray-500">Types of Pets</dt>
+                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                        {tenant.tenantDocument.petTypes || 'Not specified'}
+                      </dd>
+                    </div>
+                  </>
+                )}
+                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                  <dt className="text-sm font-medium text-gray-500">Smokes</dt>
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                    {tenant.tenantDocument.smokes === 'yes' ? 'Yes' : 'No'}
+                  </dd>
+                </div>
+                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                  <dt className="text-sm font-medium text-gray-500">Number of Adults</dt>
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                    {tenant.tenantDocument.adultOccupants || 'Not specified'}
+                  </dd>
+                </div>
+                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                  <dt className="text-sm font-medium text-gray-500">Number of Children</dt>
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                    {tenant.tenantDocument.childOccupants || 'Not specified'}
+                  </dd>
+                </div>
+                {tenant.tenantDocument.creditScore && (
+                  <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt className="text-sm font-medium text-gray-500">Credit Score</dt>
+                    <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                      <span className={`${
+                        tenant.tenantDocument.creditScore >= 750 ? 'text-green-600' :
+                        tenant.tenantDocument.creditScore >= 650 ? 'text-yellow-600' :
+                        'text-red-600'
+                      } font-medium`}>
+                        {tenant.tenantDocument.creditScore}
+                      </span>
+                      <span className="text-gray-500 ml-1">
+                        ({tenant.tenantDocument.creditScore >= 750 ? 'Excellent' :
+                          tenant.tenantDocument.creditScore >= 650 ? 'Good' :
+                          tenant.tenantDocument.creditScore >= 550 ? 'Fair' : 'Poor'})
+                      </span>
+                    </dd>
+                  </div>
+                )}
+
                 {/* Documents */}
                 <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                   <dt className="text-sm font-medium text-gray-500">Proof of Identity Documents</dt>
