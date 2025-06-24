@@ -7,6 +7,7 @@ const documentSchema = new mongoose.Schema({
   url: { type: String, required: true },
   mimeType: { type: String, required: true },
   uploadedAt: { type: Date, default: Date.now, required: true },
+  aiParsedData: { type: Object }, // AI extracted fields
 });
 
 const tenantDocumentSchema = new mongoose.Schema({
@@ -38,6 +39,13 @@ const tenantDocumentSchema = new mongoose.Schema({
   },
   additionalIncomeDescription: {
     type: String,
+    required: function () {
+      return this.hasAdditionalIncome === 'yes';
+    }
+  },
+  additionalIncomeAmount: {
+    type: Number,
+    min: 0,
     required: function () {
       return this.hasAdditionalIncome === 'yes';
     }
@@ -157,7 +165,8 @@ const tenantDocumentSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
     default: Date.now
-  }
+  },
+  tenantScore: { type: Number, default: 0 }, // AI/logic-based scoring
 });
 
 // Update the updatedAt timestamp before saving

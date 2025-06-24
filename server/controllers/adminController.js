@@ -227,6 +227,15 @@ export const updateTenant = async (req, res) => {
     tenant.hasProfile = req.body.hasProfile !== undefined ? req.body.hasProfile : tenant.hasProfile;
     tenant.rating = req.body.rating !== undefined ? Number(req.body.rating) : tenant.rating;
 
+    // Allow admin to override tenantScore
+    if (req.body.tenantScore !== undefined) {
+      const tenantDocument = await TenantDocument.findOne({ tenant: tenant._id });
+      if (tenantDocument) {
+        tenantDocument.tenantScore = Number(req.body.tenantScore);
+        await tenantDocument.save();
+      }
+    }
+
     const updatedTenant = await tenant.save();
     res.json(updatedTenant);
   } catch (error) {

@@ -47,7 +47,6 @@ const PUBLIC_URL = 'https://rentright-data.s3.ca-central-1.amazonaws.com/';
 const LOCAL_URL = process.env.LOCAL_FILE_URL || 'http://localhost:5000/uploads/';
 
 export const uploadFileToS3 = async (buffer, key, mimetype) => {
-    console.log('uploadFileToS3 called with:', { key, mimetype, bufferSize: buffer.length });
     console.log('useLocalStorage:', useLocalStorage);
     console.log('hasAwsCredentials:', hasAwsCredentials);
     

@@ -5,6 +5,55 @@ import { API_ENDPOINTS } from '../../config/api';
 import { toast } from 'react-hot-toast';
 import { adminButtonStyles } from '../../utils/uiUtils';
 import { getProfilePictureUrl } from '../../utils/imageUtils';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Grid,
+  Avatar,
+  Chip,
+  Divider,
+  Button,
+  TextField,
+  CircularProgress,
+  Alert,
+  IconButton,
+  Tooltip,
+  Paper,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
+} from '@mui/material';
+import {
+  ArrowBack,
+  Person,
+  Email,
+  Phone,
+  CalendarToday,
+  Work,
+  AttachMoney,
+  CreditCard,
+  Home,
+  Pets,
+  SmokingRooms,
+  Group,
+  ChildCare,
+  VerifiedUser,
+  Warning,
+  CheckCircle,
+  Error,
+  Info,
+  ExpandMore,
+  Description,
+  Assessment,
+  Security,
+  TrendingUp
+} from '@mui/icons-material';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import InstagramIcon from '@mui/icons-material/Instagram';
@@ -17,6 +66,8 @@ export default function AdminTenantProfile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [tenant, setTenant] = useState(null);
+  const [scoreOverride, setScoreOverride] = useState('');
+  const [savingScore, setSavingScore] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -40,376 +91,764 @@ export default function AdminTenantProfile() {
     }
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  const handleScoreOverride = async () => {
+    if (!tenant || !tenant.tenantDocument) return;
+    setSavingScore(true);
+    try {
+      const response = await axios.patch(
+        `${API_ENDPOINTS.ADMIN_TENANTS}/${id}`,
+        { tenantScore: Number(scoreOverride) },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      toast.success('Tenant score updated');
+      setTenant(prev => ({ ...prev, tenantDocument: { ...prev.tenantDocument, tenantScore: Number(scoreOverride) } }));
+    } catch (err) {
+      toast.error('Failed to update score');
+    } finally {
+      setSavingScore(false);
+    }
+  };
 
-  if (error) {
-    return <div className="text-red-600">{error}</div>;
-  }
-
-  if (!tenant) {
-    return <div>Tenant not found</div>;
-  }
+  const getAIMatchingResults = () => {
+    if (!tenant?.tenantDocument) return null;
+    
+    const results = {
+      incomeVerification: { status: 'Not verified', details: [] },
+      identityVerification: { status: 'Not verified', details: [] },
+      documentParsing: { success: 0, total: 0, details: [] },
+      creditVerification: { status: 'Not verified', details: [] },
+      rentalHistory: { status: 'Clean', details: [] }
+    };
+    
+    const doc = tenant.tenantDocument;
+    
+    // Income verification
+    let aiIncomeFound = false;
+    const documentTypes = ['proofOfIncome', 'creditHistory', 'additionalDocuments'];
+    for (const docType of documentTypes) {
+      if (doc[docType]?.length > 0) {
+        for (const document of doc[docType]) {
+          if (document.aiParsedData?.income && !isNaN(Number(document.aiParsedData.income))) {
+            const aiIncome = Number(document.aiParsedData.income);
+            const manualIncome = doc.monthlyNetIncome;
+            
+            if (manualIncome && Math.abs(aiIncome - manualIncome) / manualIncome < 0.1) {
+              results.incomeVerification.status = 'Verified ✓';
+              results.incomeVerification.details.push(`AI income (${aiIncome}) matches manual income (${manualIncome})`);
+            } else if (manualIncome) {
+              results.incomeVerification.status = 'Mismatch ⚠️';
+              results.incomeVerification.details.push(`AI income: ${aiIncome}, Manual income: ${manualIncome}`);
+            } else {
+              results.incomeVerification.status = 'AI Only ✓';
+              results.incomeVerification.details.push(`Using AI income: ${aiIncome}`);
+            }
+            aiIncomeFound = true;
+            break;
+          }
+        }
+      }
+    }
+    if (!aiIncomeFound && doc.monthlyNetIncome) {
+      results.incomeVerification.status = 'Manual Only';
+      results.incomeVerification.details.push(`Manual income: ${doc.monthlyNetIncome}`);
+    }
+    
+    // Identity verification
+    if (doc.proofOfIdentity?.length > 0) {
+      for (const document of doc.proofOfIdentity) {
+        if (document.aiParsedData?.name && document.aiParsedData?.documentType) {
+          const aiName = document.aiParsedData.name.toLowerCase();
+          const tenantName = tenant.name?.toLowerCase() || '';
+          if (aiName.includes(tenantName.split(' ')[0]) || tenantName.includes(aiName.split(' ')[0])) {
+            results.identityVerification.status = 'Verified ✓';
+            results.identityVerification.details.push(`Name verified: ${document.aiParsedData.name}`);
+          } else {
+            results.identityVerification.status = 'Mismatch ⚠️';
+            results.identityVerification.details.push(`AI name: ${document.aiParsedData.name}, Tenant name: ${tenant.name}`);
+          }
+          results.identityVerification.details.push(`Document: ${document.aiParsedData.documentType}`);
+          break;
+        }
+      }
+    }
+    
+    // Document parsing success
+    const allDocs = [
+      ...(doc.proofOfIdentity || []),
+      ...(doc.proofOfIncome || []),
+      ...(doc.creditHistory || []),
+      ...(doc.rentalHistory || []),
+      ...(doc.additionalDocuments || [])
+    ];
+    
+    results.documentParsing.total = allDocs.length;
+    for (const document of allDocs) {
+      if (document.aiParsedData && !document.aiParsedData.error) {
+        results.documentParsing.success++;
+        results.documentParsing.details.push(`${document.filename}: Successfully parsed`);
+      } else {
+        results.documentParsing.details.push(`${document.filename}: Failed to parse`);
+      }
+    }
+    
+    // Credit verification
+    if (doc.creditHistory?.length > 0) {
+      for (const document of doc.creditHistory) {
+        if (document.aiParsedData?.creditScore) {
+          const aiCreditScore = Number(document.aiParsedData.creditScore);
+          const manualCreditScore = doc.creditScore;
+          
+          if (manualCreditScore && Math.abs(aiCreditScore - manualCreditScore) < 50) {
+            results.creditVerification.status = 'Verified ✓';
+            results.creditVerification.details.push(`AI credit score (${aiCreditScore}) matches manual (${manualCreditScore})`);
+          } else if (manualCreditScore) {
+            results.creditVerification.status = 'Mismatch ⚠️';
+            results.creditVerification.details.push(`AI: ${aiCreditScore}, Manual: ${manualCreditScore}`);
+          } else {
+            results.creditVerification.status = 'AI Only ✓';
+            results.creditVerification.details.push(`Using AI credit score: ${aiCreditScore}`);
+          }
+          break;
+        }
+      }
+    }
+    
+    // Rental history
+    if (doc.rentalHistory?.length > 0) {
+      for (const document of doc.rentalHistory) {
+        if (document.aiParsedData?.negativeRemarks || 
+            document.aiParsedData?.documentType?.toLowerCase().includes('eviction')) {
+          results.rentalHistory.status = 'Issues Found ⚠️';
+          results.rentalHistory.details.push(`Document: ${document.filename}`);
+          if (document.aiParsedData.negativeRemarks) {
+            results.rentalHistory.details.push(`Remarks: ${document.aiParsedData.negativeRemarks}`);
+          }
+        }
+      }
+    }
+    
+    return results;
+  };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Not specified';
     return new Date(dateString).toLocaleDateString();
   };
 
-  const renderDocumentList = (documents) => {
-    if (!documents || documents.length === 0) {
-      return 'No documents uploaded';
-    }
-
-    return (
-      <ul className="border border-gray-200 rounded-md divide-y divide-gray-200">
-        {documents.map((doc, index) => (
-          <li key={index} className="pl-3 pr-4 py-3 flex items-center justify-between text-sm">
-            <div className="w-0 flex-1 flex items-center">
-              <span className="ml-2 flex-1 w-0 truncate">{doc.filename}</span>
-              <span className="ml-2 text-gray-500 text-xs">
-                Uploaded: {formatDate(doc.uploadedAt)}
-              </span>
-            </div>
-            <div className="ml-4 flex-shrink-0">
-              <a
-                href={doc.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-medium text-indigo-600 hover:text-indigo-500"
-              >
-                View
-              </a>
-            </div>
-          </li>
-        ))}
-      </ul>
-    );
+  const getScoreColor = (score) => {
+    if (score >= 80) return 'success';
+    if (score >= 60) return 'warning';
+    return 'error';
   };
 
+  const getScoreLabel = (score) => {
+    if (score >= 80) return 'Excellent';
+    if (score >= 60) return 'Good';
+    if (score >= 40) return 'Fair';
+    return 'Poor';
+  };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box p={3}>
+        <Alert severity="error">{error}</Alert>
+      </Box>
+    );
+  }
+
+  if (!tenant) {
+    return (
+      <Box p={3}>
+        <Alert severity="warning">Tenant not found</Alert>
+      </Box>
+    );
+  }
+
+  const aiResults = getAIMatchingResults();
+
   return (
-    <div className="p-6">
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-        <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
-          <div>
-            <h3 className="text-lg leading-6 font-medium text-gray-900">Tenant Profile</h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">Detailed information about the tenant.</p>
-          </div>
-          <button
-            onClick={() => navigate('/admin/tenants')}
-            className={adminButtonStyles.primaryLg}
-          >
-            Back to Tenants
-          </button>
-        </div>
-        <div className="border-t border-gray-200">
-          <dl>
-            {/* Basic Information */}
-            <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">Name</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{tenant.name}</dd>
-            </div>
-            <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">Email</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{tenant.email}</dd>
-            </div>
-            <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">Phone</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{tenant.phone || 'Not specified'}</dd>
-            </div>
-            <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">Joined Date</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{formatDate(tenant.createdAt)}</dd>
-            </div>
+    <Box sx={{ p: 3, backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
+      {/* Header */}
+      <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+        <IconButton onClick={() => navigate('/admin/tenants')} sx={{ backgroundColor: 'white' }}>
+          <ArrowBack />
+        </IconButton>
+        <Typography variant="h4" fontWeight="bold" color="primary">
+          Tenant Profile
+        </Typography>
+        <Chip 
+          label={tenant.hasProfile ? 'Complete' : 'Incomplete'} 
+          color={tenant.hasProfile ? 'success' : 'warning'}
+          variant="outlined"
+        />
+      </Box>
 
-            {/* Profile Picture */}
-            <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">Profile Picture</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                {tenant.profilePicture ? (
-                  <div className="flex items-center space-x-4">
-                    <img
-                      src={getProfilePictureUrl(tenant.profilePicture)}
-                      alt="Profile"
-                      className="h-16 w-16 rounded-full object-cover border-2 border-gray-200 shadow-sm"
+      <Grid container spacing={3}>
+        {/* Left column: Profile, Score, Stats */}
+        <Grid item xs={12} md={4} lg={3} sx={{ width: '14%' }}>
+          {/* Profile Card */}
+          <Card sx={{ height: 'auto' }}>
+            <CardContent sx={{ textAlign: 'center', p: 3 }}>
+              <Avatar
+                src={tenant.profilePicture ? getProfilePictureUrl(tenant.profilePicture) : undefined}
+                sx={{ width: 120, height: 120, mx: 'auto', mb: 2, fontSize: '3rem' }}
+              >
+                {tenant.name?.charAt(0).toUpperCase()}
+              </Avatar>
+              <Typography variant="h5" fontWeight="bold" gutterBottom>
+                {tenant.name}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                {tenant.email}
+              </Typography>
+              {tenant.phone && (
+                <Typography variant="body2" color="text.secondary">
+                  {tenant.phone}
+                </Typography>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Tenant Score Card */}
+          <Card sx={{ height: 'auto', mt: 2 }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Assessment sx={{ mr: 1, color: 'primary.main' }} />
+                <Typography variant="h6" fontWeight="bold">
+                  Tenant Score
+                </Typography>
+              </Box>
+              {tenant.tenantDocument?.tenantScore !== undefined && (
+                <Box sx={{ textAlign: 'center', mb: 3 }}>
+                  <Typography variant="h3" color={`${getScoreColor(tenant.tenantDocument.tenantScore)}.main`} fontWeight="bold">
+                    {tenant.tenantDocument.tenantScore}%
+                  </Typography>
+                  <Chip 
+                    label={getScoreLabel(tenant.tenantDocument.tenantScore)}
+                    color={getScoreColor(tenant.tenantDocument.tenantScore)}
+                    sx={{ mt: 1 }}
+                  />
+                </Box>
+              )}
+              {/* Score Override */}
+              {tenant.tenantDocument && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Override Score
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                    <TextField
+                      size="small"
+                      type="number"
+                      value={scoreOverride}
+                      onChange={(e) => setScoreOverride(e.target.value)}
+                      placeholder={tenant.tenantDocument.tenantScore || 0}
+                      sx={{ flex: 1 }}
                     />
-                    <div>
-                      <p className="text-sm text-gray-600">Profile picture uploaded</p>
-                      <a
-                        href={getProfilePictureUrl(tenant.profilePicture)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-indigo-600 hover:text-indigo-500 text-sm"
-                      >
-                        View full size
-                      </a>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-4">
-                    <div className="h-16 w-16 rounded-full bg-gradient-to-r from-gray-400 to-gray-500 flex items-center justify-center text-white font-semibold text-xl">
-                      {tenant.name.charAt(0).toUpperCase()}
-                    </div>
-                    <span className="text-gray-500">No profile picture uploaded</span>
-                  </div>
-                )}
-              </dd>
-            </div>
+                    <Button
+                      variant="contained"
+                      onClick={handleScoreOverride}
+                      disabled={savingScore || !scoreOverride}
+                      size="small"
+                    >
+                      {savingScore ? <CircularProgress size={20} /> : 'Save'}
+                    </Button>
+                  </Box>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
 
-            <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">Applications</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{tenant.applicationCount || 0}</dd>
-            </div>
-            {tenant.tenantScoring !== undefined && (
-              <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">Tenant Score</dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  <div className="flex items-center">
-                    <span className={`${
-                      tenant.tenantScoring >= 80 ? 'text-green-600' :
-                      tenant.tenantScoring >= 60 ? 'text-yellow-600' :
-                      'text-red-600'
-                    }`}>
-                      {tenant.tenantScoring || 0}%
-                    </span>
-                    <div className="ml-2 w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full ${
-                          tenant.tenantScoring >= 80 ? 'bg-green-500' :
-                          tenant.tenantScoring >= 60 ? 'bg-yellow-500' :
-                          'bg-red-500'
-                        }`}
-                        style={{ width: `${tenant.tenantScoring || 0}%` }}
+          {/* Quick Stats */}
+          <Card sx={{ height: 'auto', mt: 2 }}>
+            <CardContent>
+              <Typography variant="h6" fontWeight="bold" gutterBottom>
+                Quick Stats
+              </Typography>
+              <List dense>
+                <ListItem>
+                  <ListItemIcon>
+                    <CalendarToday fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Joined" 
+                    secondary={formatDate(tenant.createdAt)} 
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemIcon>
+                    <Description fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Applications" 
+                    secondary={tenant.applicationCount || 0} 
+                  />
+                </ListItem>
+              </List>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Right column: AI Verification, Profile Details, Documents */}
+        <Grid item xs={12} md={8} lg={9} sx={{ width: '84%' }}>
+          {/* AI Verification Results */}
+          {aiResults && (
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Security sx={{ mr: 1, color: 'primary.main' }} />
+                  <Typography variant="h6" fontWeight="bold">
+                    AI Verification Results
+                  </Typography>
+                </Box>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <Paper sx={{ p: 2, backgroundColor: '#f8f9fa' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <AttachMoney sx={{ mr: 1, color: 'blue.main' }} />
+                        <Typography variant="subtitle2" fontWeight="bold">
+                          Income Verification
+                        </Typography>
+                      </Box>
+                      <Chip 
+                        label={aiResults.incomeVerification.status}
+                        color={aiResults.incomeVerification.status.includes('✓') ? 'success' : 'default'}
+                        size="small"
                       />
-                    </div>
-                  </div>
-                </dd>
-              </div>
-            )}
-            <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">Profile Status</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  tenant.hasProfile 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {tenant.hasProfile ? 'Complete' : 'Incomplete'}
-                </span>
-              </dd>
-            </div>
+                      {aiResults.incomeVerification.details.length > 0 && (
+                        <Box sx={{ mt: 1 }}>
+                          {aiResults.incomeVerification.details.map((detail, index) => (
+                            <Typography key={index} variant="caption" display="block" color="text.secondary">
+                              {detail}
+                            </Typography>
+                          ))}
+                        </Box>
+                      )}
+                      
+                      {/* AI Extracted Income Data */}
+                      {tenant.tenantDocument && (
+                        <Box sx={{ mt: 2 }}>
+                          <Typography variant="caption" fontWeight="bold" color="primary" display="block" gutterBottom>
+                            AI Extracted Data:
+                          </Typography>
+                          {['proofOfIncome', 'creditHistory', 'additionalDocuments'].map((docType) => {
+                            const documents = tenant.tenantDocument[docType] || [];
+                            const incomeDocs = documents.filter(doc => 
+                              doc.aiParsedData && !doc.aiParsedData.error && 
+                              (doc.aiParsedData.income || doc.aiParsedData.netIncome || doc.aiParsedData.employer)
+                            );
+                            
+                            return incomeDocs.map((doc, index) => {
+                              // Check for income mismatches
+                              const aiIncome = Number(doc.aiParsedData.income || doc.aiParsedData.netIncome);
+                              const manualIncome = tenant.tenantDocument.monthlyNetIncome;
+                              const hasMismatch = manualIncome && aiIncome && Math.abs(aiIncome - manualIncome) / manualIncome >= 0.1;
+                              
+                              return (
+                                <Box key={`${docType}-${index}`} sx={{ mb: 1, p: 1, backgroundColor: 'white', borderRadius: 1 }}>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                                    <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ flex: 1 }}>
+                                      {doc.filename}
+                                    </Typography>
+                                    {hasMismatch && (
+                                      <Tooltip title="Income mismatch detected">
+                                        <Warning sx={{ fontSize: 'small', color: 'warning.main', ml: 1 }} />
+                                      </Tooltip>
+                                    )}
+                                  </Box>
+                                  {Object.entries(doc.aiParsedData).map(([key, value]) => {
+                                    if (['parsedAt', 'documentType', 'error', 'message', 'raw'].includes(key)) return null;
+                                    if (!value || value === 'null' || value === '') return null;
+                                    if (!['income', 'netIncome', 'employer', 'name', 'documentType', 'payPeriod', 'documentDate'].includes(key)) return null;
+                                    
+                                    // Check if this specific field has a mismatch
+                                    const isMismatchField = (key === 'income' || key === 'netIncome') && hasMismatch;
+                                    
+                                    return (
+                                      <Typography key={key} variant="caption" display="block" color={isMismatchField ? 'warning.main' : 'text.secondary'}>
+                                        <strong>{key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:</strong> {String(value)}
+                                        {isMismatchField && manualIncome && (
+                                          <span style={{ color: 'text.secondary' }}> (Manual: ${manualIncome.toLocaleString()})</span>
+                                        )}
+                                      </Typography>
+                                    );
+                                  })}
+                                </Box>
+                              );
+                            });
+                          })}
+                        </Box>
+                      )}
+                    </Paper>
+                  </Grid>
+                  
+                  <Grid item xs={12} sm={6}>
+                    <Paper sx={{ p: 2, backgroundColor: '#f8f9fa' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <VerifiedUser sx={{ mr: 1, color: 'green.main' }} />
+                        <Typography variant="subtitle2" fontWeight="bold">
+                          Identity Verification
+                        </Typography>
+                      </Box>
+                      <Chip 
+                        label={aiResults.identityVerification.status}
+                        color={aiResults.identityVerification.status.includes('✓') ? 'success' : 'default'}
+                        size="small"
+                      />
+                      {aiResults.identityVerification.details.length > 0 && (
+                        <Box sx={{ mt: 1 }}>
+                          {aiResults.identityVerification.details.map((detail, index) => (
+                            <Typography key={index} variant="caption" display="block" color="text.secondary">
+                              {detail}
+                            </Typography>
+                          ))}
+                        </Box>
+                      )}
+                      
+                      {/* AI Extracted Identity Data */}
+                      {tenant.tenantDocument && (
+                        <Box sx={{ mt: 2 }}>
+                          <Typography variant="caption" fontWeight="bold" color="primary" display="block" gutterBottom>
+                            AI Extracted Data:
+                          </Typography>
+                          {tenant.tenantDocument.proofOfIdentity?.map((doc, index) => {
+                            if (!doc.aiParsedData || doc.aiParsedData.error) return null;
+                            
+                            // Check for name mismatches
+                            const aiName = doc.aiParsedData.name?.toLowerCase() || '';
+                            const tenantName = tenant.name?.toLowerCase() || '';
+                            const hasMismatch = aiName && tenantName && 
+                              !aiName.includes(tenantName.split(' ')[0]) && 
+                              !tenantName.includes(aiName.split(' ')[0]);
+                            
+                            return (
+                              <Box key={index} sx={{ mb: 1, p: 1, backgroundColor: 'white', borderRadius: 1 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                                  <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ flex: 1 }}>
+                                    Document: {doc.filename}
+                                  </Typography>
+                                  {hasMismatch && (
+                                    <Tooltip title="Name mismatch detected">
+                                      <Warning sx={{ fontSize: 'small', color: 'warning.main', ml: 1 }} />
+                                    </Tooltip>
+                                  )}
+                                </Box>
+                                {Object.entries(doc.aiParsedData).map(([key, value]) => {
+                                  if (['parsedAt', 'documentType', 'error', 'message', 'raw'].includes(key)) return null;
+                                  if (!value || value === 'null' || value === '') return null;
+                                  
+                                  // Check if this specific field has a mismatch
+                                  const isMismatchField = key === 'name' && hasMismatch;
+                                  
+                                  return (
+                                    <Typography key={key} variant="caption" display="block" color={isMismatchField ? 'warning.main' : 'text.secondary'}>
+                                      <strong>{key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:</strong> {String(value)}
+                                      {isMismatchField && tenant.name && (
+                                        <span style={{ color: 'text.secondary' }}> (Tenant: {tenant.name})</span>
+                                      )}
+                                    </Typography>
+                                  );
+                                })}
+                              </Box>
+                            );
+                          })}
+                        </Box>
+                      )}
+                    </Paper>
+                  </Grid>
+                  
+                  <Grid item xs={12} sm={6}>
+                    <Paper sx={{ p: 2, backgroundColor: '#f8f9fa' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <CreditCard sx={{ mr: 1, color: 'orange.main' }} />
+                        <Typography variant="subtitle2" fontWeight="bold">
+                          Credit Verification
+                        </Typography>
+                      </Box>
+                      <Chip 
+                        label={aiResults.creditVerification.status}
+                        color={aiResults.creditVerification.status.includes('✓') ? 'success' : 'default'}
+                        size="small"
+                      />
+                      {aiResults.creditVerification.details.length > 0 && (
+                        <Box sx={{ mt: 1 }}>
+                          {aiResults.creditVerification.details.map((detail, index) => (
+                            <Typography key={index} variant="caption" display="block" color="text.secondary">
+                              {detail}
+                            </Typography>
+                          ))}
+                        </Box>
+                      )}
+                      
+                      {/* AI Extracted Credit Data */}
+                      {tenant.tenantDocument && (
+                        <Box sx={{ mt: 2 }}>
+                          <Typography variant="caption" fontWeight="bold" color="primary" display="block" gutterBottom>
+                            AI Extracted Data:
+                          </Typography>
+                          {tenant.tenantDocument.creditHistory?.map((doc, index) => {
+                            if (!doc.aiParsedData || doc.aiParsedData.error) return null;
+                            
+                            // Check for credit score mismatches
+                            const aiCreditScore = Number(doc.aiParsedData.creditScore);
+                            const manualCreditScore = tenant.tenantDocument.creditScore;
+                            const hasMismatch = manualCreditScore && aiCreditScore && Math.abs(aiCreditScore - manualCreditScore) >= 50;
+                            
+                            return (
+                              <Box key={index} sx={{ mb: 1, p: 1, backgroundColor: 'white', borderRadius: 1 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                                  <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ flex: 1 }}>
+                                    {doc.filename}
+                                  </Typography>
+                                  {hasMismatch && (
+                                    <Tooltip title="Credit score mismatch detected">
+                                      <Warning sx={{ fontSize: 'small', color: 'warning.main', ml: 1 }} />
+                                    </Tooltip>
+                                  )}
+                                </Box>
+                                {Object.entries(doc.aiParsedData).map(([key, value]) => {
+                                  if (['parsedAt', 'documentType', 'error', 'message', 'raw'].includes(key)) return null;
+                                  if (!value || value === 'null' || value === '') return null;
+                                  
+                                  // Check if this specific field has a mismatch
+                                  const isMismatchField = key === 'creditScore' && hasMismatch;
+                                  
+                                  return (
+                                    <Typography key={key} variant="caption" display="block" color={isMismatchField ? 'warning.main' : 'text.secondary'}>
+                                      <strong>{key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:</strong> {String(value)}
+                                      {isMismatchField && manualCreditScore && (
+                                        <span style={{ color: 'text.secondary' }}> (Manual: {manualCreditScore})</span>
+                                      )}
+                                    </Typography>
+                                  );
+                                })}
+                              </Box>
+                            );
+                          })}
+                        </Box>
+                      )}
+                    </Paper>
+                  </Grid>
+                  
+                  <Grid item xs={12} sm={6}>
+                    <Paper sx={{ p: 2, backgroundColor: '#f8f9fa' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <Home sx={{ mr: 1, color: 'red.main' }} />
+                        <Typography variant="subtitle2" fontWeight="bold">
+                          Rental History
+                        </Typography>
+                      </Box>
+                      <Chip 
+                        label={aiResults.rentalHistory.status}
+                        color={aiResults.rentalHistory.status === 'Clean' ? 'success' : 'warning'}
+                        size="small"
+                      />
+                      {aiResults.rentalHistory.details.length > 0 && (
+                        <Box sx={{ mt: 1 }}>
+                          {aiResults.rentalHistory.details.map((detail, index) => (
+                            <Typography key={index} variant="caption" display="block" color="text.secondary">
+                              {detail}
+                            </Typography>
+                          ))}
+                        </Box>
+                      )}
+                      
+                      {/* AI Extracted Rental Data */}
+                      {tenant.tenantDocument && (
+                        <Box sx={{ mt: 2 }}>
+                          <Typography variant="caption" fontWeight="bold" color="primary" display="block" gutterBottom>
+                            AI Extracted Data:
+                          </Typography>
+                          {tenant.tenantDocument.rentalHistory?.map((doc, index) => {
+                            if (!doc.aiParsedData || doc.aiParsedData.error) return null;
+                            
+                            // Check for negative rental history
+                            const hasNegativeRemarks = doc.aiParsedData.negativeRemarks && 
+                              doc.aiParsedData.negativeRemarks.toLowerCase().includes('eviction');
+                            const isEvictionDocument = doc.aiParsedData.documentType && 
+                              doc.aiParsedData.documentType.toLowerCase().includes('eviction');
+                            const hasIssues = hasNegativeRemarks || isEvictionDocument;
+                            
+                            return (
+                              <Box key={index} sx={{ mb: 1, p: 1, backgroundColor: 'white', borderRadius: 1 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                                  <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ flex: 1 }}>
+                                    {doc.filename}
+                                  </Typography>
+                                  {hasIssues && (
+                                    <Tooltip title="Negative rental history detected">
+                                      <Warning sx={{ fontSize: 'small', color: 'error.main', ml: 1 }} />
+                                    </Tooltip>
+                                  )}
+                                </Box>
+                                {Object.entries(doc.aiParsedData).map(([key, value]) => {
+                                  if (['parsedAt', 'documentType', 'error', 'message', 'raw'].includes(key)) return null;
+                                  if (!value || value === 'null' || value === '') return null;
+                                  
+                                  // Check if this specific field has issues
+                                  const isIssueField = (key === 'negativeRemarks' && hasNegativeRemarks) || 
+                                                     (key === 'documentType' && isEvictionDocument);
+                                  
+                                  return (
+                                    <Typography key={key} variant="caption" display="block" color={isIssueField ? 'error.main' : 'text.secondary'}>
+                                      <strong>{key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:</strong> {String(value)}
+                                    </Typography>
+                                  );
+                                })}
+                              </Box>
+                            );
+                          })}
+                        </Box>
+                      )}
+                    </Paper>
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
+          )}
 
-            {/* Social Media Links */}
-            {tenant.socialMedia && Object.keys(tenant.socialMedia).some(key => tenant.socialMedia[key]) && (
-              <>
-                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Social Media Links</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    <div className="flex flex-col gap-3">
-                      {tenant.socialMedia.facebook && (
-                        <a
-                          href={tenant.socialMedia.facebook}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors px-2 py-1 rounded hover:bg-blue-50"
-                        >
-                          <FacebookIcon fontSize="medium" />
-                          <span>Facebook</span>
-                        </a>
-                      )}
-                      {tenant.socialMedia.linkedin && (
-                        <a
-                          href={tenant.socialMedia.linkedin}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-blue-700 hover:text-blue-900 transition-colors px-2 py-1 rounded hover:bg-blue-50"
-                        >
-                          <LinkedInIcon fontSize="medium" />
-                          <span>LinkedIn</span>
-                        </a>
-                      )}
-                      {tenant.socialMedia.instagram && (
-                        <a
-                          href={tenant.socialMedia.instagram}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-pink-600 hover:text-pink-800 transition-colors px-2 py-1 rounded hover:bg-pink-50"
-                        >
-                          <InstagramIcon fontSize="medium" />
-                          <span>Instagram</span>
-                        </a>
-                      )}
-                      {tenant.socialMedia.twitter && (
-                        <a
-                          href={tenant.socialMedia.twitter}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-sky-500 hover:text-sky-700 transition-colors px-2 py-1 rounded hover:bg-sky-50"
-                        >
-                          <TwitterIcon fontSize="medium" />
-                          <span>Twitter</span>
-                        </a>
-                      )}
-                      {tenant.socialMedia.website && (
-                        <a
-                          href={tenant.socialMedia.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors px-2 py-1 rounded hover:bg-gray-100"
-                        >
-                          <LanguageIcon fontSize="medium" />
-                          <span>Website</span>
-                        </a>
-                      )}
-                    </div>
-                  </dd>
-                </div>
-              </>
-            )}
-
-            {/* Tenant Document Information */}
+          {/* Profile Details */}
             {tenant.tenantDocument ? (
-              <>
-                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Has Been Evicted</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {tenant.tenantDocument.hasBeenEvicted ? 'Yes' : 'No'}
-                  </dd>
-                </div>
-                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Can Pay More Than One Month</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {tenant.tenantDocument.canPayMoreThanOneMonth ? 'Yes' : 'No'}
-                  </dd>
-                </div>
-                {tenant.tenantDocument.canPayMoreThanOneMonth && (
-                  <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt className="text-sm font-medium text-gray-500">Months Ahead Can Pay</dt>
-                    <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                      {tenant.tenantDocument.monthsAheadCanPay || 'Not specified'}
-                    </dd>
-                  </div>
-                )}
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Typography variant="h6" fontWeight="bold" gutterBottom>
+                  Profile Details
+                </Typography>
+                <Grid container spacing={2}>
+                  {/* Employment & Income */}
+                  <Grid item xs={12} md={6}>
+                    <Paper sx={{ p: 2, backgroundColor: '#f8f9fa' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <Work sx={{ mr: 1, color: 'primary.main' }} />
+                        <Typography variant="subtitle2" fontWeight="bold">
+                          Employment & Income
+                        </Typography>
+                      </Box>
+                      <Typography variant="body2">
+                        <strong>Employed:</strong> {tenant.tenantDocument.isCurrentlyEmployed === 'yes' ? 'Yes' : 'No'}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Type:</strong> {tenant.tenantDocument.employmentType}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Income:</strong> ${tenant.tenantDocument.monthlyNetIncome?.toLocaleString()}
+                      </Typography>
+                      {tenant.tenantDocument.creditScore && (
+                        <Typography variant="body2">
+                          <strong>Credit Score:</strong> {tenant.tenantDocument.creditScore}
+                        </Typography>
+                      )}
+                    </Paper>
+                  </Grid>
 
-                {/* New fields */}
-                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Has Pets</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {tenant.tenantDocument.hasPets === 'yes' ? 'Yes' : 'No'}
-                  </dd>
-                </div>
-                {tenant.tenantDocument.hasPets === 'yes' && (
-                  <>
-                    <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                      <dt className="text-sm font-medium text-gray-500">Number of Pets</dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        {tenant.tenantDocument.petCount || 'Not specified'}
-                      </dd>
-                    </div>
-                    <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                      <dt className="text-sm font-medium text-gray-500">Types of Pets</dt>
-                      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                        {tenant.tenantDocument.petTypes || 'Not specified'}
-                      </dd>
-                    </div>
-                  </>
-                )}
-                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Smokes</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {tenant.tenantDocument.smokes === 'yes' ? 'Yes' : 'No'}
-                  </dd>
-                </div>
-                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Number of Adults</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {tenant.tenantDocument.adultOccupants || 'Not specified'}
-                  </dd>
-                </div>
-                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Number of Children</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {tenant.tenantDocument.childOccupants || 'Not specified'}
-                  </dd>
-                </div>
-                {tenant.tenantDocument.creditScore && (
-                  <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                    <dt className="text-sm font-medium text-gray-500">Credit Score</dt>
-                    <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                      <span className={`${
-                        tenant.tenantDocument.creditScore >= 750 ? 'text-green-600' :
-                        tenant.tenantDocument.creditScore >= 650 ? 'text-yellow-600' :
-                        'text-red-600'
-                      } font-medium`}>
-                        {tenant.tenantDocument.creditScore}
-                      </span>
-                      <span className="text-gray-500 ml-1">
-                        ({tenant.tenantDocument.creditScore >= 750 ? 'Excellent' :
-                          tenant.tenantDocument.creditScore >= 650 ? 'Good' :
-                          tenant.tenantDocument.creditScore >= 550 ? 'Fair' : 'Poor'})
-                      </span>
-                    </dd>
-                  </div>
+                  {/* Lifestyle */}
+                  <Grid item xs={12} md={6}>
+                    <Paper sx={{ p: 2, backgroundColor: '#f8f9fa' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <Group sx={{ mr: 1, color: 'primary.main' }} />
+                        <Typography variant="subtitle2" fontWeight="bold">
+                          Lifestyle
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                        <Pets sx={{ mr: 1, fontSize: 'small' }} />
+                        <Typography variant="body2">
+                          <strong>Pets:</strong> {tenant.tenantDocument.hasPets === 'yes' ? 'Yes' : 'No'}
+                          {tenant.tenantDocument.hasPets === 'yes' && ` (${tenant.tenantDocument.petCount} ${tenant.tenantDocument.petTypes})`}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                        <SmokingRooms sx={{ mr: 1, fontSize: 'small' }} />
+                        <Typography variant="body2">
+                          <strong>Smokes:</strong> {tenant.tenantDocument.smokes === 'yes' ? 'Yes' : 'No'}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                        <Group sx={{ mr: 1, fontSize: 'small' }} />
+                        <Typography variant="body2">
+                          <strong>Adults:</strong> {tenant.tenantDocument.adultOccupants}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <ChildCare sx={{ mr: 1, fontSize: 'small' }} />
+                        <Typography variant="body2">
+                          <strong>Children:</strong> {tenant.tenantDocument.childOccupants}
+                        </Typography>
+                      </Box>
+                    </Paper>
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Alert severity="warning">
+                  This tenant has not completed their profile yet.
+                </Alert>
+              </CardContent>
+            </Card>
                 )}
 
                 {/* Documents */}
-                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Proof of Identity Documents</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {renderDocumentList(tenant.tenantDocument.proofOfIdentity)}
-                  </dd>
-                </div>
-                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Proof of Income Documents</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {renderDocumentList(tenant.tenantDocument.proofOfIncome)}
-                  </dd>
-                </div>
-                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Credit History Documents</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {renderDocumentList(tenant.tenantDocument.creditHistory)}
-                  </dd>
-                </div>
-                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Rental History Documents</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {renderDocumentList(tenant.tenantDocument.rentalHistory)}
-                  </dd>
-                </div>
-                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Additional Documents</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {renderDocumentList(tenant.tenantDocument.additionalDocuments)}
-                  </dd>
-                </div>
-
-                {/* Document Creation/Update Dates */}
-                <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Profile Created</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {formatDate(tenant.tenantDocument.createdAt)}
-                  </dd>
-                </div>
-                <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                  <dt className="text-sm font-medium text-gray-500">Last Updated</dt>
-                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                    {formatDate(tenant.tenantDocument.updatedAt)}
-                  </dd>
-                </div>
-              </>
-            ) : (
-              <div className="bg-yellow-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">Tenant Profile</dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  <span className="text-yellow-700">This tenant has not completed their profile yet.</span>
-                </dd>
-              </div>
-            )}
-          </dl>
-        </div>
-      </div>
-    </div>
+          {tenant.tenantDocument && (
+            <Card>
+              <CardContent>
+                <Typography variant="h6" fontWeight="bold" gutterBottom>
+                  Documents
+                </Typography>
+                <Grid container spacing={2}>
+                  {['proofOfIdentity', 'proofOfIncome', 'creditHistory', 'rentalHistory', 'additionalDocuments'].map((docType) => (
+                    <Grid item xs={12} sm={6} md={4} key={docType}>
+                      <Accordion>
+                        <AccordionSummary expandIcon={<ExpandMore />}>
+                          <Typography variant="subtitle2" fontWeight="bold">
+                            {docType.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                          </Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                          {tenant.tenantDocument[docType]?.length > 0 ? (
+                            <List dense>
+                              {tenant.tenantDocument[docType].map((doc, index) => (
+                                <ListItem key={index}>
+                                  <ListItemText
+                                    primary={doc.filename}
+                                    secondary={formatDate(doc.uploadedAt)}
+                                  />
+                                  <Button
+                                    size="small"
+                                    href={doc.url}
+                                    target="_blank"
+                                    variant="outlined"
+                                  >
+                                    View
+                                  </Button>
+                                </ListItem>
+                              ))}
+                            </List>
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              No documents uploaded
+                            </Typography>
+                          )}
+                        </AccordionDetails>
+                      </Accordion>
+                    </Grid>
+                  ))}
+                </Grid>
+              </CardContent>
+            </Card>
+          )}
+        </Grid>
+      </Grid>
+    </Box>
   );
 } 

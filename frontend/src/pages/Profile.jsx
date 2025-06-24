@@ -265,6 +265,7 @@ export default function Profile() {
     monthlyNetIncome: '',
     hasAdditionalIncome: '',
     additionalIncomeDescription: '',
+    additionalIncomeAmount: '',
     
     // Expenses & Debts
     monthlyDebtRepayment: '',
@@ -299,6 +300,10 @@ export default function Profile() {
     rentalHistory: [],
     additionalDocuments: []
   });
+
+  const ALLOWED_FILE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+  const MAX_FILE_SIZE_MB = 5;
+  const MAX_TOTAL_FILES = 10;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -335,6 +340,7 @@ export default function Profile() {
                   monthlyNetIncome: data.monthlyNetIncome || '',
                   hasAdditionalIncome: data.hasAdditionalIncome === 'yes' ? 'true' : 'false',
                   additionalIncomeDescription: data.additionalIncomeDescription || '',
+                  additionalIncomeAmount: data.additionalIncomeAmount || '',
                   
                   // Expenses & Debts
                   monthlyDebtRepayment: data.monthlyDebtRepayment || '',
@@ -479,13 +485,25 @@ export default function Profile() {
       'hasBeenEvicted',
       'currentlyPaysRent',
       'hasTwoMonthsRentSavings',
-      'canPayMoreThanOneMonth',
-      // New required fields
-      'hasPets',
-      'smokes',
-      'adultOccupants',
-      'childOccupants'
+      'canPayMoreThanOneMonth'
     ];
+
+    // Add conditional required fields
+    if (answers.hasAdditionalIncome === 'true') {
+      requiredFields.push('additionalIncomeDescription', 'additionalIncomeAmount');
+    }
+    if (answers.paysChildSupport === 'true') {
+      requiredFields.push('childSupportAmount');
+    }
+    if (answers.currentlyPaysRent === 'true') {
+      requiredFields.push('currentRentAmount');
+    }
+    if (answers.canPayMoreThanOneMonth === 'true') {
+      requiredFields.push('monthsAheadCanPay');
+    }
+    if (answers.hasPets === 'true') {
+      requiredFields.push('petCount', 'petTypes');
+    }
 
     const missingFields = [];
     requiredFields.forEach(field => {
@@ -672,6 +690,7 @@ export default function Profile() {
           monthlyNetIncome: data.monthlyNetIncome || '',
           hasAdditionalIncome: data.hasAdditionalIncome === 'yes' ? 'true' : 'false',
           additionalIncomeDescription: data.additionalIncomeDescription || '',
+          additionalIncomeAmount: data.additionalIncomeAmount || '',
           
           // Expenses & Debts
           monthlyDebtRepayment: data.monthlyDebtRepayment || '',
@@ -724,7 +743,21 @@ export default function Profile() {
   };
 
   const handleDocumentDrop = (field) => (acceptedFiles) => {
+    // Count total files across all fields
+    const totalFiles = Object.values(documents).reduce((sum, arr) => sum + (arr ? arr.length : 0), 0);
+    if (totalFiles + acceptedFiles.length > MAX_TOTAL_FILES) {
+      toast.error(`You can upload a maximum of ${MAX_TOTAL_FILES} files in total.`);
+      return;
+    }
     acceptedFiles.forEach(file => {
+      if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+        toast.error('Only PNG, JPEG, and WEBP images are allowed.');
+        return;
+      }
+      if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+        toast.error(`File size must be less than ${MAX_FILE_SIZE_MB}MB.`);
+        return;
+      }
       handleDocumentUpload(file, field);
     });
   };
@@ -1297,12 +1330,16 @@ export default function Profile() {
                       name="employmentType"
                       value={answers.employmentType}
                       onChange={handleAnswerChange}
+                      placeholder="Select employment type"
                       required
                       error={validationErrors.includes('employmentType')}
                       helperText={validationErrors.includes('employmentType') ? 'Required' : undefined}
                       size="small"
+                      InputProps={{
+                        style: { minWidth: 220 }
+                      }}
                     >
-                      <MenuItem value="">Select type</MenuItem>
+                      <MenuItem value="" disabled>Select employment type</MenuItem>
                       <MenuItem value="full-time">Full-time</MenuItem>
                       <MenuItem value="part-time">Part-time</MenuItem>
                       <MenuItem value="self-employed">Self-employed</MenuItem>
@@ -1348,18 +1385,42 @@ export default function Profile() {
                   </Grid>
 
                   {answers.hasAdditionalIncome === 'true' && (
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Additional Income Description *"
-                        name="additionalIncomeDescription"
-                        multiline
-                        rows={1}
-                        value={answers.additionalIncomeDescription}
-                        onChange={handleAnswerChange}
-                        placeholder="Describe your additional income sources..."
-                        size="small"
-                      />
+                    <Grid container spacing={3}>
+                      <Grid item xs={12} md={6}>
+                        <TextField
+                          fullWidth
+                          label="Additional Income Amount *"
+                          name="additionalIncomeAmount"
+                          type="number"
+                          value={answers.additionalIncomeAmount}
+                          onChange={handleAnswerChange}
+                          placeholder="0.00"
+                          inputProps={{ min: 0, step: 0.01 }}
+                          required
+                          error={validationErrors.includes('additionalIncomeAmount')}
+                          helperText={validationErrors.includes('additionalIncomeAmount') ? 'Required' : undefined}
+                          InputProps={{
+                            startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                          }}
+                          size="small"
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <TextField
+                          fullWidth
+                          label="Additional Income Description *"
+                          name="additionalIncomeDescription"
+                          multiline
+                          rows={1}
+                          value={answers.additionalIncomeDescription}
+                          onChange={handleAnswerChange}
+                          placeholder="Describe your additional income sources..."
+                          required
+                          error={validationErrors.includes('additionalIncomeDescription')}
+                          helperText={validationErrors.includes('additionalIncomeDescription') ? 'Required' : undefined}
+                          size="small"
+                        />
+                      </Grid>
                     </Grid>
                   )}
                 </Grid>
