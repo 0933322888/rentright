@@ -166,7 +166,6 @@ const tenantDocumentSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  tenantScore: { type: Number, default: 0 }, // AI/logic-based scoring
 });
 
 // Update the updatedAt timestamp before saving

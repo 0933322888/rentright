@@ -4,6 +4,10 @@ export default {
     "./index.html",
     "./src/**/*.{js,jsx}",
   ],
+  safelist: [
+    'text-orange-500',
+    'bg-orange-500'
+  ],
   theme: {
     extend: {
       colors: {

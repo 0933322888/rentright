@@ -3,6 +3,7 @@ import { uploadFileToS3, deleteFileFromS3, generateS3Key } from '../utils/s3.js'
 import fs from 'fs';
 import { parseDocumentWithOpenAI } from '../utils/aiImageRecognition.js';
 import { calculateTenantScore } from '../utils/tenantScoringUtils.js';
+import User from '../models/userModel.js';
 
 const documentFields = [
   'proofOfIdentity', 'proofOfIncome', 'creditHistory',
@@ -57,11 +58,8 @@ export const uploadTenantDocument = async (req, res) => {
     tenantDocument[field].push(docMeta);
     await tenantDocument.save();
 
-    console.log('[tenantScore] Before calculation (upload):', tenantDocument.tenantScore);
-    tenantDocument.tenantScore = calculateTenantScore(tenantDocument);
-    console.log('[tenantScore] After calculation (upload):', tenantDocument.tenantScore);
-    await tenantDocument.save();
-    console.log('[tenantScore] Saved to DB (upload)');
+    const score = calculateTenantScore(tenantDocument);
+    await User.findByIdAndUpdate(tenantDocument.tenant, { tenantScoring: score });
 
     res.status(201).json({
       url,
@@ -71,7 +69,7 @@ export const uploadTenantDocument = async (req, res) => {
       mimeType: file.mimetype,
       uploadedAt: new Date(),
       aiParsedData,
-      tenantScore: tenantDocument.tenantScore
+      tenantScore: score
     });
   } catch (error) {
     console.error('Error in uploadTenantDocument:', error);
@@ -169,11 +167,8 @@ export const updateTenantProfile = async (req, res) => {
 
     const savedDocument = await tenantDocument.save();
 
-    console.log('[tenantScore] Before calculation (update):', tenantDocument.tenantScore);
-    tenantDocument.tenantScore = calculateTenantScore(tenantDocument);
-    console.log('[tenantScore] After calculation (update):', tenantDocument.tenantScore);
-    await tenantDocument.save();
-    console.log('[tenantScore] Saved to DB (update)');
+    const score = calculateTenantScore(tenantDocument);
+    await User.findByIdAndUpdate(tenantDocument.tenant, { tenantScoring: score });
 
     const responseData = savedDocument.toObject();
 
@@ -197,7 +192,7 @@ export const updateTenantProfile = async (req, res) => {
 
     res.json({
       ...responseData,
-      tenantScore: tenantDocument.tenantScore
+      tenantScore: score
     });
   } catch (error) {
     console.error('Error in updateTenantProfile:', error);
@@ -239,9 +234,11 @@ export const getTenantProfile = async (req, res) => {
     delete profileData.createdAt;
     delete profileData.updatedAt;
 
+    const score = calculateTenantScore(tenantDocument);
+
     res.json({
       ...profileData,
-      tenantScore: tenantDocument.tenantScore
+      tenantScore: score
     });
   } catch (error) {
     console.error('Error in getTenantProfile:', error);

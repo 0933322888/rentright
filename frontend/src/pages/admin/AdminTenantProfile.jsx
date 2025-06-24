@@ -92,16 +92,16 @@ export default function AdminTenantProfile() {
   };
 
   const handleScoreOverride = async () => {
-    if (!tenant || !tenant.tenantDocument) return;
+    if (!tenant) return;
     setSavingScore(true);
     try {
       const response = await axios.patch(
         `${API_ENDPOINTS.ADMIN_TENANTS}/${id}`,
-        { tenantScore: Number(scoreOverride) },
+        { tenantScoring: Number(scoreOverride) },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       toast.success('Tenant score updated');
-      setTenant(prev => ({ ...prev, tenantDocument: { ...prev.tenantDocument, tenantScore: Number(scoreOverride) } }));
+      setTenant(prev => ({ ...prev, tenantScoring: Number(scoreOverride) }));
     } catch (err) {
       toast.error('Failed to update score');
     } finally {
@@ -110,7 +110,7 @@ export default function AdminTenantProfile() {
   };
 
   const getAIMatchingResults = () => {
-    if (!tenant?.tenantDocument) return null;
+    if (!tenant?.tenantScoring) return null;
     
     const results = {
       incomeVerification: { status: 'Not verified', details: [] },
@@ -120,7 +120,7 @@ export default function AdminTenantProfile() {
       rentalHistory: { status: 'Clean', details: [] }
     };
     
-    const doc = tenant.tenantDocument;
+    const doc = tenant.tenantScoring;
     
     // Income verification
     let aiIncomeFound = false;
@@ -236,8 +236,8 @@ export default function AdminTenantProfile() {
   };
 
   const getScoreColor = (score) => {
-    if (score >= 80) return 'success';
-    if (score >= 60) return 'warning';
+    if (score >= 75) return 'success';
+    if (score >= 40) return 'warning';
     return 'error';
   };
 
@@ -293,7 +293,7 @@ export default function AdminTenantProfile() {
 
       <Grid container spacing={3}>
         {/* Left column: Profile, Score, Stats */}
-        <Grid item xs={12} md={4} lg={3} sx={{ width: '14%' }}>
+        <Grid item xs={12} md={4} lg={3} sx={{ width: '19%' }}>
           {/* Profile Card */}
           <Card sx={{ height: 'auto' }}>
             <CardContent sx={{ textAlign: 'center', p: 3 }}>
@@ -326,20 +326,48 @@ export default function AdminTenantProfile() {
                   Tenant Score
                 </Typography>
               </Box>
-              {tenant.tenantDocument?.tenantScore !== undefined && (
+              {tenant.tenantScoring !== undefined && (
                 <Box sx={{ textAlign: 'center', mb: 3 }}>
-                  <Typography variant="h3" color={`${getScoreColor(tenant.tenantDocument.tenantScore)}.main`} fontWeight="bold">
-                    {tenant.tenantDocument.tenantScore}%
+                  <Typography variant="h3" color={`${getScoreColor(tenant.tenantScoring)}.main`} fontWeight="bold">
+                    {tenant.tenantScoring}%
                   </Typography>
                   <Chip 
-                    label={getScoreLabel(tenant.tenantDocument.tenantScore)}
-                    color={getScoreColor(tenant.tenantDocument.tenantScore)}
+                    label={getScoreLabel(tenant.tenantScoring)}
+                    color={getScoreColor(tenant.tenantScoring)}
                     sx={{ mt: 1 }}
                   />
                 </Box>
               )}
+
+              {/* Score Breakdown */}
+              {tenant.scoreBreakdown && (
+                <Box sx={{ mt: 2, textAlign: 'left' }}>
+                  <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                    Score Breakdown
+                  </Typography>
+                  <List dense>
+                    {Object.entries(tenant.scoreBreakdown).map(([section, data]) => (
+                      <Box key={section} sx={{ mb: 1 }}>
+                        <Typography variant="body2" fontWeight="bold" color="primary.main">
+                          {section.charAt(0).toUpperCase() + section.slice(1)}: {data.score}/{data.max}
+                        </Typography>
+                        {data.details && data.details.length > 0 && (
+                          <List dense sx={{ pl: 2 }}>
+                            {data.details.map((detail, idx) => (
+                              <ListItem key={idx} sx={{ py: 0 }}>
+                                <ListItemText primary={<Typography variant="caption">{detail}</Typography>} />
+                              </ListItem>
+                            ))}
+                          </List>
+                        )}
+                      </Box>
+                    ))}
+                  </List>
+                </Box>
+              )}
+
               {/* Score Override */}
-              {tenant.tenantDocument && (
+              {tenant.tenantScoring && (
                 <Box sx={{ mt: 2 }}>
                   <Typography variant="subtitle2" gutterBottom>
                     Override Score
@@ -350,7 +378,7 @@ export default function AdminTenantProfile() {
                       type="number"
                       value={scoreOverride}
                       onChange={(e) => setScoreOverride(e.target.value)}
-                      placeholder={tenant.tenantDocument.tenantScore || 0}
+                      placeholder={tenant.tenantScoring || 0}
                       sx={{ flex: 1 }}
                     />
                     <Button
@@ -398,7 +426,7 @@ export default function AdminTenantProfile() {
         </Grid>
 
         {/* Right column: AI Verification, Profile Details, Documents */}
-        <Grid item xs={12} md={8} lg={9} sx={{ width: '84%' }}>
+        <Grid item xs={12} md={8} lg={9} sx={{ width: '79%' }}>
           {/* AI Verification Results */}
           {aiResults && (
             <Card sx={{ mb: 3 }}>
@@ -434,13 +462,13 @@ export default function AdminTenantProfile() {
                       )}
                       
                       {/* AI Extracted Income Data */}
-                      {tenant.tenantDocument && (
+                      {tenant.tenantScoring && (
                         <Box sx={{ mt: 2 }}>
                           <Typography variant="caption" fontWeight="bold" color="primary" display="block" gutterBottom>
                             AI Extracted Data:
                           </Typography>
                           {['proofOfIncome', 'creditHistory', 'additionalDocuments'].map((docType) => {
-                            const documents = tenant.tenantDocument[docType] || [];
+                            const documents = tenant.tenantScoring[docType] || [];
                             const incomeDocs = documents.filter(doc => 
                               doc.aiParsedData && !doc.aiParsedData.error && 
                               (doc.aiParsedData.income || doc.aiParsedData.netIncome || doc.aiParsedData.employer)
@@ -449,7 +477,7 @@ export default function AdminTenantProfile() {
                             return incomeDocs.map((doc, index) => {
                               // Check for income mismatches
                               const aiIncome = Number(doc.aiParsedData.income || doc.aiParsedData.netIncome);
-                              const manualIncome = tenant.tenantDocument.monthlyNetIncome;
+                              const manualIncome = tenant.tenantScoring.monthlyNetIncome;
                               const hasMismatch = manualIncome && aiIncome && Math.abs(aiIncome - manualIncome) / manualIncome >= 0.1;
                               
                               return (
@@ -514,12 +542,12 @@ export default function AdminTenantProfile() {
                       )}
                       
                       {/* AI Extracted Identity Data */}
-                      {tenant.tenantDocument && (
+                      {tenant.tenantScoring && (
                         <Box sx={{ mt: 2 }}>
                           <Typography variant="caption" fontWeight="bold" color="primary" display="block" gutterBottom>
                             AI Extracted Data:
                           </Typography>
-                          {tenant.tenantDocument.proofOfIdentity?.map((doc, index) => {
+                          {tenant.tenantScoring.proofOfIdentity?.map((doc, index) => {
                             if (!doc.aiParsedData || doc.aiParsedData.error) return null;
                             
                             // Check for name mismatches
@@ -589,17 +617,17 @@ export default function AdminTenantProfile() {
                       )}
                       
                       {/* AI Extracted Credit Data */}
-                      {tenant.tenantDocument && (
+                      {tenant.tenantScoring && (
                         <Box sx={{ mt: 2 }}>
                           <Typography variant="caption" fontWeight="bold" color="primary" display="block" gutterBottom>
                             AI Extracted Data:
                           </Typography>
-                          {tenant.tenantDocument.creditHistory?.map((doc, index) => {
+                          {tenant.tenantScoring.creditHistory?.map((doc, index) => {
                             if (!doc.aiParsedData || doc.aiParsedData.error) return null;
                             
                             // Check for credit score mismatches
                             const aiCreditScore = Number(doc.aiParsedData.creditScore);
-                            const manualCreditScore = tenant.tenantDocument.creditScore;
+                            const manualCreditScore = tenant.tenantScoring.creditScore;
                             const hasMismatch = manualCreditScore && aiCreditScore && Math.abs(aiCreditScore - manualCreditScore) >= 50;
                             
                             return (
@@ -662,12 +690,12 @@ export default function AdminTenantProfile() {
                       )}
                       
                       {/* AI Extracted Rental Data */}
-                      {tenant.tenantDocument && (
+                      {tenant.tenantScoring && (
                         <Box sx={{ mt: 2 }}>
                           <Typography variant="caption" fontWeight="bold" color="primary" display="block" gutterBottom>
                             AI Extracted Data:
                           </Typography>
-                          {tenant.tenantDocument.rentalHistory?.map((doc, index) => {
+                          {tenant.tenantScoring.rentalHistory?.map((doc, index) => {
                             if (!doc.aiParsedData || doc.aiParsedData.error) return null;
                             
                             // Check for negative rental history
@@ -716,7 +744,7 @@ export default function AdminTenantProfile() {
           )}
 
           {/* Profile Details */}
-            {tenant.tenantDocument ? (
+            {tenant.tenantScoring ? (
             <Card sx={{ mb: 3 }}>
               <CardContent>
                 <Typography variant="h6" fontWeight="bold" gutterBottom>
@@ -733,17 +761,17 @@ export default function AdminTenantProfile() {
                         </Typography>
                       </Box>
                       <Typography variant="body2">
-                        <strong>Employed:</strong> {tenant.tenantDocument.isCurrentlyEmployed === 'yes' ? 'Yes' : 'No'}
+                        <strong>Employed:</strong> {tenant.tenantScoring.isCurrentlyEmployed === 'yes' ? 'Yes' : 'No'}
                       </Typography>
                       <Typography variant="body2">
-                        <strong>Type:</strong> {tenant.tenantDocument.employmentType}
+                        <strong>Type:</strong> {tenant.tenantScoring.employmentType}
                       </Typography>
                       <Typography variant="body2">
-                        <strong>Income:</strong> ${tenant.tenantDocument.monthlyNetIncome?.toLocaleString()}
+                        <strong>Income:</strong> ${tenant.tenantScoring.monthlyNetIncome?.toLocaleString()}
                       </Typography>
-                      {tenant.tenantDocument.creditScore && (
+                      {tenant.tenantScoring.creditScore && (
                         <Typography variant="body2">
-                          <strong>Credit Score:</strong> {tenant.tenantDocument.creditScore}
+                          <strong>Credit Score:</strong> {tenant.tenantScoring.creditScore}
                         </Typography>
                       )}
                     </Paper>
@@ -761,26 +789,26 @@ export default function AdminTenantProfile() {
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
                         <Pets sx={{ mr: 1, fontSize: 'small' }} />
                         <Typography variant="body2">
-                          <strong>Pets:</strong> {tenant.tenantDocument.hasPets === 'yes' ? 'Yes' : 'No'}
-                          {tenant.tenantDocument.hasPets === 'yes' && ` (${tenant.tenantDocument.petCount} ${tenant.tenantDocument.petTypes})`}
+                          <strong>Pets:</strong> {tenant.tenantScoring.hasPets === 'yes' ? 'Yes' : 'No'}
+                          {tenant.tenantScoring.hasPets === 'yes' && ` (${tenant.tenantScoring.petCount} ${tenant.tenantScoring.petTypes})`}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
                         <SmokingRooms sx={{ mr: 1, fontSize: 'small' }} />
                         <Typography variant="body2">
-                          <strong>Smokes:</strong> {tenant.tenantDocument.smokes === 'yes' ? 'Yes' : 'No'}
+                          <strong>Smokes:</strong> {tenant.tenantScoring.smokes === 'yes' ? 'Yes' : 'No'}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
                         <Group sx={{ mr: 1, fontSize: 'small' }} />
                         <Typography variant="body2">
-                          <strong>Adults:</strong> {tenant.tenantDocument.adultOccupants}
+                          <strong>Adults:</strong> {tenant.tenantScoring.adultOccupants}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <ChildCare sx={{ mr: 1, fontSize: 'small' }} />
                         <Typography variant="body2">
-                          <strong>Children:</strong> {tenant.tenantDocument.childOccupants}
+                          <strong>Children:</strong> {tenant.tenantScoring.childOccupants}
                         </Typography>
                       </Box>
                     </Paper>
@@ -799,7 +827,7 @@ export default function AdminTenantProfile() {
                 )}
 
                 {/* Documents */}
-          {tenant.tenantDocument && (
+          {tenant.tenantScoring && (
             <Card>
               <CardContent>
                 <Typography variant="h6" fontWeight="bold" gutterBottom>
@@ -815,9 +843,9 @@ export default function AdminTenantProfile() {
                           </Typography>
                         </AccordionSummary>
                         <AccordionDetails>
-                          {tenant.tenantDocument[docType]?.length > 0 ? (
+                          {tenant.tenantScoring[docType]?.length > 0 ? (
                             <List dense>
-                              {tenant.tenantDocument[docType].map((doc, index) => (
+                              {tenant.tenantScoring[docType].map((doc, index) => (
                                 <ListItem key={index}>
                                   <ListItemText
                                     primary={doc.filename}
