@@ -99,7 +99,12 @@ const PropertyDetails = () => {
       creditHistory: tenantProfile.creditHistory?.length > 0,
       rentalHistory: tenantProfile.rentalHistory?.length > 0,
       hasBeenEvicted: tenantProfile.hasBeenEvicted !== undefined,
-      canPayMoreThanOneMonth: tenantProfile.canPayMoreThanOneMonth !== undefined
+      canPayMoreThanOneMonth: tenantProfile.canPayMoreThanOneMonth !== undefined,
+      // New required fields
+      hasPets: tenantProfile.hasPets !== undefined,
+      smokes: tenantProfile.smokes !== undefined,
+      adultOccupants: tenantProfile.adultOccupants !== undefined,
+      childOccupants: tenantProfile.childOccupants !== undefined
     };
 
     console.log('Profile completion requirements:', requirements);

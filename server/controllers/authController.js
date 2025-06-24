@@ -22,7 +22,7 @@ const handleOAuthSuccess = (req, res) => {
     const isNewUser = !user.registrationComplete;
     
     // Redirect to frontend with token and user info
-    const redirectUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/oauth-success?token=${token}&user=${encodeURIComponent(JSON.stringify({
+    const redirectUrl = `${process.env.FRONTEND_URL || 'http://localhost:5137'}/oauth-success?token=${token}&user=${encodeURIComponent(JSON.stringify({
       _id: user._id,
       name: user.name,
       email: user.email,
@@ -36,14 +36,14 @@ const handleOAuthSuccess = (req, res) => {
     res.redirect(redirectUrl);
   } catch (error) {
     console.error('OAuth success handler error:', error);
-    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/oauth-error`);
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5137'}/oauth-error`);
   }
 };
 
 // OAuth Failure Handler
 const handleOAuthFailure = (req, res) => {
   console.error('OAuth failure:', req.query.error);
-  res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/oauth-error?error=${encodeURIComponent(req.query.error || 'Authentication failed')}`);
+  res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5137'}/oauth-error?error=${encodeURIComponent(req.query.error || 'Authentication failed')}`);
 };
 
 // OAuth Routes
