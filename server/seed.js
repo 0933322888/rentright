@@ -454,43 +454,67 @@ const seed = async () => {
     console.log('Created users');
 
     // Create tenant documents for specific tenants
-    const tenantDocumentData = {
+    const tenantProfileData = {
+      employmentStatus: 'employed',
+      employerName: 'Tech Solutions Inc.',
+      jobTitle: 'Software Engineer',
+      monthlyNetIncome: 8000,
+      monthlyDebtRepayment: 1500,
+      additionalIncomeAmount: 500,
+      additionalIncomeSource: 'Freelance consulting',
+      currentRentAmount: 2200,
+      monthsAheadCanPay: 3,
+      maritalStatus: 'single',
+      childSupportAmount: 0,
+      adultOccupants: 1,
+      childOccupants: 0,
+      hasPets: false,
+      petCount: 0,
+      petTypes: [],
+      petSizes: [],
+      smokingStatus: 'non-smoker',
+      creditScore: 750,
+      bankruptcyHistory: false,
+      evictionHistory: false,
+      hasGuarantor: false,
+      guarantorName: '',
+      guarantorRelationship: '',
+      guarantorPhone: '',
+      guarantorEmail: '',
+      guarantorAddress: '',
+      guarantorMonthlyIncome: 0,
+      guarantorEmployer: '',
+      guarantorJobTitle: '',
       proofOfIdentity: [],
       proofOfIncome: [],
       creditHistory: [],
       rentalHistory: [],
-      additionalDocuments: [],
-      isCurrentlyEmployed: "yes",
-      employmentType: "full-time",
-      monthlyNetIncome: 10000,
-      hasAdditionalIncome: "yes",
-      additionalIncomeDescription: "dividends",
-      monthlyDebtRepayment: 2000,
-      paysChildSupport: "no",
-      childSupportAmount: 0,
-      hasBeenEvicted: "no",
-      currentlyPaysRent: "yes",
-      currentRentAmount: 2500,
-      hasTwoMonthsRentSavings: "yes",
-      canShareFinancialDocuments: "yes",
-      canPayMoreThanOneMonth: "yes",
-      monthsAheadCanPay: 3
+      additionalDocuments: []
     };
 
-    // Create tenant documents for sampleTenants[0] and sampleTenants[2]
-    const tenantDocuments = [
+    // Create tenant profiles for sampleTenants[0] and sampleTenants[2]
+    const tenantProfiles = [
       {
-        ...tenantDocumentData,
-        tenant: createdTenants[0]._id // sampleTenants[0]
+        ...tenantProfileData,
+        tenant: createdTenants[0]._id // sampleTenants[0] - Emily Davis
       },
       {
-        ...tenantDocumentData,
-        tenant: createdTenants[2]._id // sampleTenants[2]
+        ...tenantProfileData,
+        tenant: createdTenants[2]._id, // sampleTenants[2] - Lisa Anderson
+        employmentStatus: 'self-employed',
+        employerName: 'Anderson Consulting',
+        jobTitle: 'Independent Consultant',
+        monthlyNetIncome: 6500,
+        hasPets: true,
+        petCount: 1,
+        petTypes: ['Dog'],
+        petSizes: ['medium'],
+        creditScore: 720
       }
     ];
 
-    await TenantProfile.insertMany(tenantDocuments);
-    console.log('Created tenant documents');
+    await TenantProfile.insertMany(tenantProfiles);
+    console.log('Created tenant profiles');
 
     // Assign landlords to properties
     const propertiesWithLandlords = sampleProperties.map((property, index) => ({

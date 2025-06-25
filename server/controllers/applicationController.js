@@ -164,7 +164,8 @@ export const updateApplicationStatus = async (req, res) => {
   try {
     const { status } = req.body;
     const application = await Application.findById(req.params.id)
-      .populate('property', 'landlord available');
+      .populate('property', 'landlord available')
+      .populate('tenant', 'firstName lastName email');
 
     if (!application) {
       return res.status(404).json({ message: 'Application not found' });
@@ -181,14 +182,15 @@ export const updateApplicationStatus = async (req, res) => {
     // If approved, update property.tenant and set available to false
     if (status === 'approved') {
       const property = await Property.findById(application.property._id);
-      property.tenant = application.tenant;
+      property.tenant = application.tenant._id;
       property.available = false;
+      property.status = 'rented';
       await property.save();
 
       // Cancel all other applications for this tenant with status 'viewing' or 'pending'
       await Application.updateMany(
         {
-          tenant: application.tenant,
+          tenant: application.tenant._id,
           _id: { $ne: application._id }, // Exclude the current application
           status: { $in: ['viewing', 'pending'] }
         },
@@ -198,10 +200,20 @@ export const updateApplicationStatus = async (req, res) => {
         }
       );
 
-      console.log(`Cancelled other applications for tenant ${application.tenant} after approval of application ${application._id}`);
-    }
+      console.log(`Cancelled other applications for tenant ${application.tenant._id} after approval of application ${application._id}`);
 
-    res.json(application);
+      // Add a notification about payment setup
+      const response = {
+        application,
+        message: 'Application approved successfully',
+        paymentSetupRequired: true,
+        paymentSetupMessage: `Congratulations! Your application for ${application.property.title} has been approved. Please set up your payment method to start making rent payments.`
+      };
+
+      res.json(response);
+    } else {
+      res.json(application);
+    }
   } catch (error) {
     res.status(400).json({ message: error.message });
   }

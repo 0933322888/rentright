@@ -1,9 +1,10 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import { Readable } from 'stream';
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -161,4 +162,35 @@ export const getLocalFileUrl = (key) => {
 export const generateS3Key = (folder, originalName) => {
     const ext = originalName.split('.').pop();
     return `${folder}/${uuidv4()}.${ext}`;
+};
+
+export const getFileFromS3 = async (key) => {
+    if (useLocalStorage) {
+        // Fallback to local file read
+        const uploadsDir = path.join(__dirname, '../uploads');
+        const filePath = path.join(uploadsDir, key);
+        return fs.readFileSync(filePath);
+    }
+
+    if (!s3) {
+        throw new Error('AWS S3 is not configured.');
+    }
+
+    const command = new GetObjectCommand({
+        Bucket: BUCKET,
+        Key: key,
+    });
+    const response = await s3.send(command);
+
+    // Convert stream to buffer
+    return await streamToBuffer(response.Body);
+};
+
+const streamToBuffer = async (stream) => {
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+        stream.on('data', (chunk) => chunks.push(chunk));
+        stream.on('end', () => resolve(Buffer.concat(chunks)));
+        stream.on('error', reject);
+    });
 }; 

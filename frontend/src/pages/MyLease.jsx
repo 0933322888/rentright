@@ -16,12 +16,14 @@ import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import MyTickets from './MyTickets';
 import LeaseAgreement from '../components/lease/LeaseAgreement';
+import Insurance from '../components/lease/Insurance';
 import Payments from '../components/lease/Payments';
 import { toast } from 'react-hot-toast';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import InfoIcon from '@mui/icons-material/Info';
 import DescriptionIcon from '@mui/icons-material/Description';
+import SecurityIcon from '@mui/icons-material/Security';
 import BuildIcon from '@mui/icons-material/Build';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import theme from '../theme';
@@ -59,6 +61,10 @@ const MyLease = () => {
   }, []);
 
   const handleLeaseUpdate = (updatedLease) => {
+    setLeaseDetails(updatedLease);
+  };
+
+  const handleInsuranceUpdate = (updatedLease) => {
     setLeaseDetails(updatedLease);
   };
 
@@ -133,6 +139,20 @@ const MyLease = () => {
                   <Tab
                     label={
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                        <SecurityIcon sx={{ fontSize: 28 }} />
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                          <Typography>Insurance</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Manage insurance documents
+                          </Typography>
+                        </Box>
+                      </Box>
+                    }
+                    value="insurance"
+                  />
+                  <Tab
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
                         <BuildIcon sx={{ fontSize: 28 }} />
                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                           <Typography>Repair Tickets</Typography>
@@ -179,6 +199,26 @@ const MyLease = () => {
                       title="No Active Lease"
                       message="You don't have any active lease agreements."
                       icon={DescriptionIcon}
+                    />
+                  )}
+                </TabPanel>
+                <TabPanel value="insurance" sx={{ p: 0 }}>
+                  {loading ? (
+                    <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+                      <CircularProgress />
+                    </Box>
+                  ) : error ? (
+                    <Alert severity="error">{error}</Alert>
+                  ) : leaseDetails ? (
+                    <Insurance 
+                      leaseDetails={leaseDetails} 
+                      onInsuranceUpdate={handleInsuranceUpdate}
+                    />
+                  ) : (
+                    <EmptyState
+                      title="No Active Lease"
+                      message="You don't have any active lease agreements."
+                      icon={SecurityIcon}
                     />
                   )}
                 </TabPanel>

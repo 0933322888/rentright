@@ -100,6 +100,40 @@ const applicationSchema = new mongoose.Schema({
       uploadedAt: Date
     }
   },
+  insurance: {
+    documents: [{
+      _id: {
+        type: mongoose.Schema.Types.ObjectId,
+        auto: true
+      },
+      path: String,
+      filename: String,
+      originalName: String,
+      mimeType: String,
+      uploadedAt: {
+        type: Date,
+        default: Date.now
+      },
+      url: String,
+      s3Key: String,
+      year: {
+        type: String,
+        required: true
+      }
+    }],
+    aiSummaries: {
+      type: Map,
+      of: new mongoose.Schema({
+        content: String,
+        generatedAt: Date,
+        generatedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User'
+        },
+        year: String
+      }, { _id: false })
+    }
+  },
   createdAt: {
     type: Date,
     default: Date.now

@@ -5,10 +5,13 @@ import { API_ENDPOINTS } from '../config/api';
 import { useAuth } from '../context/AuthContext';
 import { Card, Container, Row, Col, Button, Badge, Modal } from 'react-bootstrap';
 import ProfileCompletionModal from '../components/ProfileCompletionModal';
+import PaymentSetupModal from '../components/PaymentSetupModal';
+import RentPaymentModal from '../components/RentPaymentModal';
 import { 
   FaUser, FaHome, FaCalendarAlt, FaClock, FaMapMarkerAlt, FaBuilding, 
   FaCheckCircle, FaHourglassHalf, FaTimesCircle, FaCheck, FaTimes, FaEye,
-  FaTicketAlt, FaMoneyBillWave, FaExclamationTriangle, FaFileContract, FaCalendarCheck
+  FaTicketAlt, FaMoneyBillWave, FaExclamationTriangle, FaFileContract, FaCalendarCheck,
+  FaCreditCard, FaWallet
 } from 'react-icons/fa';
 import ViewingScheduleModal from '../components/ViewingScheduleModal';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -26,7 +29,10 @@ const TenantDashboard = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showRescheduleModal, setShowRescheduleModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showPaymentSetupModal, setShowPaymentSetupModal] = useState(false);
+  const [showRentPaymentModal, setShowRentPaymentModal] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
+  const [paymentSetupStatus, setPaymentSetupStatus] = useState(null);
 
   const fetchDashboardData = async () => {
     try {
@@ -93,6 +99,20 @@ const TenantDashboard = () => {
           setPaymentsError('Failed to load payments');
           setPayments([]); // Reset payments to empty array
         }
+
+        // Fetch payment setup status
+        try {
+          const paymentSetupRes = await axios.get(
+            API_ENDPOINTS.PAYMENT_SETUP_STATUS(user._id),
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          setPaymentSetupStatus(paymentSetupRes.data);
+        } catch (error) {
+          console.error('Error fetching payment setup status:', error);
+          setPaymentSetupStatus({ setupExists: false, setupCompleted: false });
+        }
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -115,6 +135,18 @@ const TenantDashboard = () => {
   useEffect(() => {
     console.log('Payments state updated:', payments);
   }, [payments]);
+
+  const handlePaymentSetupSuccess = () => {
+    setShowPaymentSetupModal(false);
+    fetchDashboardData(); // Refresh data to get updated payment setup status
+    toast.success('Payment method set up successfully!');
+  };
+
+  const handleRentPaymentSuccess = () => {
+    setShowRentPaymentModal(false);
+    fetchDashboardData(); // Refresh data to get updated payments
+    toast.success('Rent payment completed successfully!');
+  };
 
   if (loading) {
     return (
@@ -428,10 +460,46 @@ const TenantDashboard = () => {
                         <FaMoneyBillWave className="text-primary me-2" size={24} />
                         <Card.Title className="mb-0">Recent Payments</Card.Title>
                       </div>
-                      <Link to="/payments">
-                        <Button variant="primary" size="sm">Make Payment</Button>
-                      </Link>
+                      <div className="d-flex gap-2">
+                        {paymentSetupStatus?.setupCompleted ? (
+                          <Button 
+                            variant="primary" 
+                            size="sm"
+                            onClick={() => setShowRentPaymentModal(true)}
+                          >
+                            <FaCreditCard className="me-1" />
+                            Pay Rent
+                          </Button>
+                        ) : (
+                          <Button 
+                            variant="outline-primary" 
+                            size="sm"
+                            onClick={() => setShowPaymentSetupModal(true)}
+                          >
+                            <FaWallet className="me-1" />
+                            Setup Payment
+                          </Button>
+                        )}
+                      </div>
                     </div>
+                    
+                    {/* Payment Setup Status */}
+                    {paymentSetupStatus && (
+                      <div className="mb-3">
+                        {paymentSetupStatus.setupCompleted ? (
+                          <div className="alert alert-success d-flex align-items-center py-2">
+                            <FaCheckCircle className="me-2" />
+                            <small>Payment method set up ✓</small>
+                          </div>
+                        ) : (
+                          <div className="alert alert-warning d-flex align-items-center py-2">
+                            <FaExclamationTriangle className="me-2" />
+                            <small>Payment method not set up</small>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {paymentsError ? (
                       <div className="text-center py-4">
                         <p className="text-danger mb-2">{paymentsError}</p>
@@ -682,6 +750,20 @@ const TenantDashboard = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      <PaymentSetupModal
+        show={showPaymentSetupModal}
+        onHide={() => setShowPaymentSetupModal(false)}
+        onSuccess={handlePaymentSetupSuccess}
+      />
+
+      <RentPaymentModal
+        show={showRentPaymentModal}
+        onHide={() => setShowRentPaymentModal(false)}
+        onSuccess={handleRentPaymentSuccess}
+        amount={approvedApplication?.property?.price || 0}
+        property={approvedApplication?.property}
+      />
     </div>
   );
 };

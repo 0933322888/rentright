@@ -27,29 +27,38 @@ async function testApplicationCancellation() {
     // Create test properties
     const property1 = new Property({
       title: 'Test Property 1',
+      description: 'A test property for testing application cancellation',
+      type: 'apartment',
       landlord: landlord._id,
       location: { address: '123 Test St', city: 'Test City', state: 'TS', zipCode: '12345' },
       price: 1500,
+      availableFrom: new Date(),
       available: true,
-      status: 'approved'
+      status: 'active'
     });
 
     const property2 = new Property({
       title: 'Test Property 2',
+      description: 'Another test property for testing application cancellation',
+      type: 'house',
       landlord: landlord._id,
       location: { address: '456 Test Ave', city: 'Test City', state: 'TS', zipCode: '12345' },
       price: 2000,
+      availableFrom: new Date(),
       available: true,
-      status: 'approved'
+      status: 'active'
     });
 
     const property3 = new Property({
       title: 'Test Property 3',
+      description: 'A third test property for testing application cancellation',
+      type: 'condo',
       landlord: landlord._id,
       location: { address: '789 Test Blvd', city: 'Test City', state: 'TS', zipCode: '12345' },
       price: 1800,
+      availableFrom: new Date(),
       available: true,
-      status: 'approved'
+      status: 'active'
     });
 
     await Promise.all([property1.save(), property2.save(), property3.save()]);
