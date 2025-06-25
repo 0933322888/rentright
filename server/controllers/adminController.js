@@ -1,7 +1,7 @@
 import Property from '../models/propertyModel.js';
 import User from '../models/userModel.js';
 import Application from '../models/applicationModel.js';
-import TenantDocument from '../models/tenantDocumentModel.js';
+import TenantProfile from '../models/tenantProfileModel.js';
 import PropertyDocument from '../models/propertyDocumentModel.js';
 import { generateViewingTimeSlots } from '../utils/timeSlotGenerator.js';
 import {
@@ -112,7 +112,7 @@ export const getAllTenants = async (req, res) => {
       tenants.map(async (tenant) => {
         const [applicationCount, tenantDocument] = await Promise.all([
           Application.countDocuments({ tenant: tenant._id }),
-          TenantDocument.findOne({ tenant: tenant._id })
+          TenantProfile.findOne({ tenant: tenant._id })
         ]);
         
         return {
@@ -194,7 +194,7 @@ export const getTenantById = async (req, res) => {
     }
 
     // Get tenant document
-    const tenantDocument = await TenantDocument.findOne({ tenant: tenant._id });
+    const tenantDocument = await TenantProfile.findOne({ tenant: tenant._id });
 
     // Get application count
     const applicationCount = await Application.countDocuments({ tenant: tenant._id });

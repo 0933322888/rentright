@@ -9,7 +9,7 @@ export function calculateTenantScore(tenantDoc) {
   console.log('[tenantScore] --- Calculation Start ---');
   
   // Employment (manual or AI-verified)
-  if (tenantDoc.isCurrentlyEmployed === 'yes') {
+  if (tenantDoc.employmentStatus === 'employed' || tenantDoc.employmentStatus === 'self-employed') {
     totalPoints += 15;
   }
   maxPoints += 15;
@@ -53,7 +53,7 @@ export function calculateTenantScore(tenantDoc) {
   maxPoints += 30; // Max for income section
   
   // No evictions (manual + AI verification from rental history)
-  if (tenantDoc.hasBeenEvicted === 'no') {
+  if (tenantDoc.evictionHistory === false) {
     totalPoints += 15;
   }
   maxPoints += 15;
@@ -147,12 +147,12 @@ export function calculateTenantScore(tenantDoc) {
   maxPoints += 10;
   
   // Additional factors
-  if (tenantDoc.hasTwoMonthsRentSavings === 'yes') { totalPoints += 5; console.log('[tenantScore] +5: Has 2+ months rent savings'); }
-  if (tenantDoc.canPayMoreThanOneMonth === 'yes') { totalPoints += 5; console.log('[tenantScore] +5: Can pay multiple months ahead'); }
+  if (tenantDoc.monthsAheadCanPay >= 2) { totalPoints += 5; console.log('[tenantScore] +5: Can pay 2+ months ahead'); }
+  if (tenantDoc.monthsAheadCanPay >= 1) { totalPoints += 5; console.log('[tenantScore] +5: Can pay multiple months ahead'); }
   
   // Pet and smoking factors (risk assessment)
-  if (tenantDoc.hasPets === 'no') { totalPoints += 3; console.log('[tenantScore] +3: No pets'); }
-  if (tenantDoc.smokes === 'no') { totalPoints += 3; console.log('[tenantScore] +3: Non-smoker'); }
+  if (tenantDoc.hasPets === false) { totalPoints += 3; console.log('[tenantScore] +3: No pets'); }
+  if (tenantDoc.smokingStatus === 'non-smoker') { totalPoints += 3; console.log('[tenantScore] +3: Non-smoker'); }
   
   // Occupancy factors
   if (tenantDoc.adultOccupants <= 2) { totalPoints += 2; console.log('[tenantScore] +2: ≤2 adult occupants'); }
@@ -183,7 +183,7 @@ export function getScoreBreakdown(tenantDoc) {
   };
 
   // Employment
-  if (tenantDoc.isCurrentlyEmployed === 'yes') {
+  if (tenantDoc.employmentStatus === 'employed' || tenantDoc.employmentStatus === 'self-employed') {
     breakdown.employment.score = 15;
     breakdown.employment.details.push('Currently employed');
   }
@@ -226,7 +226,7 @@ export function getScoreBreakdown(tenantDoc) {
   }
 
   // Eviction history
-  if (tenantDoc.hasBeenEvicted === 'no') {
+  if (tenantDoc.evictionHistory === false) {
     breakdown.eviction.score += 15;
     breakdown.eviction.details.push('No eviction history');
   }
@@ -308,19 +308,19 @@ export function getScoreBreakdown(tenantDoc) {
   breakdown.aiParsing.details.push(`${breakdown.aiParsing.score}/10 AI parsing points`);
 
   // Additional factors
-  if (tenantDoc.hasTwoMonthsRentSavings === 'yes') {
+  if (tenantDoc.monthsAheadCanPay >= 2) {
     breakdown.additional.score += 5;
-    breakdown.additional.details.push('Has 2+ months rent savings');
+    breakdown.additional.details.push('Can pay 2+ months ahead');
   }
-  if (tenantDoc.canPayMoreThanOneMonth === 'yes') {
+  if (tenantDoc.monthsAheadCanPay >= 1) {
     breakdown.additional.score += 5;
     breakdown.additional.details.push('Can pay multiple months ahead');
   }
-  if (tenantDoc.hasPets === 'no') {
+  if (tenantDoc.hasPets === false) {
     breakdown.additional.score += 3;
     breakdown.additional.details.push('No pets');
   }
-  if (tenantDoc.smokes === 'no') {
+  if (tenantDoc.smokingStatus === 'non-smoker') {
     breakdown.additional.score += 3;
     breakdown.additional.details.push('Non-smoker');
   }

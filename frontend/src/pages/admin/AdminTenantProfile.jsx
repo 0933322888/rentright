@@ -110,7 +110,7 @@ export default function AdminTenantProfile() {
   };
 
   const getAIMatchingResults = () => {
-    if (!tenant?.tenantScoring) return null;
+    if (!tenant?.tenantDocument) return null;
     
     const results = {
       incomeVerification: { status: 'Not verified', details: [] },
@@ -120,7 +120,7 @@ export default function AdminTenantProfile() {
       rentalHistory: { status: 'Clean', details: [] }
     };
     
-    const doc = tenant.tenantScoring;
+    const doc = tenant.tenantDocument;
     
     // Income verification
     let aiIncomeFound = false;
@@ -462,13 +462,13 @@ export default function AdminTenantProfile() {
                       )}
                       
                       {/* AI Extracted Income Data */}
-                      {tenant.tenantScoring && (
+                      {tenant.tenantDocument && (
                         <Box sx={{ mt: 2 }}>
                           <Typography variant="caption" fontWeight="bold" color="primary" display="block" gutterBottom>
                             AI Extracted Data:
                           </Typography>
                           {['proofOfIncome', 'creditHistory', 'additionalDocuments'].map((docType) => {
-                            const documents = tenant.tenantScoring[docType] || [];
+                            const documents = tenant.tenantDocument[docType] || [];
                             const incomeDocs = documents.filter(doc => 
                               doc.aiParsedData && !doc.aiParsedData.error && 
                               (doc.aiParsedData.income || doc.aiParsedData.netIncome || doc.aiParsedData.employer)
@@ -477,7 +477,7 @@ export default function AdminTenantProfile() {
                             return incomeDocs.map((doc, index) => {
                               // Check for income mismatches
                               const aiIncome = Number(doc.aiParsedData.income || doc.aiParsedData.netIncome);
-                              const manualIncome = tenant.tenantScoring.monthlyNetIncome;
+                              const manualIncome = tenant.tenantDocument.monthlyNetIncome;
                               const hasMismatch = manualIncome && aiIncome && Math.abs(aiIncome - manualIncome) / manualIncome >= 0.1;
                               
                               return (
@@ -542,12 +542,12 @@ export default function AdminTenantProfile() {
                       )}
                       
                       {/* AI Extracted Identity Data */}
-                      {tenant.tenantScoring && (
+                      {tenant.tenantDocument && (
                         <Box sx={{ mt: 2 }}>
                           <Typography variant="caption" fontWeight="bold" color="primary" display="block" gutterBottom>
                             AI Extracted Data:
                           </Typography>
-                          {tenant.tenantScoring.proofOfIdentity?.map((doc, index) => {
+                          {tenant.tenantDocument.proofOfIdentity?.map((doc, index) => {
                             if (!doc.aiParsedData || doc.aiParsedData.error) return null;
                             
                             // Check for name mismatches
@@ -617,17 +617,17 @@ export default function AdminTenantProfile() {
                       )}
                       
                       {/* AI Extracted Credit Data */}
-                      {tenant.tenantScoring && (
+                      {tenant.tenantDocument && (
                         <Box sx={{ mt: 2 }}>
                           <Typography variant="caption" fontWeight="bold" color="primary" display="block" gutterBottom>
                             AI Extracted Data:
                           </Typography>
-                          {tenant.tenantScoring.creditHistory?.map((doc, index) => {
+                          {tenant.tenantDocument.creditHistory?.map((doc, index) => {
                             if (!doc.aiParsedData || doc.aiParsedData.error) return null;
                             
                             // Check for credit score mismatches
                             const aiCreditScore = Number(doc.aiParsedData.creditScore);
-                            const manualCreditScore = tenant.tenantScoring.creditScore;
+                            const manualCreditScore = tenant.tenantDocument.creditScore;
                             const hasMismatch = manualCreditScore && aiCreditScore && Math.abs(aiCreditScore - manualCreditScore) >= 50;
                             
                             return (
@@ -690,12 +690,12 @@ export default function AdminTenantProfile() {
                       )}
                       
                       {/* AI Extracted Rental Data */}
-                      {tenant.tenantScoring && (
+                      {tenant.tenantDocument && (
                         <Box sx={{ mt: 2 }}>
                           <Typography variant="caption" fontWeight="bold" color="primary" display="block" gutterBottom>
                             AI Extracted Data:
                           </Typography>
-                          {tenant.tenantScoring.rentalHistory?.map((doc, index) => {
+                          {tenant.tenantDocument.rentalHistory?.map((doc, index) => {
                             if (!doc.aiParsedData || doc.aiParsedData.error) return null;
                             
                             // Check for negative rental history
@@ -744,7 +744,7 @@ export default function AdminTenantProfile() {
           )}
 
           {/* Profile Details */}
-            {tenant.tenantScoring ? (
+            {tenant.tenantDocument ? (
             <Card sx={{ mb: 3 }}>
               <CardContent>
                 <Typography variant="h6" fontWeight="bold" gutterBottom>
@@ -761,17 +761,35 @@ export default function AdminTenantProfile() {
                         </Typography>
                       </Box>
                       <Typography variant="body2">
-                        <strong>Employed:</strong> {tenant.tenantScoring.isCurrentlyEmployed === 'yes' ? 'Yes' : 'No'}
+                        <strong>Status:</strong> {tenant.tenantDocument.employmentStatus ? tenant.tenantDocument.employmentStatus.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Not specified'}
                       </Typography>
-                      <Typography variant="body2">
-                        <strong>Type:</strong> {tenant.tenantScoring.employmentType}
-                      </Typography>
-                      <Typography variant="body2">
-                        <strong>Income:</strong> ${tenant.tenantScoring.monthlyNetIncome?.toLocaleString()}
-                      </Typography>
-                      {tenant.tenantScoring.creditScore && (
+                      {tenant.tenantDocument.employerName && (
                         <Typography variant="body2">
-                          <strong>Credit Score:</strong> {tenant.tenantScoring.creditScore}
+                          <strong>Employer:</strong> {tenant.tenantDocument.employerName}
+                        </Typography>
+                      )}
+                      {tenant.tenantDocument.jobTitle && (
+                        <Typography variant="body2">
+                          <strong>Job Title:</strong> {tenant.tenantDocument.jobTitle}
+                        </Typography>
+                      )}
+                      <Typography variant="body2">
+                        <strong>Monthly Income:</strong> ${tenant.tenantDocument.monthlyNetIncome?.toLocaleString() || 'Not specified'}
+                      </Typography>
+                      {tenant.tenantDocument.monthlyDebtRepayment && (
+                        <Typography variant="body2">
+                          <strong>Monthly Debt:</strong> ${tenant.tenantDocument.monthlyDebtRepayment.toLocaleString()}
+                        </Typography>
+                      )}
+                      {tenant.tenantDocument.additionalIncomeAmount && (
+                        <Typography variant="body2">
+                          <strong>Additional Income:</strong> ${tenant.tenantDocument.additionalIncomeAmount.toLocaleString()}
+                          {tenant.tenantDocument.additionalIncomeSource && ` (${tenant.tenantDocument.additionalIncomeSource})`}
+                        </Typography>
+                      )}
+                      {tenant.tenantDocument.creditScore && (
+                        <Typography variant="body2">
+                          <strong>Credit Score:</strong> {tenant.tenantDocument.creditScore}
                         </Typography>
                       )}
                     </Paper>
@@ -783,36 +801,216 @@ export default function AdminTenantProfile() {
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                         <Group sx={{ mr: 1, color: 'primary.main' }} />
                         <Typography variant="subtitle2" fontWeight="bold">
-                          Lifestyle
+                          Lifestyle & Household
+                        </Typography>
+                      </Box>
+                      {tenant.tenantDocument.maritalStatus && (
+                        <Typography variant="body2">
+                          <strong>Marital Status:</strong> {tenant.tenantDocument.maritalStatus.charAt(0).toUpperCase() + tenant.tenantDocument.maritalStatus.slice(1)}
+                        </Typography>
+                      )}
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                        <Group sx={{ mr: 1, fontSize: 'small' }} />
+                        <Typography variant="body2">
+                          <strong>Adults:</strong> {tenant.tenantDocument.adultOccupants || 'Not specified'}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                        <ChildCare sx={{ mr: 1, fontSize: 'small' }} />
+                        <Typography variant="body2">
+                          <strong>Children:</strong> {tenant.tenantDocument.childOccupants || 'Not specified'}
+                        </Typography>
+                      </Box>
+                      {tenant.tenantDocument.childSupportAmount > 0 && (
+                        <Typography variant="body2">
+                          <strong>Child Support:</strong> ${tenant.tenantDocument.childSupportAmount.toLocaleString()}
+                        </Typography>
+                      )}
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
                         <Pets sx={{ mr: 1, fontSize: 'small' }} />
                         <Typography variant="body2">
-                          <strong>Pets:</strong> {tenant.tenantScoring.hasPets === 'yes' ? 'Yes' : 'No'}
-                          {tenant.tenantScoring.hasPets === 'yes' && ` (${tenant.tenantScoring.petCount} ${tenant.tenantScoring.petTypes})`}
+                          <strong>Pets:</strong> {tenant.tenantDocument.hasPets ? 'Yes' : 'No'}
+                          {tenant.tenantDocument.hasPets && tenant.tenantDocument.petCount && ` (${tenant.tenantDocument.petTypes || 'pets'})`}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
                         <SmokingRooms sx={{ mr: 1, fontSize: 'small' }} />
                         <Typography variant="body2">
-                          <strong>Smokes:</strong> {tenant.tenantScoring.smokes === 'yes' ? 'Yes' : 'No'}
-                        </Typography>
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                        <Group sx={{ mr: 1, fontSize: 'small' }} />
-                        <Typography variant="body2">
-                          <strong>Adults:</strong> {tenant.tenantScoring.adultOccupants}
-                        </Typography>
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <ChildCare sx={{ mr: 1, fontSize: 'small' }} />
-                        <Typography variant="body2">
-                          <strong>Children:</strong> {tenant.tenantScoring.childOccupants}
+                          <strong>Smoking:</strong> {tenant.tenantDocument.smokingStatus ? tenant.tenantDocument.smokingStatus.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Not specified'}
                         </Typography>
                       </Box>
                     </Paper>
                   </Grid>
+
+                  {/* Financial & Credit */}
+                  <Grid item xs={12} md={6}>
+                    <Paper sx={{ p: 2, backgroundColor: '#f8f9fa' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <CreditCard sx={{ mr: 1, color: 'primary.main' }} />
+                        <Typography variant="subtitle2" fontWeight="bold">
+                          Financial & Credit
+                        </Typography>
+                      </Box>
+                      {tenant.tenantDocument.creditScore && (
+                        <Typography variant="body2">
+                          <strong>Credit Score:</strong> {tenant.tenantDocument.creditScore}
+                        </Typography>
+                      )}
+                      <Typography variant="body2">
+                        <strong>Bankruptcy History:</strong> {tenant.tenantDocument.bankruptcyHistory ? 'Yes' : 'No'}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Eviction History:</strong> {tenant.tenantDocument.evictionHistory ? 'Yes' : 'No'}
+                      </Typography>
+                    </Paper>
+                  </Grid>
+
+                  {/* Rental History */}
+                  <Grid item xs={12} md={6}>
+                    <Paper sx={{ p: 2, backgroundColor: '#f8f9fa' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <Home sx={{ mr: 1, color: 'primary.main' }} />
+                        <Typography variant="subtitle2" fontWeight="bold">
+                          Rental History
+                        </Typography>
+                      </Box>
+                      <Typography variant="body2">
+                        <strong>Currently Pays Rent:</strong> {tenant.tenantDocument.currentlyPaysRent === 'true' ? 'Yes' : 'No'}
+                      </Typography>
+                      {tenant.tenantDocument.currentRentAmount && (
+                        <Typography variant="body2">
+                          <strong>Current Rent:</strong> ${tenant.tenantDocument.currentRentAmount.toLocaleString()}
+                        </Typography>
+                      )}
+                    </Paper>
+                  </Grid>
+
+                  {/* Application Strengthening */}
+                  <Grid item xs={12} md={6}>
+                    <Paper sx={{ p: 2, backgroundColor: '#f8f9fa' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <TrendingUp sx={{ mr: 1, color: 'primary.main' }} />
+                        <Typography variant="subtitle2" fontWeight="bold">
+                          Application Strengthening
+                        </Typography>
+                      </Box>
+                      <Typography variant="body2">
+                        <strong>Can Pay in Advance:</strong> {tenant.tenantDocument.monthsAheadCanPay > 1 ? 'Yes' : 'No'}
+                      </Typography>
+                      {tenant.tenantDocument.monthsAheadCanPay > 1 && (
+                        <Typography variant="body2">
+                          <strong>Can Pay Months Ahead:</strong> {tenant.tenantDocument.monthsAheadCanPay}
+                        </Typography>
+                      )}
+                      <Typography variant="body2">
+                        <strong>Has Guarantor:</strong> {tenant.tenantDocument.hasGuarantor ? 'Yes' : 'No'}
+                      </Typography>
+                      {tenant.tenantDocument.hasGuarantor && tenant.tenantDocument.guarantorName && (
+                        <Typography variant="body2">
+                          <strong>Guarantor:</strong> {tenant.tenantDocument.guarantorName}
+                        </Typography>
+                      )}
+                    </Paper>
+                  </Grid>
+
+                  {/* Social Media Links */}
+                  {tenant.socialMedia && Object.keys(tenant.socialMedia).some(key => tenant.socialMedia[key]) && (
+                    <Grid item xs={12} md={6}>
+                      <Paper sx={{ p: 2, backgroundColor: '#f8f9fa' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                          <LanguageIcon sx={{ mr: 1, color: 'primary.main' }} />
+                          <Typography variant="subtitle2" fontWeight="bold">
+                            Social Media Links
+                          </Typography>
+                        </Box>
+                        {tenant.socialMedia.facebook && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                            <FacebookIcon sx={{ mr: 1, fontSize: 'small', color: '#1877f2' }} />
+                            <Typography variant="body2" sx={{ flex: 1 }}>
+                              <strong>Facebook:</strong> 
+                            </Typography>
+                            <Button
+                              size="small"
+                              href={tenant.socialMedia.facebook}
+                              target="_blank"
+                              variant="text"
+                              sx={{ p: 0, minWidth: 'auto', textTransform: 'none' }}
+                            >
+                              View Profile
+                            </Button>
+                          </Box>
+                        )}
+                        {tenant.socialMedia.linkedin && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                            <LinkedInIcon sx={{ mr: 1, fontSize: 'small', color: '#0077b5' }} />
+                            <Typography variant="body2" sx={{ flex: 1 }}>
+                              <strong>LinkedIn:</strong> 
+                            </Typography>
+                            <Button
+                              size="small"
+                              href={tenant.socialMedia.linkedin}
+                              target="_blank"
+                              variant="text"
+                              sx={{ p: 0, minWidth: 'auto', textTransform: 'none' }}
+                            >
+                              View Profile
+                            </Button>
+                          </Box>
+                        )}
+                        {tenant.socialMedia.instagram && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                            <InstagramIcon sx={{ mr: 1, fontSize: 'small', color: '#e4405f' }} />
+                            <Typography variant="body2" sx={{ flex: 1 }}>
+                              <strong>Instagram:</strong> 
+                            </Typography>
+                            <Button
+                              size="small"
+                              href={tenant.socialMedia.instagram}
+                              target="_blank"
+                              variant="text"
+                              sx={{ p: 0, minWidth: 'auto', textTransform: 'none' }}
+                            >
+                              View Profile
+                            </Button>
+                          </Box>
+                        )}
+                        {tenant.socialMedia.twitter && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                            <TwitterIcon sx={{ mr: 1, fontSize: 'small', color: '#1da1f2' }} />
+                            <Typography variant="body2" sx={{ flex: 1 }}>
+                              <strong>Twitter:</strong> 
+                            </Typography>
+                            <Button
+                              size="small"
+                              href={tenant.socialMedia.twitter}
+                              target="_blank"
+                              variant="text"
+                              sx={{ p: 0, minWidth: 'auto', textTransform: 'none' }}
+                            >
+                              View Profile
+                            </Button>
+                          </Box>
+                        )}
+                        {tenant.socialMedia.website && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                            <LanguageIcon sx={{ mr: 1, fontSize: 'small', color: '#666' }} />
+                            <Typography variant="body2" sx={{ flex: 1 }}>
+                              <strong>Website:</strong> 
+                            </Typography>
+                            <Button
+                              size="small"
+                              href={tenant.socialMedia.website}
+                              target="_blank"
+                              variant="text"
+                              sx={{ p: 0, minWidth: 'auto', textTransform: 'none' }}
+                            >
+                              Visit Site
+                            </Button>
+                          </Box>
+                        )}
+                      </Paper>
+                    </Grid>
+                  )}
                 </Grid>
               </CardContent>
             </Card>
@@ -827,7 +1025,7 @@ export default function AdminTenantProfile() {
                 )}
 
                 {/* Documents */}
-          {tenant.tenantScoring && (
+          {tenant.tenantDocument && (
             <Card>
               <CardContent>
                 <Typography variant="h6" fontWeight="bold" gutterBottom>
@@ -843,9 +1041,9 @@ export default function AdminTenantProfile() {
                           </Typography>
                         </AccordionSummary>
                         <AccordionDetails>
-                          {tenant.tenantScoring[docType]?.length > 0 ? (
+                          {tenant.tenantDocument[docType]?.length > 0 ? (
                             <List dense>
-                              {tenant.tenantScoring[docType].map((doc, index) => (
+                              {tenant.tenantDocument[docType].map((doc, index) => (
                                 <ListItem key={index}>
                                   <ListItemText
                                     primary={doc.filename}

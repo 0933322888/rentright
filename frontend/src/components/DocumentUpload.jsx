@@ -1,11 +1,11 @@
 import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Box, Typography, IconButton, Paper } from '@mui/material';
+import { Box, Typography, IconButton, Paper, CircularProgress } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 
-const DocumentUpload = ({ field, documents = [], onDrop, onDelete, maxFiles = 1, required = false, error = false }) => {
+const DocumentUpload = ({ field, documents = [], onDrop, onDelete, maxFiles = 1, required = false, error = false, isLoading = false }) => {
   const handleDrop = useCallback((acceptedFiles) => {
     onDrop(acceptedFiles);
   }, [onDrop]);
@@ -16,7 +16,8 @@ const DocumentUpload = ({ field, documents = [], onDrop, onDelete, maxFiles = 1,
     accept: {
       'application/pdf': ['.pdf'],
       'image/*': ['.png', '.jpg', '.jpeg']
-    }
+    },
+    disabled: isLoading
   });
 
   const fieldLabels = {
@@ -47,18 +48,25 @@ const DocumentUpload = ({ field, documents = [], onDrop, onDelete, maxFiles = 1,
             border: '2px dashed',
             borderColor: error ? 'error.main' : isDragActive ? 'primary.main' : 'grey.300',
             backgroundColor: isDragActive ? 'action.hover' : 'background.paper',
-            cursor: 'pointer',
+            cursor: isLoading ? 'not-allowed' : 'pointer',
+            opacity: isLoading ? 0.6 : 1,
             '&:hover': {
-              borderColor: 'primary.main',
-              backgroundColor: 'action.hover'
+              borderColor: isLoading ? 'grey.300' : 'primary.main',
+              backgroundColor: isLoading ? 'background.paper' : 'action.hover'
             }
           }}
         >
           <input {...getInputProps()} />
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-            <CloudUploadIcon sx={{ fontSize: 40, color: 'primary.main' }} />
+            {isLoading ? (
+              <CircularProgress size={40} color="primary" />
+            ) : (
+              <CloudUploadIcon sx={{ fontSize: 40, color: 'primary.main' }} />
+            )}
             <Typography variant="body1" color="textSecondary">
-              {isDragActive
+              {isLoading 
+                ? 'Uploading document...'
+                : isDragActive
                 ? 'Drop the files here...'
                 : `Drag and drop files here, or click to select files (${maxFiles} ${maxFiles === 1 ? 'file' : 'files'} max)`}
             </Typography>
@@ -96,6 +104,7 @@ const DocumentUpload = ({ field, documents = [], onDrop, onDelete, maxFiles = 1,
                     size="small"
                     onClick={() => window.open(doc.url, '_blank', 'noopener,noreferrer')}
                     color="primary"
+                    disabled={isLoading}
                   >
                     <VisibilityIcon />
                   </IconButton>
@@ -103,6 +112,7 @@ const DocumentUpload = ({ field, documents = [], onDrop, onDelete, maxFiles = 1,
                     size="small"
                     onClick={() => onDelete(field, index)}
                     color="error"
+                    disabled={isLoading}
                   >
                     <DeleteIcon />
                   </IconButton>

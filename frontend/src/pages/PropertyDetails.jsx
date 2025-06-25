@@ -62,6 +62,7 @@ const PropertyDetails = () => {
             const profileResponse = await axios.get(API_ENDPOINTS.GET_TENANT_PROFILE, {
               headers: { 'Authorization': `Bearer ${token}` }
             });
+            console.log('Tenant profile:', profileResponse.data);
             setTenantProfile(profileResponse.data);
           } catch (profileError) {
             if (profileError.response && profileError.response.status === 404) {
@@ -96,13 +97,9 @@ const PropertyDetails = () => {
     const requirements = {
       proofOfIdentity: tenantProfile.proofOfIdentity?.length > 0,
       proofOfIncome: tenantProfile.proofOfIncome?.length > 0,
-      creditHistory: tenantProfile.creditHistory?.length > 0,
-      rentalHistory: tenantProfile.rentalHistory?.length > 0,
-      hasBeenEvicted: tenantProfile.hasBeenEvicted !== undefined,
-      canPayMoreThanOneMonth: tenantProfile.canPayMoreThanOneMonth !== undefined,
+      hasBeenEvicted: tenantProfile.evictionHistory !== undefined,
       // New required fields
       hasPets: tenantProfile.hasPets !== undefined,
-      smokes: tenantProfile.smokes !== undefined,
       adultOccupants: tenantProfile.adultOccupants !== undefined,
       childOccupants: tenantProfile.childOccupants !== undefined
     };

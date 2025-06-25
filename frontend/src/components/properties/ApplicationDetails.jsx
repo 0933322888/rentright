@@ -12,7 +12,8 @@ import {
   AccordionDetails,
   Tab,
   Alert,
-  AlertTitle
+  AlertTitle,
+  Stack
 } from '@mui/material';
 import { TabList, TabPanel, TabContext } from '@mui/lab';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -28,6 +29,10 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import PersonIcon from '@mui/icons-material/Person';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import ApplicationApprovalModal from '../ApplicationApprovalModal';
+import WorkIcon from '@mui/icons-material/Work';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import HomeIcon from '@mui/icons-material/Home';
+import DescriptionIcon from '@mui/icons-material/Description';
 
 export default function ApplicationDetails({ 
   applications, 
@@ -140,301 +145,406 @@ export default function ApplicationDetails({
       </Box>
       {applications.map((application, index) => (
         <TabPanel key={application._id} value={index.toString()}>
-          <Paper sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
-              <Box>
-                <Typography variant="h6" gutterBottom>
-                  {application.tenant.name}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Applied on {new Date(application.createdAt).toLocaleDateString()}
-                </Typography>
+            {/* Tenant Header Section */}
+            <Box sx={{ 
+              mb: 4,
+              p: 3,
+              background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'grey.200',
+              position: 'relative'
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                <Box sx={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: '50%',
+                  bgcolor: 'primary.main',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: 1
+                }}>
+                  <PersonIcon sx={{ color: 'white', fontSize: 24 }} />
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="h5" fontWeight="bold" color="text.primary" gutterBottom>
+                    {application.tenant.name}
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                    <Chip
+                      label={application.status.charAt(0).toUpperCase() + application.status.slice(1)}
+                      color={
+                        application.status === 'approved' ? 'success' :
+                        application.status === 'rejected' ? 'error' :
+                        application.status === 'viewing' ? 'info' :
+                        'warning'
+                      }
+                      size="small"
+                    />
+                    <Typography variant="body2" color="text.secondary">
+                      Applied {new Date(application.createdAt).toLocaleDateString()}
+                    </Typography>
+                    {getOtherApplicationsCount(application) > 0 && (
+                      <Typography variant="body2" color="text.secondary">
+                        • {getOtherApplicationsCount(application)} other applications
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
               </Box>
-              <Chip
-                label={application.status.charAt(0).toUpperCase() + application.status.slice(1)}
-                color={
-                  application.status === 'approved' ? 'success' :
-                  application.status === 'rejected' ? 'error' :
-                  application.status === 'viewing' ? 'info' :
-                  'warning'
-                }
-                sx={{ ml: 2 }}
-              />
             </Box>
 
             {/* Application Actions */}
             {application.status === 'pending' && (
               <Box sx={{ 
-                mt: 3, 
-                p: 2, 
-                bgcolor: 'background.paper',
-                borderRadius: 1,
-                border: '1px solid',
-                borderColor: 'divider',
+                mb: 4,
+                p: 3, 
+                bgcolor: 'success.50',
+                borderRadius: 3,
+                border: '2px solid',
+                borderColor: 'success.200',
                 display: 'flex',
-                justifyContent: 'flex-end',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
                 gap: 2
               }}>
-                <Button
-                  variant="contained"
-                  color="success"
-                  onClick={() => handleApproveClick(application)}
-                  startIcon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>}
-                  sx={{
-                    minWidth: 120,
-                    borderRadius: 2,
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    boxShadow: '0 2px 4px rgba(46,125,50,0.2)',
-                    '&:hover': {
-                      boxShadow: '0 4px 8px rgba(46,125,50,0.3)',
-                    }
-                  }}
-                >
-                  Approve
-                </Button>
-                <Button
-                  variant="contained"
-                  color="error"
-                  onClick={() => onApplicationAction(application._id, 'reject')}
-                  startIcon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>}
-                  sx={{
-                    minWidth: 120,
-                    borderRadius: 2,
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    boxShadow: '0 2px 4px rgba(211,47,47,0.2)',
-                    '&:hover': {
-                      boxShadow: '0 4px 8px rgba(211,47,47,0.3)',
-                    }
-                  }}
-                >
-                  Reject
-                </Button>
-              </Box>
-            )}
-
-            {application.status === 'viewing' && (
-              <Box sx={{ mt: 2, p: 2, bgcolor: 'info.light', borderRadius: 1 }}>
-                <Typography variant="body2" color="info.contrastText">
-                  This application is pending a property viewing. You can review the application after the viewing is completed.
-                </Typography>
-                {application.viewingDate && (
-                  <Box sx={{ mt: 1 }}>
-                    <Typography variant="body2" color="info.contrastText">
-                      Scheduled viewing: {new Date(application.viewingDate).toLocaleDateString()} at {application.viewingTime}
-                    </Typography>
-                  </Box>
-                )}
+                <Box>
+                  <Typography variant="h6" fontWeight="bold" color="success.800" gutterBottom>
+                    Application Review Required
+                  </Typography>
+                  <Typography variant="body2" color="success.700">
+                    Review the tenant's profile and documents to make a decision
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                  <Button
+                    variant="contained"
+                    color="success"
+                    onClick={() => handleApproveClick(application)}
+                    startIcon={<CheckCircleIcon />}
+                    sx={{
+                      minWidth: 140,
+                      borderRadius: 3,
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      fontSize: '1rem',
+                      py: 1.5,
+                      px: 3,
+                      boxShadow: '0 4px 12px rgba(46,125,50,0.3)',
+                      '&:hover': {
+                        boxShadow: '0 6px 20px rgba(46,125,50,0.4)',
+                        transform: 'translateY(-2px)'
+                      }
+                    }}
+                  >
+                    Approve Application
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    onClick={() => onApplicationAction(application._id, 'reject')}
+                    startIcon={<ErrorIcon />}
+                    sx={{
+                      minWidth: 140,
+                      borderRadius: 3,
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      fontSize: '1rem',
+                      py: 1.5,
+                      px: 3,
+                      borderWidth: 2,
+                      '&:hover': {
+                        borderWidth: 2,
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 4px 12px rgba(211,47,47,0.2)'
+                      }
+                    }}
+                  >
+                    Reject Application
+                  </Button>
+                </Box>
               </Box>
             )}
 
             {application.status === 'approved' && (
-              <Alert 
-                severity="success" 
-                sx={{ 
-                  mt: 3, 
-                  mb: 3,
-                  borderRadius: 2,
-                  width: '100%',
-                  '& .MuiAlert-icon': {
-                    fontSize: 28
-                  }
-                }}
-                icon={<CheckCircleIcon />}
-              >
-                <AlertTitle sx={{ fontWeight: 600, mb: 1 }}>
-                  Application Approved Successfully! 🎉
-                </AlertTitle>
-                <Typography variant="body1" sx={{ mb: 2 }}>
-                  Congratulations! You have selected <strong>{application.tenant.name}</strong> as your tenant. 
-                  The property is now assigned and all other applications have been automatically rejected.
-                </Typography>
-                <Box sx={{ 
-                  p: 2, 
-                  bgcolor: 'success.light', 
-                  borderRadius: 1,
-                  border: '1px solid',
-                  borderColor: 'success.main',
-                  mt: 2,
-                  width: '100%'
-                }}>
-                  <Typography variant="subtitle2" fontWeight="bold" color="success.contrastText" sx={{ mb: 1 }}>
-                    Next Steps - Lease Agreement Process:
+              <Box sx={{ 
+                mb: 4,
+                p: 3, 
+                bgcolor: 'info.50',
+                borderRadius: 3,
+                border: '2px solid',
+                borderColor: 'info.200',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 2
+              }}>
+                <Box>
+                  <Typography variant="h6" fontWeight="bold" color="info.800" gutterBottom>
+                    Application Approved
                   </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                    <AssignmentIcon color="success" />
-                    <Typography variant="body2" color="success.contrastText">
-                      Go to the <strong>Lease Agreement</strong> tab to proceed with the lease setup
-                    </Typography>
-                  </Box>
-                  <Typography variant="body2" color="success.contrastText" sx={{ mb: 2 }}>
-                    • Upload the standard lease agreement document<br/>
-                    • Set and agree on the lease start date<br/>
-                    • Complete the lease approval process with the tenant
+                  <Typography variant="body2" color="info.700">
+                    This application has been approved. You can now proceed with lease creation.
                   </Typography>
-                  {onNavigateToLease && (
-                    <Button
-                      variant="contained"
-                      color="success"
-                      onClick={handleNavigateToLease}
-                      startIcon={<AssignmentIcon />}
-                      sx={{
-                        mt: 1,
-                        borderRadius: 2,
-                        textTransform: 'none',
-                        fontWeight: 600,
-                        boxShadow: '0 2px 4px rgba(46,125,50,0.3)',
-                        '&:hover': {
-                          boxShadow: '0 4px 8px rgba(46,125,50,0.4)',
-                        }
-                      }}
-                    >
-                      Go to Lease Agreement
-                    </Button>
-                  )}
                 </Box>
-              </Alert>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleNavigateToLease}
+                  startIcon={<AssignmentIcon />}
+                  sx={{
+                    minWidth: 140,
+                    borderRadius: 3,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    fontSize: '1rem',
+                    py: 1.5,
+                    px: 3,
+                    boxShadow: '0 4px 12px rgba(25,118,210,0.3)',
+                    '&:hover': {
+                      boxShadow: '0 6px 20px rgba(25,118,210,0.4)',
+                      transform: 'translateY(-2px)'
+                    }
+                  }}
+                >
+                  Create Lease Agreement
+                </Button>
+              </Box>
+            )}
+
+            {application.status === 'rejected' && (
+              <Box sx={{ 
+                mb: 4,
+                p: 3, 
+                bgcolor: 'error.50',
+                borderRadius: 3,
+                border: '2px solid',
+                borderColor: 'error.200'
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                  <ErrorIcon color="error" />
+                  <Typography variant="h6" fontWeight="bold" color="error.800">
+                    Application Rejected
+                  </Typography>
+                </Box>
+                <Typography variant="body2" color="error.700">
+                  This application has been rejected and is no longer active.
+                </Typography>
+              </Box>
             )}
 
             {/* Application Details */}
             <Grid container spacing={3}>
               {/* Tenant Score Section */}
-              <Grid xs={12} md={4}>
+              <Grid item xs={12} md={4}>
                 <Paper 
-                  variant="outlined" 
+                  elevation={0}
                   sx={{ 
-                    p: 2,
+                    p: 3,
                     height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2,
-                    transition: 'all 0.2s',
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    color: 'white',
+                    borderRadius: 3,
+                    border: '1px solid',
+                    borderColor: 'primary.300',
+                    transition: 'all 0.3s ease',
                     '&:hover': {
-                      boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                      boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+                      transform: 'translateY(-3px)'
                     }
                   }}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <ScoreIcon color="primary" />
-                    <Typography variant="subtitle1" fontWeight="bold">
-                      Tenant Score
-                    </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                    <Box sx={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: '50%',
+                      bgcolor: 'rgba(255,255,255,0.2)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backdropFilter: 'blur(10px)'
+                    }}>
+                      <ScoreIcon sx={{ color: 'white', fontSize: 24 }} />
+                    </Box>
+                    <Box>
+                      <Typography variant="h6" fontWeight="bold">
+                        Tenant Score
+                      </Typography>
+                      <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                        Overall assessment rating
+                      </Typography>
+                    </Box>
                   </Box>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1 }}>
-                    <Box sx={{ textAlign: 'center' }}>
-                      <Typography 
-                        variant="h3" 
-                        color={
-                          application.tenantScoring >= 80 ? 'success.main' :
-                          application.tenantScoring >= 60 ? 'warning.main' :
-                          'error.main'
+
+                  <Box sx={{ textAlign: 'center', mb: 3 }}>
+                    <Typography 
+                      variant="h2" 
+                      sx={{
+                        fontWeight: 800,
+                        fontSize: '3.5rem',
+                        textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                        mb: 1
+                      }}
+                    >
+                      {application.tenantScoring}
+                    </Typography>
+                    <Typography variant="body1" sx={{ opacity: 0.9, mb: 2 }}>
+                      out of 100
+                    </Typography>
+                    <LinearProgress 
+                      variant="determinate" 
+                      value={application.tenantScoring} 
+                      sx={{
+                        height: 12,
+                        borderRadius: 6,
+                        backgroundColor: 'rgba(255,255,255,0.3)',
+                        mb: 2,
+                        '& .MuiLinearProgress-bar': {
+                          borderRadius: 6,
+                          background: 'linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%)'
                         }
-                        fontWeight="bold"
-                      >
-                        {application.tenantScoring}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        out of 100
-                      </Typography>
-                    </Box>
-                    <Box sx={{ mt: 2 }}>
-                      <LinearProgress 
-                        variant="determinate" 
-                        value={application.tenantScoring} 
-                        sx={{
-                          height: 10,
-                          borderRadius: 5,
-                          backgroundColor: 'grey.200',
-                          '& .MuiLinearProgress-bar': {
-                            backgroundColor: 
-                              application.tenantScoring >= 80 ? 'success.main' :
-                              application.tenantScoring >= 60 ? 'warning.main' :
-                              'error.main'
-                          }
-                        }}
-                      />
-                    </Box>
-                    <Box sx={{ mt: 1 }}>
-                      <Typography variant="body2" color="text.secondary" align="center">
-                        {application.tenantScoring >= 80 ? 'Excellent' :
-                         application.tenantScoring >= 60 ? 'Good' :
-                         'Needs Review'}
-                      </Typography>
-                    </Box>
+                      }}
+                    />
+                    <Chip 
+                      label={
+                        application.tenantScoring >= 80 ? 'Excellent' :
+                        application.tenantScoring >= 60 ? 'Good' :
+                        'Needs Review'
+                      }
+                      sx={{
+                        fontWeight: 'bold',
+                        fontSize: '1rem',
+                        bgcolor: 'rgba(255,255,255,0.2)',
+                        color: 'white',
+                        backdropFilter: 'blur(10px)'
+                      }}
+                    />
+                  </Box>
+
+                  <Box sx={{ 
+                    p: 2, 
+                    bgcolor: 'rgba(255,255,255,0.1)', 
+                    borderRadius: 2,
+                    backdropFilter: 'blur(10px)'
+                  }}>
+                    <Typography variant="body2" sx={{ opacity: 0.9, textAlign: 'center' }}>
+                      {application.tenantScoring >= 80 ? 'Highly recommended tenant with excellent credentials' :
+                       application.tenantScoring >= 60 ? 'Good candidate with solid background' :
+                       'Requires additional review and consideration'}
+                    </Typography>
                   </Box>
                 </Paper>
               </Grid>
 
               {/* Viewing Schedule Section */}
-              <Grid xs={12} md={4}>
+              <Grid item xs={12} md={4}>
                 <Paper 
-                  variant="outlined" 
+                  elevation={0}
                   sx={{ 
-                    p: 2,
+                    p: 3,
                     height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2,
-                    transition: 'all 0.2s',
+                    background: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+                    border: '2px solid',
+                    borderColor: 'orange.200',
+                    borderRadius: 3,
+                    transition: 'all 0.3s ease',
                     '&:hover': {
-                      boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                      boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
+                      transform: 'translateY(-3px)'
                     }
                   }}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <CalendarTodayIcon color="primary" />
-                    <Typography variant="subtitle1" fontWeight="bold">
-                      Viewing Schedule
-                    </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                    <Box sx={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: '50%',
+                      bgcolor: 'orange.main',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: 2
+                    }}>
+                      <CalendarTodayIcon sx={{ color: 'white', fontSize: 24 }} />
+                    </Box>
+                    <Box>
+                      <Typography variant="h6" fontWeight="bold" color="orange.800">
+                        Viewing Schedule
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Property viewing details
+                      </Typography>
+                    </Box>
                   </Box>
+
                   {application.viewingDate ? (
                     <Box sx={{ 
-                      display: 'flex', 
-                      flexDirection: 'column', 
-                      gap: 2,
-                      flex: 1,
-                      justifyContent: 'center'
+                      p: 3, 
+                      bgcolor: 'white', 
+                      borderRadius: 2,
+                      border: '1px solid',
+                      borderColor: 'orange.200',
+                      textAlign: 'center'
                     }}>
                       <Box sx={{ 
                         display: 'flex', 
                         alignItems: 'center', 
+                        justifyContent: 'center',
                         gap: 2,
-                        p: 2,
-                        bgcolor: 'primary.light',
-                        borderRadius: 2,
-                        color: 'primary.contrastText'
+                        mb: 2
                       }}>
-                        <CalendarTodayIcon />
+                        <CalendarTodayIcon color="orange" sx={{ fontSize: 32 }} />
                         <Box>
-                          <Typography variant="subtitle2">
+                          <Typography variant="h5" fontWeight="bold" color="orange.800">
                             {new Date(application.viewingDate).toLocaleDateString()}
                           </Typography>
-                          <Typography variant="body2">
+                          <Typography variant="h6" color="orange.600" fontWeight="medium">
                             {application.viewingTime}
                           </Typography>
                         </Box>
                       </Box>
-                      <Typography variant="body2" color="text.secondary" align="center">
-                        Please be available at the scheduled time
-                      </Typography>
+                      <Chip 
+                        label="Scheduled" 
+                        color="success" 
+                        icon={<CheckCircleIcon />}
+                        sx={{ fontWeight: 'bold' }}
+                      />
                     </Box>
                   ) : (
                     <Box sx={{ 
-                      display: 'flex', 
-                      flexDirection: 'column', 
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flex: 1,
-                      gap: 1
+                      p: 4, 
+                      bgcolor: 'white', 
+                      borderRadius: 2,
+                      border: '1px solid',
+                      borderColor: 'orange.200',
+                      textAlign: 'center'
                     }}>
-                      <AccessTimeIcon color="action" sx={{ fontSize: 40 }} />
-                      <Typography variant="body2" color="text.secondary">
+                      <AccessTimeIcon color="action" sx={{ fontSize: 48, mb: 2, opacity: 0.5 }} />
+                      <Typography variant="h6" color="text.secondary" gutterBottom>
                         No viewing scheduled yet
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Schedule a property viewing to proceed with the application
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {application.viewingDate && (
+                    <Box sx={{ 
+                      mt: 2, 
+                      p: 2, 
+                      bgcolor: 'orange.50', 
+                      borderRadius: 2,
+                      border: '1px solid',
+                      borderColor: 'orange.200'
+                    }}>
+                      <Typography variant="body2" color="orange.800" sx={{ fontWeight: 500 }}>
+                        📅 Please be available at the scheduled time for the property viewing
                       </Typography>
                     </Box>
                   )}
@@ -442,61 +552,109 @@ export default function ApplicationDetails({
               </Grid>
 
               {/* Contact Information Section */}
-              <Grid xs={12} md={4}>
+              <Grid item xs={12} md={4}>
                 <Paper 
-                  variant="outlined" 
+                  elevation={0}
                   sx={{ 
-                    p: 2,
+                    p: 3,
                     height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 2,
-                    transition: 'all 0.2s',
+                    background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+                    border: '2px solid',
+                    borderColor: 'teal.200',
+                    borderRadius: 3,
+                    transition: 'all 0.3s ease',
                     '&:hover': {
-                      boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                      boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
+                      transform: 'translateY(-3px)'
                     }
                   }}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <ContactMailIcon color="primary" />
-                    <Typography variant="subtitle1" fontWeight="bold">
-                      Contact Information
-                    </Typography>
-                  </Box>
-                  <Box sx={{ 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    gap: 2,
-                    flex: 1,
-                    justifyContent: 'center'
-                  }}>
-                    <Box sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: 2,
-                      p: 2,
-                      bgcolor: 'grey.100',
-                      borderRadius: 2
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                    <Box sx={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: '50%',
+                      bgcolor: 'teal.main',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: 2
                     }}>
-                      <EmailIcon color="action" />
-                      <Typography variant="body2">
-                        {application.tenant.email}
-                      </Typography>
+                      <ContactMailIcon sx={{ color: 'white', fontSize: 24 }} />
                     </Box>
-                    <Box sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: 2,
-                      p: 2,
-                      bgcolor: 'grey.100',
-                      borderRadius: 2
-                    }}>
-                      <PhoneIcon color="action" />
-                      <Typography variant="body2">
-                        {application.tenant.phone || 'Not provided'}
+                    <Box>
+                      <Typography variant="h6" fontWeight="bold" color="teal.800">
+                        Contact Information
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Tenant contact details
                       </Typography>
                     </Box>
                   </Box>
+
+                  <Stack spacing={2}>
+                    <Box sx={{ 
+                      p: 2, 
+                      bgcolor: 'white', 
+                      borderRadius: 2,
+                      border: '1px solid',
+                      borderColor: 'teal.200',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                        transform: 'translateY(-1px)'
+                      }
+                    }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <EmailIcon color="teal" />
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                            Email Address
+                          </Typography>
+                          <Typography variant="body1" fontWeight="medium" sx={{ wordBreak: 'break-word' }}>
+                            {application.tenant.email}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+
+                    <Box sx={{ 
+                      p: 2, 
+                      bgcolor: 'white', 
+                      borderRadius: 2,
+                      border: '1px solid',
+                      borderColor: 'teal.200',
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                        transform: 'translateY(-1px)'
+                      }
+                    }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <PhoneIcon color="teal" />
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                            Phone Number
+                          </Typography>
+                          <Typography variant="body1" fontWeight="medium">
+                            {application.tenant.phone || 'Not provided'}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+
+                    <Box sx={{ 
+                      p: 2, 
+                      bgcolor: 'teal.50', 
+                      borderRadius: 2,
+                      border: '1px solid',
+                      borderColor: 'teal.200'
+                    }}>
+                      <Typography variant="body2" color="teal.800" sx={{ fontWeight: 500 }}>
+                        💬 Ready to communicate with the tenant about their application
+                      </Typography>
+                    </Box>
+                  </Stack>
                 </Paper>
               </Grid>
             </Grid>
@@ -504,456 +662,1004 @@ export default function ApplicationDetails({
             {/* Tenant Profile Section */}
             {application.tenantDocument && (
               <Paper 
-                variant="outlined" 
-                sx={{ mt: 3, p: 3, transition: 'all 0.2s', '&:hover': { boxShadow: '0 4px 8px rgba(0,0,0,0.1)' } }}
+                elevation={0}
+                sx={{ 
+                  mt: 4, 
+                  p: 4, 
+                  borderRadius: 3,
+                  background: 'linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%)',
+                  border: '2px solid',
+                  borderColor: 'primary.200',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
+                    transform: 'translateY(-2px)'
+                  }
+                }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-                  <PersonIcon color="primary" />
-                  <Typography variant="h6" fontWeight="bold">Tenant Profile</Typography>
+                {/* Header */}
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 2, 
+                  mb: 4,
+                  p: 2,
+                  borderRadius: 2,
+                  bgcolor: 'primary.50',
+                  border: '1px solid',
+                  borderColor: 'primary.200'
+                }}>
+                  <Box sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '50%',
+                    bgcolor: 'primary.main',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: 2
+                  }}>
+                    <PersonIcon sx={{ color: 'white', fontSize: 24 }} />
+                  </Box>
+                  <Box>
+                    <Typography variant="h5" fontWeight="bold" color="primary.main">
+                      Tenant Profile
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Comprehensive tenant information for decision making
+                    </Typography>
+                  </Box>
                 </Box>
 
-                {/* Tenant Profile Summary */}
+                {/* Financial Summary Dashboard */}
                 {(() => {
                   const netIncome = Number(application.tenantDocument.monthlyNetIncome) || 0;
-                  const additionalIncome = application.tenantDocument.hasAdditionalIncome === 'yes' ? (Number(application.tenantDocument.additionalIncomeAmount) || 0) : 0;
+                  const additionalIncome = application.tenantDocument.additionalIncomeAmount || 0;
                   const debt = Number(application.tenantDocument.monthlyDebtRepayment) || 0;
-                  const currentRent = application.tenantDocument.currentlyPaysRent === 'yes' ? (Number(application.tenantDocument.currentRentAmount) || 0) : 0;
+                  const currentRent = application.tenantDocument.currentRentAmount || 0;
                   const totalIncome = netIncome + additionalIncome;
                   const totalExpenses = debt + currentRent;
                   const netDisposable = totalIncome - totalExpenses;
                   const incomeExpenseRatio = totalExpenses > 0 ? totalIncome / totalExpenses : null;
                   let riskLevel = 'Low Risk';
                   let riskColor = 'success';
+                  let riskIcon = <CheckCircleIcon />;
+                  
                   if (incomeExpenseRatio !== null) {
-                    if (incomeExpenseRatio < 1) { riskLevel = 'High Risk'; riskColor = 'error'; }
-                    else if (incomeExpenseRatio < 2) { riskLevel = 'Medium Risk'; riskColor = 'warning'; }
+                    if (incomeExpenseRatio < 1) { 
+                      riskLevel = 'High Risk'; 
+                      riskColor = 'error'; 
+                      riskIcon = <ErrorIcon />;
+                    }
+                    else if (incomeExpenseRatio < 2) { 
+                      riskLevel = 'Medium Risk'; 
+                      riskColor = 'warning'; 
+                      riskIcon = <InfoIcon />;
+                    }
                   }
+                  
                   return (
-                    <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.100', borderRadius: 2, border: '1px solid', borderColor: 'divider', display: 'flex', flexWrap: 'wrap', gap: 3, alignItems: 'center' }}>
-                      <Box sx={{ minWidth: 180 }}>
-                        <Typography variant="subtitle2" color="text.secondary">Net Disposable Income</Typography>
-                        <Typography variant="h6" fontWeight="bold" title="Net Disposable = Income + Additional - Debts - Rent">
-                          ${netDisposable.toLocaleString()}
-                        </Typography>
-                      </Box>
-                      <Box sx={{ minWidth: 220 }}>
-                        <Typography variant="subtitle2" color="text.secondary">Income vs. Expenses Ratio</Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Box sx={{ width: 100, mr: 1 }}>
-                            <LinearProgress 
-                              variant="determinate" 
-                              value={incomeExpenseRatio !== null ? Math.min(incomeExpenseRatio * 50, 100) : 0} 
-                              color={riskColor}
-                              sx={{ height: 10, borderRadius: 5 }}
-                            />
+                    <Paper 
+                      elevation={0}
+                      sx={{ 
+                        mb: 4, 
+                        p: 3, 
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        color: 'white',
+                        borderRadius: 3,
+                        border: '1px solid',
+                        borderColor: 'primary.300'
+                      }}
+                    >
+                      <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ mb: 3 }}>
+                        Financial Summary Dashboard
+                      </Typography>
+                      <Grid container spacing={3}>
+                        <Grid item xs={12} sm={6} md={3}>
+                          <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2 }}>
+                            <Typography variant="h4" fontWeight="bold" sx={{ mb: 1 }}>
+                              ${netDisposable.toLocaleString()}
+                            </Typography>
+                            <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                              Net Disposable Income
+                            </Typography>
                           </Box>
-                          <Typography variant="body1" fontWeight="bold">
-                            {incomeExpenseRatio !== null ? incomeExpenseRatio.toFixed(2) : 'N/A'}
-                          </Typography>
-                        </Box>
-                      </Box>
-                      <Box>
-                        <Typography variant="subtitle2" color="text.secondary">Risk Level</Typography>
-                        <Chip label={riskLevel} color={riskColor} sx={{ fontWeight: 'bold', fontSize: 16 }} />
-                      </Box>
-                    </Box>
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={3}>
+                          <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2 }}>
+                            <Typography variant="h4" fontWeight="bold" sx={{ mb: 1 }}>
+                              ${totalIncome.toLocaleString()}
+                            </Typography>
+                            <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                              Total Monthly Income
+                            </Typography>
+                          </Box>
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={3}>
+                          <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2 }}>
+                            <Typography variant="h4" fontWeight="bold" sx={{ mb: 1 }}>
+                              {incomeExpenseRatio !== null ? incomeExpenseRatio.toFixed(2) : 'N/A'}
+                            </Typography>
+                            <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                              Income/Expense Ratio
+                            </Typography>
+                          </Box>
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={3}>
+                          <Box sx={{ 
+                            textAlign: 'center', 
+                            p: 2, 
+                            bgcolor: 'rgba(255,255,255,0.1)', 
+                            borderRadius: 2,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: 1
+                          }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              {riskIcon}
+                              <Typography variant="h6" fontWeight="bold">
+                                {riskLevel}
+                              </Typography>
+                            </Box>
+                            <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                              Risk Assessment
+                            </Typography>
+                          </Box>
+                        </Grid>
+                      </Grid>
+                    </Paper>
                   );
                 })()}
 
                 {/* Tenant Profile Details */}
                 <Grid container spacing={3}>
                   {/* Employment & Income Section */}
-                  <Grid xs={12}>
-                    <Box sx={{ 
-                      p: 2, 
-                      bgcolor: 'grey.50', 
-                      borderRadius: 2,
-                      border: '1px solid',
-                      borderColor: 'divider'
-                    }}>
-                      <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-                        Employment & Income
-                      </Typography>
-                      <Grid container spacing={2}>
-                        <Grid xs={12} md={6}>
-                          <Box sx={{ 
-                            p: 1.5,
-                            bgcolor: 'white',
-                            borderRadius: 1
-                          }}>
-                            <Typography variant="body2" color="text.secondary">
-                              Employment Status
-                            </Typography>
-                            <Typography variant="body1">
-                              {application.tenantDocument.isCurrentlyEmployed === 'yes' ? 'Currently Employed' : 'Not Currently Employed'}
-                            </Typography>
-                          </Box>
-                        </Grid>
-                        {application.tenantDocument.isCurrentlyEmployed === 'yes' && (
+                  <Grid item xs={12} md={6}>
+                    <Paper 
+                      elevation={0}
+                      sx={{ 
+                        p: 3, 
+                        height: '100%',
+                        background: 'linear-gradient(135deg, #fff8f0 0%, #fff4e6 100%)',
+                        border: '2px solid',
+                        borderColor: 'orange.200',
+                        borderRadius: 3,
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                          transform: 'translateY(-2px)'
+                        }
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                        <Box sx={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: '50%',
+                          bgcolor: 'orange.main',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <WorkIcon sx={{ color: 'white', fontSize: 20 }} />
+                        </Box>
+                        <Typography variant="h6" fontWeight="bold" color="orange.800">
+                          Employment & Income
+                        </Typography>
+                      </Box>
+                      
+                      <Stack spacing={2}>
+                        <Box sx={{ 
+                          p: 2, 
+                          bgcolor: 'white', 
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor: 'orange.200'
+                        }}>
+                          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                            Employment Status
+                          </Typography>
+                          <Typography variant="body1" fontWeight="medium">
+                            {application.tenantDocument.employmentStatus ? 
+                              application.tenantDocument.employmentStatus.charAt(0).toUpperCase() + 
+                              application.tenantDocument.employmentStatus.slice(1).replace('-', ' ') : 
+                              'Not specified'}
+                          </Typography>
+                        </Box>
+                        
+                        {application.tenantDocument.employmentStatus && application.tenantDocument.employmentStatus !== 'unemployed' && (
                           <>
-                            <Grid xs={12} md={6}>
-                              <Box sx={{ 
-                                p: 1.5,
-                                bgcolor: 'white',
-                                borderRadius: 1
-                              }}>
-                                <Typography variant="body2" color="text.secondary">
-                                  Employment Type
-                                </Typography>
-                                <Typography variant="body1">
-                                  {application.tenantDocument.employmentType}
-                                </Typography>
-                              </Box>
-                            </Grid>
-                            <Grid xs={12} md={6}>
-                              <Box sx={{ 
-                                p: 1.5,
-                                bgcolor: 'white',
-                                borderRadius: 1
-                              }}>
-                                <Typography variant="body2" color="text.secondary">
-                                  Monthly Net Income
-                                </Typography>
-                                <Typography variant="body1">
-                                  ${application.tenantDocument.monthlyNetIncome?.toLocaleString()}
-                                </Typography>
-                              </Box>
-                            </Grid>
+                            <Box sx={{ 
+                              p: 2, 
+                              bgcolor: 'white', 
+                              borderRadius: 2,
+                              border: '1px solid',
+                              borderColor: 'orange.200'
+                            }}>
+                              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                Employer & Position
+                              </Typography>
+                              <Typography variant="body1" fontWeight="medium">
+                                {application.tenantDocument.employerName || 'Not specified'}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                {application.tenantDocument.jobTitle || 'Position not specified'}
+                              </Typography>
+                            </Box>
+                            
+                            <Box sx={{ 
+                              p: 2, 
+                              bgcolor: 'white', 
+                              borderRadius: 2,
+                              border: '1px solid',
+                              borderColor: 'orange.200'
+                            }}>
+                              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                Monthly Net Income
+                              </Typography>
+                              <Typography variant="h6" fontWeight="bold" color="success.main">
+                                ${application.tenantDocument.monthlyNetIncome?.toLocaleString() || '0'}
+                              </Typography>
+                            </Box>
                           </>
                         )}
-                        <Grid xs={12}>
-                          <Box sx={{ 
-                            p: 1.5,
-                            bgcolor: 'white',
-                            borderRadius: 1
-                          }}>
+                        
+                        <Box sx={{ 
+                          p: 2, 
+                          bgcolor: 'white', 
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor: 'orange.200'
+                        }}>
+                          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                            Additional Income
+                          </Typography>
+                          <Typography variant="body1" fontWeight="medium">
+                            {application.tenantDocument.additionalIncomeAmount && application.tenantDocument.additionalIncomeAmount > 0
+                              ? `$${application.tenantDocument.additionalIncomeAmount.toLocaleString()}`
+                              : 'No additional income'}
+                          </Typography>
+                          {application.tenantDocument.additionalIncomeSource && (
                             <Typography variant="body2" color="text.secondary">
-                              Additional Income
+                              Source: {application.tenantDocument.additionalIncomeSource}
                             </Typography>
-                            <Typography variant="body1">
-                              {application.tenantDocument.hasAdditionalIncome === 'yes' 
-                                ? `Yes - ${application.tenantDocument.additionalIncomeDescription}`
-                                : 'No additional income'}
-                            </Typography>
-                          </Box>
-                        </Grid>
-                      </Grid>
-                    </Box>
+                          )}
+                        </Box>
+                        
+                        <Box sx={{ 
+                          p: 2, 
+                          bgcolor: 'white', 
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor: 'orange.200'
+                        }}>
+                          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                            Child Support
+                          </Typography>
+                          <Typography variant="body1" fontWeight="medium">
+                            {application.tenantDocument.childSupportAmount && application.tenantDocument.childSupportAmount > 0
+                              ? `$${application.tenantDocument.childSupportAmount.toLocaleString()}`
+                              : 'No child support payments'}
+                          </Typography>
+                        </Box>
+                      </Stack>
+                    </Paper>
                   </Grid>
 
-                  {/* Expenses & Debts Section */}
-                  <Grid xs={12}>
-                    <Box sx={{ 
-                      p: 2, 
-                      bgcolor: 'grey.50', 
-                      borderRadius: 2,
-                      border: '1px solid',
-                      borderColor: 'divider'
-                    }}>
-                      <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-                        Expenses & Debts
-                      </Typography>
-                      <Grid container spacing={2}>
-                        <Grid xs={12} md={6}>
-                          <Box sx={{ 
-                            p: 1.5,
-                            bgcolor: 'white',
-                            borderRadius: 1
-                          }}>
-                            <Typography variant="body2" color="text.secondary">
-                              Monthly Debt Repayment
-                            </Typography>
-                            <Typography variant="body1">
-                              ${application.tenantDocument.monthlyDebtRepayment?.toLocaleString()}
+                  {/* Personal & Household Information Section */}
+                  <Grid item xs={12} md={6}>
+                    <Paper 
+                      elevation={0}
+                      sx={{ 
+                        p: 3, 
+                        height: '100%',
+                        background: 'linear-gradient(135deg, #f0fff4 0%, #e6ffe6 100%)',
+                        border: '2px solid',
+                        borderColor: 'green.200',
+                        borderRadius: 3,
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                          transform: 'translateY(-2px)'
+                        }
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                        <Box sx={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: '50%',
+                          bgcolor: 'green.main',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <PersonIcon sx={{ color: 'white', fontSize: 20 }} />
+                        </Box>
+                        <Typography variant="h6" fontWeight="bold" color="green.800">
+                          Personal & Household
+                        </Typography>
+                      </Box>
+                      
+                      <Stack spacing={2}>
+                        <Box sx={{ 
+                          p: 2, 
+                          bgcolor: 'white', 
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor: 'green.200'
+                        }}>
+                          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                            Household Members
+                          </Typography>
+                          <Box sx={{ display: 'flex', gap: 2 }}>
+                            <Chip 
+                              label={`${application.tenantDocument.adultOccupants || 1} Adults`} 
+                              color="primary" 
+                              variant="outlined"
+                            />
+                            <Chip 
+                              label={`${application.tenantDocument.childOccupants || 0} Children`} 
+                              color="secondary" 
+                              variant="outlined"
+                            />
+                          </Box>
+                        </Box>
+                        
+                        <Box sx={{ 
+                          p: 2, 
+                          bgcolor: 'white', 
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor: 'green.200'
+                        }}>
+                          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                            Marital Status
+                          </Typography>
+                          <Typography variant="body1" fontWeight="medium">
+                            {application.tenantDocument.maritalStatus ? 
+                              application.tenantDocument.maritalStatus.charAt(0).toUpperCase() + 
+                              application.tenantDocument.maritalStatus.slice(1) : 
+                              'Not specified'}
+                          </Typography>
+                        </Box>
+                        
+                        <Box sx={{ 
+                          p: 2, 
+                          bgcolor: 'white', 
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor: 'green.200'
+                        }}>
+                          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                            Pets
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {application.tenantDocument.hasPets ? (
+                              <CheckCircleIcon color="success" />
+                            ) : (
+                              <InfoIcon color="info" />
+                            )}
+                            <Typography variant="body1" fontWeight="medium">
+                              {application.tenantDocument.hasPets 
+                                ? `${application.tenantDocument.petCount || 0} pet(s)`
+                                : 'No pets'}
                             </Typography>
                           </Box>
-                        </Grid>
-                        <Grid xs={12} md={6}>
-                          <Box sx={{ 
-                            p: 1.5,
-                            bgcolor: 'white',
-                            borderRadius: 1
-                          }}>
-                            <Typography variant="body2" color="text.secondary">
-                              Child/Spousal Support
+                          {application.tenantDocument.petTypes && (
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                              Types: {application.tenantDocument.petTypes}
                             </Typography>
-                            <Typography variant="body1">
-                              {application.tenantDocument.paysChildSupport === 'yes'
-                                ? `Yes - $${application.tenantDocument.childSupportAmount?.toLocaleString()}`
-                                : 'No'}
+                          )}
+                        </Box>
+                        
+                        <Box sx={{ 
+                          p: 2, 
+                          bgcolor: 'white', 
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor: 'green.200'
+                        }}>
+                          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                            Smoking Status
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {application.tenantDocument.smokingStatus === 'non-smoker' ? (
+                              <CheckCircleIcon color="success" />
+                            ) : (
+                              <InfoIcon color="warning" />
+                            )}
+                            <Typography variant="body1" fontWeight="medium">
+                              {application.tenantDocument.smokingStatus ? 
+                                application.tenantDocument.smokingStatus.charAt(0).toUpperCase() + 
+                                application.tenantDocument.smokingStatus.slice(1).replace('-', ' ') : 
+                                'Not specified'}
                             </Typography>
                           </Box>
-                        </Grid>
-                      </Grid>
-                    </Box>
+                        </Box>
+                      </Stack>
+                    </Paper>
+                  </Grid>
+
+                  {/* Financial & Credit Section */}
+                  <Grid item xs={12} md={6}>
+                    <Paper 
+                      elevation={0}
+                      sx={{ 
+                        p: 3, 
+                        height: '100%',
+                        background: 'linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%)',
+                        border: '2px solid',
+                        borderColor: 'blue.200',
+                        borderRadius: 3,
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                          transform: 'translateY(-2px)'
+                        }
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                        <Box sx={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: '50%',
+                          bgcolor: 'blue.main',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <AccountBalanceIcon sx={{ color: 'white', fontSize: 20 }} />
+                        </Box>
+                        <Typography variant="h6" fontWeight="bold" color="blue.800">
+                          Financial & Credit
+                        </Typography>
+                      </Box>
+                      
+                      <Stack spacing={2}>
+                        <Box sx={{ 
+                          p: 2, 
+                          bgcolor: 'white', 
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor: 'blue.200'
+                        }}>
+                          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                            Monthly Debt Repayment
+                          </Typography>
+                          <Typography variant="h6" fontWeight="bold" color="error.main">
+                            ${application.tenantDocument.monthlyDebtRepayment?.toLocaleString() || '0'}
+                          </Typography>
+                        </Box>
+                        
+                        <Box sx={{ 
+                          p: 2, 
+                          bgcolor: 'white', 
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor: 'blue.200'
+                        }}>
+                          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                            Current Rent
+                          </Typography>
+                          <Typography variant="body1" fontWeight="medium">
+                            {application.tenantDocument.currentRentAmount && application.tenantDocument.currentRentAmount > 0
+                              ? `$${application.tenantDocument.currentRentAmount.toLocaleString()}`
+                              : 'Not currently renting'}
+                          </Typography>
+                        </Box>
+                        
+                        <Box sx={{ 
+                          p: 2, 
+                          bgcolor: 'white', 
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor: 'blue.200'
+                        }}>
+                          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                            Credit Score
+                          </Typography>
+                          <Typography variant="body1" fontWeight="medium">
+                            {application.tenantDocument.creditScore 
+                              ? `${application.tenantDocument.creditScore}`
+                              : 'Not provided'}
+                          </Typography>
+                        </Box>
+                      </Stack>
+                    </Paper>
                   </Grid>
 
                   {/* Rental History Section */}
-                  <Grid xs={12}>
-                    <Box sx={{ 
-                      p: 2, 
-                      bgcolor: 'grey.50', 
-                      borderRadius: 2,
-                      border: '1px solid',
-                      borderColor: 'divider'
-                    }}>
-                      <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-                        Rental History
-                      </Typography>
-                      <Grid container spacing={2}>
-                        <Grid xs={12} md={6}>
-                          <Box sx={{ 
-                            p: 1.5,
-                            bgcolor: 'white',
-                            borderRadius: 1
-                          }}>
-                            <Typography variant="body2" color="text.secondary">
-                              Eviction History
+                  <Grid item xs={12} md={6}>
+                    <Paper 
+                      elevation={0}
+                      sx={{ 
+                        p: 3, 
+                        height: '100%',
+                        background: 'linear-gradient(135deg, #fff0f8 0%, #ffe6f3 100%)',
+                        border: '2px solid',
+                        borderColor: 'pink.200',
+                        borderRadius: 3,
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                          transform: 'translateY(-2px)'
+                        }
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                        <Box sx={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: '50%',
+                          bgcolor: 'pink.main',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}>
+                          <HomeIcon sx={{ color: 'white', fontSize: 20 }} />
+                        </Box>
+                        <Typography variant="h6" fontWeight="bold" color="pink.800">
+                          Rental History
+                        </Typography>
+                      </Box>
+                      
+                      <Stack spacing={2}>
+                        <Box sx={{ 
+                          p: 2, 
+                          bgcolor: 'white', 
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor: 'pink.200'
+                        }}>
+                          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                            Eviction History
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {application.tenantDocument.evictionHistory ? (
+                              <ErrorIcon color="error" />
+                            ) : (
+                              <CheckCircleIcon color="success" />
+                            )}
+                            <Typography variant="body1" fontWeight="medium">
+                              {application.tenantDocument.evictionHistory 
+                                ? 'Has been evicted previously' 
+                                : 'No previous evictions'}
                             </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              {application.tenantDocument.hasBeenEvicted === 'yes' ? (
-                                <ErrorIcon color="error" />
-                              ) : (
-                                <CheckCircleIcon color="success" />
-                              )}
-                              <Typography variant="body1">
-                                {application.tenantDocument.hasBeenEvicted === 'yes' 
-                                  ? 'Has been evicted previously' 
-                                  : 'No previous evictions'}
-                              </Typography>
-                            </Box>
                           </Box>
-                        </Grid>
-                        <Grid xs={12} md={6}>
-                          <Box sx={{ 
-                            p: 1.5,
-                            bgcolor: 'white',
-                            borderRadius: 1
-                          }}>
-                            <Typography variant="body2" color="text.secondary">
-                              Current Rent
-                            </Typography>
-                            <Typography variant="body1">
-                              {application.tenantDocument.currentlyPaysRent === 'yes'
-                                ? `$${application.tenantDocument.currentRentAmount?.toLocaleString()}`
-                                : 'Not currently renting'}
+                        </Box>
+                        
+                        <Box sx={{ 
+                          p: 2, 
+                          bgcolor: 'white', 
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor: 'pink.200'
+                        }}>
+                          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                            Bankruptcy History
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {application.tenantDocument.bankruptcyHistory ? (
+                              <ErrorIcon color="error" />
+                            ) : (
+                              <CheckCircleIcon color="success" />
+                            )}
+                            <Typography variant="body1" fontWeight="medium">
+                              {application.tenantDocument.bankruptcyHistory 
+                                ? 'Has filed for bankruptcy previously' 
+                                : 'No bankruptcy history'}
                             </Typography>
                           </Box>
-                        </Grid>
-                      </Grid>
-                    </Box>
+                        </Box>
+                        
+                        <Box sx={{ 
+                          p: 2, 
+                          bgcolor: 'white', 
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor: 'pink.200'
+                        }}>
+                          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                            Advance Payment Capability
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {application.tenantDocument.monthsAheadCanPay && application.tenantDocument.monthsAheadCanPay > 1 ? (
+                              <CheckCircleIcon color="success" />
+                            ) : (
+                              <InfoIcon color="info" />
+                            )}
+                            <Typography variant="body1" fontWeight="medium">
+                              {application.tenantDocument.monthsAheadCanPay && application.tenantDocument.monthsAheadCanPay > 1
+                                ? `Can pay up to ${application.tenantDocument.monthsAheadCanPay} months in advance`
+                                : 'Can pay one month at a time'}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Stack>
+                    </Paper>
                   </Grid>
 
-                  {/* Financial Preparedness Section */}
-                  <Grid xs={12}>
-                    <Box sx={{ 
-                      p: 2, 
-                      bgcolor: 'grey.50', 
-                      borderRadius: 2,
-                      border: '1px solid',
-                      borderColor: 'divider'
-                    }}>
-                      <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-                        Financial Preparedness
-                      </Typography>
-                      <Grid container spacing={2}>
-                        <Grid xs={12} md={6}>
-                          <Box sx={{ 
-                            p: 1.5,
-                            bgcolor: 'white',
-                            borderRadius: 1
+                  {/* Lease Guarantor Section */}
+                  {application.tenantDocument.hasGuarantor && (
+                    <Grid item xs={12}>
+                      <Paper 
+                        elevation={0}
+                        sx={{ 
+                          p: 3,
+                          background: 'linear-gradient(135deg, #f8f0ff 0%, #f0e6ff 100%)',
+                          border: '2px solid',
+                          borderColor: 'purple.200',
+                          borderRadius: 3,
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                            transform: 'translateY(-2px)'
+                          }
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                          <Box sx={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: '50%',
+                            bgcolor: 'purple.main',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
                           }}>
-                            <Typography variant="body2" color="text.secondary">
-                              Two Months Rent Savings
-                            </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              {application.tenantDocument.hasTwoMonthsRentSavings === 'yes' ? (
-                                <CheckCircleIcon color="success" />
-                              ) : (
-                                <InfoIcon color="info" />
-                              )}
-                              <Typography variant="body1">
-                                {application.tenantDocument.hasTwoMonthsRentSavings === 'yes'
-                                  ? 'Has savings equivalent to two months rent'
-                                  : 'Does not have two months rent in savings'}
+                            <PersonIcon sx={{ color: 'white', fontSize: 20 }} />
+                          </Box>
+                          <Typography variant="h6" fontWeight="bold" color="purple.800">
+                            Lease Guarantor
+                          </Typography>
+                          <Chip label="Additional Security" color="purple" size="small" />
+                        </Box>
+                        
+                        <Grid container spacing={3}>
+                          <Grid item xs={12} md={6}>
+                            <Box sx={{ 
+                              p: 2, 
+                              bgcolor: 'white', 
+                              borderRadius: 2,
+                              border: '1px solid',
+                              borderColor: 'purple.200'
+                            }}>
+                              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                Guarantor Name
+                              </Typography>
+                              <Typography variant="body1" fontWeight="medium">
+                                {application.tenantDocument.guarantorName || 'Not specified'}
                               </Typography>
                             </Box>
-                          </Box>
-                        </Grid>
-                        <Grid xs={12} md={6}>
-                          <Box sx={{ 
-                            p: 1.5,
-                            bgcolor: 'white',
-                            borderRadius: 1
-                          }}>
-                            <Typography variant="body2" color="text.secondary">
-                              Financial Documents
-                            </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              {application.tenantDocument.canShareFinancialDocuments === 'yes' ? (
-                                <CheckCircleIcon color="success" />
-                              ) : (
-                                <InfoIcon color="info" />
-                              )}
-                              <Typography variant="body1">
-                                {application.tenantDocument.canShareFinancialDocuments === 'yes'
-                                  ? 'Willing to share financial documents'
-                                  : 'Not willing to share financial documents'}
+                          </Grid>
+                          <Grid item xs={12} md={6}>
+                            <Box sx={{ 
+                              p: 2, 
+                              bgcolor: 'white', 
+                              borderRadius: 2,
+                              border: '1px solid',
+                              borderColor: 'purple.200'
+                            }}>
+                              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                Relationship
+                              </Typography>
+                              <Typography variant="body1" fontWeight="medium">
+                                {application.tenantDocument.guarantorRelationship || 'Not specified'}
                               </Typography>
                             </Box>
-                          </Box>
-                        </Grid>
-                      </Grid>
-                    </Box>
-                  </Grid>
-
-                  {/* Payment Capability Section */}
-                  <Grid xs={12}>
-                    <Box sx={{ 
-                      p: 2, 
-                      bgcolor: 'grey.50', 
-                      borderRadius: 2,
-                      border: '1px solid',
-                      borderColor: 'divider'
-                    }}>
-                      <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-                        Payment Capability
-                      </Typography>
-                      <Grid container spacing={2}>
-                        <Grid xs={12}>
-                          <Box sx={{ 
-                            p: 1.5,
-                            bgcolor: 'white',
-                            borderRadius: 1
-                          }}>
-                            <Typography variant="body2" color="text.secondary">
-                              Advance Payment
-                            </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              {application.tenantDocument.canPayMoreThanOneMonth === 'yes' ? (
-                                <CheckCircleIcon color="success" />
-                              ) : (
-                                <InfoIcon color="info" />
-                              )}
-                              <Typography variant="body1">
-                                {application.tenantDocument.canPayMoreThanOneMonth === 'yes'
-                                  ? `Can pay up to ${application.tenantDocument.monthsAheadCanPay} months in advance`
-                                  : 'Can pay one month at a time'}
+                          </Grid>
+                          <Grid item xs={12} md={6}>
+                            <Box sx={{ 
+                              p: 2, 
+                              bgcolor: 'white', 
+                              borderRadius: 2,
+                              border: '1px solid',
+                              borderColor: 'purple.200'
+                            }}>
+                              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                Contact Information
+                              </Typography>
+                              <Typography variant="body1" fontWeight="medium">
+                                {application.tenantDocument.guarantorPhone || 'Phone not specified'}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                {application.tenantDocument.guarantorEmail || 'Email not specified'}
                               </Typography>
                             </Box>
-                          </Box>
+                          </Grid>
+                          <Grid item xs={12} md={6}>
+                            <Box sx={{ 
+                              p: 2, 
+                              bgcolor: 'white', 
+                              borderRadius: 2,
+                              border: '1px solid',
+                              borderColor: 'purple.200'
+                            }}>
+                              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                Financial Information
+                              </Typography>
+                              <Typography variant="body1" fontWeight="medium">
+                                {application.tenantDocument.guarantorMonthlyIncome 
+                                  ? `$${application.tenantDocument.guarantorMonthlyIncome.toLocaleString()}`
+                                  : 'Income not specified'}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                {application.tenantDocument.guarantorEmployer || 'Employer not specified'}
+                              </Typography>
+                            </Box>
+                          </Grid>
+                          <Grid item xs={12}>
+                            <Box sx={{ 
+                              p: 2, 
+                              bgcolor: 'white', 
+                              borderRadius: 2,
+                              border: '1px solid',
+                              borderColor: 'purple.200'
+                            }}>
+                              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                Address
+                              </Typography>
+                              <Typography variant="body1" fontWeight="medium">
+                                {application.tenantDocument.guarantorAddress || 'Address not specified'}
+                              </Typography>
+                            </Box>
+                          </Grid>
                         </Grid>
-                      </Grid>
-                    </Box>
-                  </Grid>
+                      </Paper>
+                    </Grid>
+                  )}
                 </Grid>
               </Paper>
             )}
 
             {/* Tenant Documents Section */}
             {application.tenantDocument && (
-              <Accordion 
-                defaultExpanded={false}
-                sx={{
-                  mt: 3,
-                  '&:before': { display: 'none' },
-                  boxShadow: 'none',
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: '8px !important',
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  mt: 4, 
+                  p: 4,
+                  background: 'linear-gradient(135deg, #f8f0ff 0%, #f0e6ff 100%)',
+                  border: '2px solid',
+                  borderColor: 'purple.200',
+                  borderRadius: 3,
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
+                    transform: 'translateY(-2px)'
+                  }
                 }}
               >
-                <AccordionSummary
-                  expandIcon={<ExpandMoreIcon />}
-                  aria-controls="tenant-documents-content"
-                  id="tenant-documents-header"
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
+                  <Box sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '50%',
+                    bgcolor: 'purple.main',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: 2
+                  }}>
+                    <DescriptionIcon sx={{ color: 'white', fontSize: 24 }} />
+                  </Box>
+                  <Box>
+                    <Typography variant="h5" fontWeight="bold" color="purple.800">
+                      Supporting Documents
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Tenant uploaded documents for verification
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Accordion 
+                  defaultExpanded={false}
                   sx={{
-                    '&:hover': {
-                      backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                    '&:before': { display: 'none' },
+                    boxShadow: 'none',
+                    border: '2px solid',
+                    borderColor: 'purple.200',
+                    borderRadius: '12px !important',
+                    bgcolor: 'white',
+                    '& .MuiAccordionSummary-root': {
+                      borderRadius: '12px',
+                      '&:hover': {
+                        backgroundColor: 'purple.50',
+                      },
                     },
                   }}
                 >
-                  <Typography variant="h6">Tenant Documents</Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    {['proofOfIdentity', 'proofOfIncome', 'creditHistory', 'rentalHistory', 'additionalDocuments'].map((field) => (
-                      <Box key={field} sx={{ p: 3, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
-                        <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-                          {field.replace(/([A-Z])/g, ' $1').trim()}
-                        </Typography>
-                        {application.tenantDocument[field]?.length > 0 ? (
-                          <Grid container spacing={2}>
-                            {application.tenantDocument[field].map((doc, docIndex) => (
-                              <Grid xs={12} sm={6} md={4} key={docIndex}>
-                                <Box sx={{ 
-                                  p: 2, 
-                                  border: '1px solid', 
-                                  borderColor: 'divider', 
-                                  borderRadius: 1,
-                                  transition: 'all 0.2s',
-                                  '&:hover': {
-                                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                                  }
-                                }}>
-                                  {doc.thumbnailUrl ? (
-                                    <img
-                                      src={doc.thumbnailUrl.startsWith('http') 
-                                        ? doc.thumbnailUrl 
-                                        : `${import.meta.env.VITE_API_URL}${doc.thumbnailUrl}`}
-                                      alt={`${field} ${docIndex + 1}`}
-                                      style={{ width: '100%', height: '200px', objectFit: 'cover' }}
-                                      onError={(e) => onImageError(doc._id, e)}
-                                    />
-                                  ) : (
-                                    <Box sx={{ 
-                                      height: '200px', 
-                                      display: 'flex', 
-                                      alignItems: 'center', 
-                                      justifyContent: 'center', 
-                                      bgcolor: 'grey.100',
-                                      borderRadius: 1
-                                    }}>
-                                      <Typography variant="body2" color="text.secondary">
-                                        Document Preview
-                                      </Typography>
-                                    </Box>
-                                  )}
-                                  <Typography variant="body2" sx={{ mt: 1, mb: 1 }}>
-                                    {doc.filename}
-                                  </Typography>
-                                  <Button
-                                    variant="outlined"
-                                    size="small"
-                                    startIcon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                    </svg>}
-                                    onClick={() => {
-                                      const url = doc.url.startsWith('http') 
-                                        ? doc.url 
-                                        : `${import.meta.env.VITE_API_URL}${doc.url}`;
-                                      window.open(url, '_blank');
+                  <AccordionSummary
+                    expandIcon={<ExpandMoreIcon color="purple" />}
+                    aria-controls="tenant-documents-content"
+                    id="tenant-documents-header"
+                    sx={{
+                      '& .MuiAccordionSummary-content': {
+                        alignItems: 'center',
+                        gap: 2
+                      }
+                    }}
+                  >
+                    <DescriptionIcon color="purple" />
+                    <Typography variant="h6" fontWeight="bold" color="purple.800">
+                      View Tenant Documents
+                    </Typography>
+                    <Chip 
+                      label={`${['proofOfIdentity', 'proofOfIncome', 'creditHistory', 'rentalHistory', 'additionalDocuments']
+                        .reduce((total, field) => total + (application.tenantDocument[field]?.length || 0), 0)} documents`}
+                      color="purple" 
+                      size="small"
+                      variant="outlined"
+                    />
+                  </AccordionSummary>
+                  <AccordionDetails sx={{ p: 3 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      {[
+                        { field: 'proofOfIdentity', label: 'Proof of Identity', icon: '🆔', color: 'blue' },
+                        { field: 'proofOfIncome', label: 'Proof of Income', icon: '💰', color: 'green' },
+                        { field: 'creditHistory', label: 'Credit History', icon: '📊', color: 'orange' },
+                        { field: 'rentalHistory', label: 'Rental History', icon: '🏠', color: 'purple' },
+                        { field: 'additionalDocuments', label: 'Additional Documents', icon: '📄', color: 'grey' }
+                      ].map(({ field, label, icon, color }) => (
+                        <Box key={field} sx={{ 
+                          p: 3, 
+                          border: '2px solid', 
+                          borderColor: `${color}.200`,
+                          borderRadius: 3,
+                          bgcolor: `${color}.50`,
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                            transform: 'translateY(-2px)'
+                          }
+                        }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                            <Typography variant="h4">{icon}</Typography>
+                            <Box>
+                              <Typography variant="h6" fontWeight="bold" color={`${color}.800`}>
+                                {label}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                {application.tenantDocument[field]?.length || 0} document(s) uploaded
+                              </Typography>
+                            </Box>
+                          </Box>
+                          
+                          {application.tenantDocument[field]?.length > 0 ? (
+                            <Grid container spacing={3}>
+                              {application.tenantDocument[field].map((doc, docIndex) => (
+                                <Grid item xs={12} sm={6} md={4} key={docIndex}>
+                                  <Paper 
+                                    elevation={0}
+                                    sx={{ 
+                                      p: 2, 
+                                      border: '2px solid', 
+                                      borderColor: `${color}.200`, 
+                                      borderRadius: 2,
+                                      bgcolor: 'white',
+                                      transition: 'all 0.3s ease',
+                                      '&:hover': {
+                                        boxShadow: '0 6px 20px rgba(0,0,0,0.15)',
+                                        transform: 'translateY(-3px)',
+                                        borderColor: `${color}.400`
+                                      }
                                     }}
-                                    fullWidth
                                   >
-                                    Download
-                                  </Button>
-                                </Box>
-                              </Grid>
-                            ))}
-                          </Grid>
-                        ) : (
-                          <Typography variant="body2" color="text.secondary">
-                            No documents uploaded
-                          </Typography>
-                        )}
-                      </Box>
-                    ))}
-                  </Box>
-                </AccordionDetails>
-              </Accordion>
+                                    {doc.thumbnailUrl ? (
+                                      <Box sx={{ 
+                                        height: 200, 
+                                        borderRadius: 1, 
+                                        overflow: 'hidden',
+                                        mb: 2,
+                                        border: '1px solid',
+                                        borderColor: 'grey.200'
+                                      }}>
+                                        <img
+                                          src={doc.thumbnailUrl.startsWith('http') 
+                                            ? doc.thumbnailUrl 
+                                            : `${import.meta.env.VITE_API_URL}${doc.thumbnailUrl}`}
+                                          alt={`${label} ${docIndex + 1}`}
+                                          style={{ 
+                                            width: '100%', 
+                                            height: '100%', 
+                                            objectFit: 'cover',
+                                            transition: 'transform 0.3s ease'
+                                          }}
+                                          onError={(e) => onImageError(doc._id, e)}
+                                          onMouseEnter={(e) => {
+                                            e.target.style.transform = 'scale(1.05)';
+                                          }}
+                                          onMouseLeave={(e) => {
+                                            e.target.style.transform = 'scale(1)';
+                                          }}
+                                        />
+                                      </Box>
+                                    ) : (
+                                      <Box sx={{ 
+                                        height: 200, 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        justifyContent: 'center', 
+                                        bgcolor: 'grey.100',
+                                        borderRadius: 1,
+                                        mb: 2,
+                                        border: '1px solid',
+                                        borderColor: 'grey.200'
+                                      }}>
+                                        <DescriptionIcon sx={{ fontSize: 48, color: 'grey.400' }} />
+                                      </Box>
+                                    )}
+                                    
+                                    <Typography variant="body2" sx={{ 
+                                      mb: 2, 
+                                      fontWeight: 500,
+                                      color: 'text.primary',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap'
+                                    }}>
+                                      {doc.filename}
+                                    </Typography>
+                                    
+                                    <Button
+                                      variant="contained"
+                                      size="small"
+                                      startIcon={<svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                      </svg>}
+                                      onClick={() => {
+                                        const url = doc.url.startsWith('http') 
+                                          ? doc.url 
+                                          : `${import.meta.env.VITE_API_URL}${doc.url}`;
+                                        window.open(url, '_blank');
+                                      }}
+                                      fullWidth
+                                      sx={{
+                                        borderRadius: 2,
+                                        textTransform: 'none',
+                                        fontWeight: 600,
+                                        background: `linear-gradient(135deg, ${color}.main 0%, ${color}.dark 100%)`,
+                                        '&:hover': {
+                                          background: `linear-gradient(135deg, ${color}.dark 0%, ${color}.main 100%)`,
+                                          transform: 'translateY(-1px)',
+                                          boxShadow: `0 4px 12px ${color}.main`
+                                        }
+                                      }}
+                                    >
+                                      Download Document
+                                    </Button>
+                                  </Paper>
+                                </Grid>
+                              ))}
+                            </Grid>
+                          ) : (
+                            <Box sx={{ 
+                              p: 4, 
+                              textAlign: 'center',
+                              bgcolor: 'white',
+                              borderRadius: 2,
+                              border: '1px dashed',
+                              borderColor: `${color}.300`
+                            }}>
+                              <DescriptionIcon sx={{ fontSize: 48, color: 'grey.400', mb: 2 }} />
+                              <Typography variant="body1" color="text.secondary" gutterBottom>
+                                No documents uploaded
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                Tenant has not uploaded any {label.toLowerCase()} documents yet
+                              </Typography>
+                            </Box>
+                          )}
+                        </Box>
+                      ))}
+                    </Box>
+                  </AccordionDetails>
+                </Accordion>
+              </Paper>
             )}
-          </Paper>
         </TabPanel>
       ))}
       <ApplicationApprovalModal

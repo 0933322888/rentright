@@ -1,6 +1,6 @@
 import Application from '../models/applicationModel.js';
 import Property from '../models/propertyModel.js';
-import TenantDocument from '../models/tenantDocumentModel.js';
+import TenantProfile from '../models/tenantProfileModel.js';
 import User from '../models/userModel.js';
 import path from 'path';
 import fs from 'fs';
@@ -265,7 +265,7 @@ export const getPropertyApplications = async (req, res) => {
     // Get tenant documents for each application
     const applicationsWithDocuments = await Promise.all(
       applications.map(async (application) => {
-        const tenantDocument = await TenantDocument.findOne({ tenant: application.tenant._id });
+        const tenantDocument = await TenantProfile.findOne({ tenant: application.tenant._id });
         if (tenantDocument) {
           // Format the document data to include URLs
           const formattedDocument = tenantDocument.toObject();
