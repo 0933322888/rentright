@@ -25,15 +25,23 @@ const paymentSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'paid', 'overdue', 'cancelled'],
+    enum: ['pending', 'paid', 'overdue', 'cancelled', 'failed'],
     default: 'pending'
   },
   paymentMethod: {
     type: String,
-    enum: ['credit_card', 'debit_card', 'bank_transfer', 'cash'],
+    enum: ['credit_card', 'debit_card', 'bank_transfer', 'cash', 'stripe'],
     required: true
   },
   transactionId: {
+    type: String,
+    sparse: true
+  },
+  stripePaymentIntentId: {
+    type: String,
+    sparse: true
+  },
+  stripeChargeId: {
     type: String,
     sparse: true
   },
@@ -45,6 +53,13 @@ const paymentSchema = new mongoose.Schema({
     type: String,
     enum: ['rent', 'commission'],
     default: 'rent'
+  },
+  failureReason: {
+    type: String
+  },
+  retryCount: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true

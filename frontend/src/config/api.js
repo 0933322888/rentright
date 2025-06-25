@@ -26,11 +26,29 @@ export const API_ENDPOINTS = {
 
   // Payment endpoints
   PAYMENTS: `${BASE_URL}/api/payments`,
+  CONFIRM_PAYMENT: `${BASE_URL}/api/payments/confirm`,
+  PAYMENT_INTENT_STATUS: (paymentIntentId) => `${BASE_URL}/api/payments/intent/${paymentIntentId}/status`,
+
+  // Payment Setup endpoints
+  PAYMENT_SETUP: `${BASE_URL}/api/payment-setup`,
+  INITIALIZE_PAYMENT_SETUP: (tenantId) => `${BASE_URL}/api/payment-setup/initialize/${tenantId}`,
+  COMPLETE_PAYMENT_SETUP: (tenantId) => `${BASE_URL}/api/payment-setup/complete/${tenantId}`,
+  PAYMENT_SETUP_STATUS: (tenantId) => `${BASE_URL}/api/payment-setup/status/${tenantId}`,
+  UPDATE_PAYMENT_METHOD: (tenantId) => `${BASE_URL}/api/payment-setup/update/${tenantId}`,
+  DELETE_PAYMENT_SETUP: (tenantId) => `${BASE_URL}/api/payment-setup/${tenantId}`,
 
   // Application endpoints
   APPLICATIONS: `${BASE_URL}/api/applications`,
   PROPERTY_APPLICATIONS: (propertyId) => `${BASE_URL}/api/applications/property/${propertyId}`,
   PROPERTY_DOCUMENTS: (propertyId) => `${BASE_URL}/api/properties/${propertyId}/documents`,
+
+  // Insurance endpoints
+  INSURANCE: `${BASE_URL}/api/insurance`,
+  INSURANCE_DOCUMENTS: (applicationId) => `${BASE_URL}/api/insurance/${applicationId}`,
+  UPLOAD_INSURANCE_DOCUMENT: (applicationId) => `${BASE_URL}/api/insurance/${applicationId}/upload`,
+  DELETE_INSURANCE_DOCUMENT: (applicationId, documentId) => `${BASE_URL}/api/insurance/${applicationId}/${documentId}`,
+  GENERATE_INSURANCE_SUMMARY: (applicationId) => `${BASE_URL}/api/insurance/${applicationId}/generate-summary`,
+  DOWNLOAD_INSURANCE_DOCUMENT: (applicationId, documentId) => `${BASE_URL}/api/insurance/${applicationId}/${documentId}/download`,
 
   // Admin endpoints
   ADMIN: `${BASE_URL}/api/admin`,

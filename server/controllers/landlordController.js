@@ -45,9 +45,25 @@ export const updateApplicationStatus = async (req, res) => {
     if (status === 'approved') {
       property.tenant = application.tenant._id;
       property.available = false;
+      property.status = 'rented';
       await property.save();
 
-      // Reject all other pending applications
+      // Cancel all other applications for this tenant with status 'viewing' or 'pending'
+      await Application.updateMany(
+        {
+          tenant: application.tenant._id,
+          _id: { $ne: application._id }, // Exclude the current application
+          status: { $in: ['viewing', 'pending'] }
+        },
+        {
+          status: 'cancelled',
+          updatedAt: Date.now()
+        }
+      );
+
+      console.log(`Cancelled other applications for tenant ${application.tenant._id} after approval of application ${application._id}`);
+
+      // Also reject all other applications for this specific property
       await Application.updateMany(
         {
           property: property._id,

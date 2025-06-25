@@ -20,6 +20,7 @@ import ReceiptIcon from '@mui/icons-material/Receipt';
 import BuildIcon from '@mui/icons-material/Build';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import LeaseAgreement from '../components/lease/LeaseAgreement';
+import Insurance from '../components/lease/Insurance';
 import Payments from '../components/lease/Payments';
 import PropertyOverview from '../components/properties/PropertyOverview';
 import ApplicationDetails from '../components/properties/ApplicationDetails';
@@ -31,6 +32,7 @@ import { useTickets } from '../hooks/useTickets';
 import { LoadingSpinner, ErrorDisplay, EmptyState } from '../utils/uiUtils';
 import { getImageUrl, handleImageError } from '../utils/imageUtils';
 import { tabStyles, verticalTabStyles } from '../utils/uiUtils';
+import SecurityIcon from '@mui/icons-material/Security';
 
 export default function MyProperties() {
   const navigate = useNavigate();
@@ -152,9 +154,7 @@ export default function MyProperties() {
                             fontWeight: 'medium'
                           }}
                         >
-                          {property.status === 'active' ? 'Approved' : 
-                           property.status === 'pending' ? 'Pending Approval' : 
-                           property.status}
+                          {property.status.charAt(0).toUpperCase() + property.status.slice(1)}
                         </Typography>
                       </Box>
                     }
@@ -256,6 +256,20 @@ export default function MyProperties() {
                         <Tab
                           label={
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                              <SecurityIcon sx={{ fontSize: 24 }} />
+                              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                <Typography>Insurance</Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  View tenant insurance
+                                </Typography>
+                              </Box>
+                            </Box>
+                          }
+                          value="insurance"
+                        />
+                        <Tab
+                          label={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
                               <ReceiptIcon sx={{ fontSize: 24 }} />
                               <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                                 <Typography>Payments</Typography>
@@ -332,6 +346,22 @@ export default function MyProperties() {
                             title="No Approved Applications"
                             message="Lease agreements will be available once an application is approved."
                             icon={DescriptionIcon}
+                          />
+                        )}
+                      </TabPanel>
+                      <TabPanel value="insurance" sx={{ p: 0 }}>
+                        {applications.length > 0 && applications.some(app => app.status === 'approved') ? (
+                          <Box sx={{ p: 1 }}>
+                            <Insurance 
+                              leaseDetails={applications.find(app => app.status === 'approved')} 
+                              onInsuranceUpdate={handleLeaseUpdate}
+                            />
+                          </Box>
+                        ) : (
+                          <EmptyState
+                            title="No Approved Applications"
+                            message="Insurance documents will be available once an application is approved."
+                            icon={SecurityIcon}
                           />
                         )}
                       </TabPanel>

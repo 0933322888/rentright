@@ -5,7 +5,9 @@ import {
   getPaymentById,
   updatePaymentStatus,
   generateMonthlyPayment,
-  getPropertyPayments
+  getPropertyPayments,
+  confirmPayment,
+  getPaymentIntentStatus
 } from '../controllers/paymentController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -23,13 +25,19 @@ router.get('/property/:propertyId', getPropertyPayments);
 // Create a new payment
 router.post('/', createPayment);
 
+// Confirm payment with Stripe
+router.post('/confirm', confirmPayment);
+
 // Get payment by ID
 router.get('/:id', getPaymentById);
 
 // Update payment status (admin only)
-router.patch('/:id', updatePaymentStatus);
+router.put('/:id/status', updatePaymentStatus);
 
 // Generate monthly payment
-router.post('/generate', generateMonthlyPayment);
+router.post('/generate-monthly', generateMonthlyPayment);
+
+// Get payment intent status
+router.get('/intent/:paymentIntentId/status', getPaymentIntentStatus);
 
 export default router; 

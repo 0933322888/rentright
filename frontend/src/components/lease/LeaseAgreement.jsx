@@ -575,9 +575,199 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
   };
 
   const canApproveStartDate = () => {
-    if (!agreementStatus?.leaseStartDate) return false;
-    const { setBy, approvedBy } = agreementStatus.leaseStartDate;
-    return setBy !== user?.role && !approvedBy;
+    const currentDate = agreementStatus?.leaseStartDate;
+    return currentDate && 
+           currentDate.date && 
+           currentDate.setBy && 
+           currentDate.setBy !== user?.role && 
+           !currentDate.approvedBy;
+  };
+
+  const getNextStepInfo = () => {
+    if (!agreementStatus) return null;
+
+    const { status } = agreementStatus;
+    const isTenant = user?.role === 'tenant';
+    const isLandlord = user?.role === 'landlord';
+
+    // Check if lease start date needs to be set or approved
+    const leaseStartDate = agreementStatus.leaseStartDate;
+    
+    // Debug logging to understand the current state
+    console.log('Lease start date state:', {
+      leaseStartDate,
+      userRole: user?.role,
+      isTenant,
+      isLandlord,
+      applicationStatus: leaseDetails?.status
+    });
+
+    // --- PRIORITIZE landlord set date blocks ---
+    // Case: Landlord changed lease start date and tenant needs to approve
+    if (leaseStartDate?.date && leaseStartDate?.setBy === 'landlord' && !leaseStartDate?.approvedBy && isTenant) {
+      return {
+        type: 'warning',
+        title: 'Approve New Lease Start Date',
+        message: 'Please approve new lease start date proposed by landlord.',
+        action: `Click "Approve Date" to approve the lease start date of ${format(new Date(leaseStartDate.date), 'PPP')}.`
+      };
+    }
+    // Case: Landlord is waiting for tenant to approve the lease start date
+    if (leaseStartDate?.date && leaseStartDate?.setBy === 'landlord' && !leaseStartDate?.approvedBy && isLandlord) {
+      return {
+        type: 'info',
+        title: 'Wait for Tenant Approval',
+        message: 'Please wait for tenant\'s approval of lease start date.',
+        action: 'No action required at this time.'
+      };
+    }
+    // Case: landlord needs to approve the lease start date
+    if (leaseStartDate?.date && leaseStartDate?.setBy === 'tenant' && !leaseStartDate?.approvedBy && isLandlord) {
+      return {
+        type: 'info',
+        title: 'Set or Approve Lease Start Date',
+        message: 'Please approve or propose new lease start date for the property.',
+        action: leaseStartDate?.date ? 'Click "Approve Date" to approve the current date or "Change" to set a new date.' : 'Click "Set Start Date" to propose a lease start date.'
+      };
+    }
+    // Case: Tenant needs to approve lease start date (regardless of who originally set it)
+    if (leaseStartDate?.date && !leaseStartDate?.approvedBy && isTenant && leaseStartDate?.setBy !== 'tenant') {
+      return {
+        type: 'warning',
+        title: 'Approve Lease Start Date',
+        message: 'Please approve new lease start date proposed by landlord.',
+        action: `Click "Approve Date" to approve the lease start date of ${format(new Date(leaseStartDate.date), 'PPP')}.`
+      };
+    }
+    // Case: Landlord is waiting for tenant to approve the lease start date (regardless of who originally set it)
+    if (leaseStartDate?.date && !leaseStartDate?.approvedBy && isLandlord && leaseStartDate?.setBy !== 'landlord') {
+      return {
+        type: 'info',
+        title: 'Wait for Tenant Approval',
+        message: 'Please wait for tenant\'s approval of lease start date.',
+        action: 'No action required at this time.'
+      };
+    }
+    // Case: Check if landlord recently updated the lease start date (based on lastUpdatedAt)
+    if (leaseStartDate?.date && leaseStartDate?.lastUpdatedAt && !leaseStartDate?.approvedBy) {
+      const lastUpdate = new Date(leaseStartDate.lastUpdatedAt);
+      const now = new Date();
+      const timeDiff = now - lastUpdate;
+      const isRecentUpdate = timeDiff < 24 * 60 * 60 * 1000; // Within 24 hours
+      
+      if (isRecentUpdate && leaseStartDate?.setBy === 'landlord' && isTenant) {
+        return {
+          type: 'warning',
+          title: 'Approve New Lease Start Date',
+          message: 'Please approve new lease start date proposed by landlord.',
+          action: `Click "Approve Date" to approve the lease start date of ${format(new Date(leaseStartDate.date), 'PPP')}.`
+        };
+      }
+      
+      if (isRecentUpdate && leaseStartDate?.setBy === 'landlord' && isLandlord) {
+        return {
+          type: 'info',
+          title: 'Wait for Tenant Approval',
+          message: 'Please wait for tenant\'s approval of lease start date.',
+          action: 'No action required at this time.'
+        };
+      }
+    }
+    // --- END PRIORITY BLOCKS ---
+
+    // Special case: When application is approved but lease start date needs attention
+    if (leaseDetails?.status === 'approved' && (!leaseStartDate?.date || !leaseStartDate?.approvedBy)) {
+      if (isLandlord) {
+        return {
+          type: 'info',
+          title: 'Set or Approve Lease Start Date',
+          message: 'Please approve or propose new lease start date for the property.',
+          action: leaseStartDate?.date ? 'Click "Approve Date" to approve the current date or "Change" to set a new date.' : 'Click "Set Start Date" to propose a lease start date.'
+        };
+      } else if (isTenant) {
+        return {
+          type: 'info',
+          title: 'Wait for Landlord Approval',
+          message: 'Wait for the landlord to approve lease start date before proceeding to the next step.',
+          action: 'No action required at this time.'
+        };
+      }
+    }
+
+    if (!leaseStartDate?.date) {
+      return {
+        type: 'info',
+        title: 'Set Lease Start Date',
+        message: 'The lease start date needs to be set before proceeding with the agreement.',
+        action: 'Click "Set Start Date" to continue.'
+      };
+    }
+
+    if (leaseStartDate.date && !leaseStartDate.approvedBy && canApproveStartDate()) {
+      return {
+        type: 'warning',
+        title: 'Approve Lease Start Date',
+        message: `The ${leaseStartDate.setBy === 'tenant' ? 'tenant' : 'landlord'} has set the lease start date to ${format(new Date(leaseStartDate.date), 'PPP')}. Please review and approve this date.`,
+        action: 'Click "Approve Date" to continue.'
+      };
+    }
+
+    // Check agreement approval status
+    if (status === 'pending') {
+      if (isTenant) {
+        return {
+          type: 'info',
+          title: 'Review and Approve Agreement',
+          message: 'Please review the lease agreement carefully. Once you approve it, the landlord will review your approval.',
+          action: 'Click "Approve" when you are ready to proceed.'
+        };
+      } else if (isLandlord) {
+        return {
+          type: 'info',
+          title: 'Wait for Lease Agreement tenant approval',
+          message: 'The tenant needs to review and approve the lease agreement first. You will be notified when they approve it.',
+          action: 'No action required at this time.'
+        };
+      }
+    }
+
+    if (status === 'tenant_approved') {
+      if (isLandlord) {
+        return {
+          type: 'success',
+          title: 'Tenant Has Approved Lease Agreement',
+          message: 'The tenant has approved the lease agreement. Please review their approval and either approve the agreement or request changes.',
+          action: 'Click "Approve" to finalize the agreement or "Request Changes" if modifications are needed.'
+        };
+      } else if (isTenant) {
+        return {
+          type: 'success',
+          title: 'Approval Submitted',
+          message: 'Your approval has been submitted. The landlord will now review and either approve the agreement or request changes.',
+          action: 'Wait for the landlord\'s response.'
+        };
+      }
+    }
+
+    if (status === 'landlord_approved') {
+      return {
+        type: 'success',
+        title: 'Agreement Approved',
+        message: 'The lease agreement has been approved by both parties. You can now proceed with signing the document.',
+        action: 'Click "Send for Signing" to initiate the digital signing process.'
+      };
+    }
+
+    if (status === 'signed') {
+      return {
+        type: 'success',
+        title: 'Lease Agreement Signed',
+        message: 'Congratulations! The lease agreement has been signed by all parties. Your lease is now active.',
+        action: 'You can view the signed document and manage your lease from your dashboard.'
+      };
+    }
+
+    return null;
   };
 
   const signingStatus = getSigningStatus();
@@ -936,6 +1126,39 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
 
   return (
     <Box>
+      {/* Next Step Info Banner */}
+      {(() => {
+        const nextStepInfo = getNextStepInfo();
+        if (!nextStepInfo) return null;
+
+        const alertColor = nextStepInfo.type === 'success' ? 'success' : 
+                          nextStepInfo.type === 'warning' ? 'warning' : 'info';
+
+        return (
+          <Alert 
+            severity={alertColor} 
+            sx={{ 
+              mb: 3,
+              '& .MuiAlert-message': {
+                width: '100%'
+              }
+            }}
+          >
+            <Box sx={{ width: '100%' }}>
+              <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
+                {nextStepInfo.title}
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 1 }}>
+                {nextStepInfo.message}
+              </Typography>
+              <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
+                <strong>Next Step:</strong> {nextStepInfo.action}
+              </Typography>
+            </Box>
+          </Alert>
+        );
+      })()}
+
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom>
           Lease Agreement Process

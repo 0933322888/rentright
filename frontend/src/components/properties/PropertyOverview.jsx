@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
+import ShareIcon from '@mui/icons-material/Share';
 import { getImageUrl, handleImageError } from '../../utils/imageUtils';
 
 // Base64 encoded SVG for fallback image
@@ -335,6 +336,25 @@ export default function PropertyOverview({
           borderTop: 1,
           borderColor: 'divider'
         }}>
+          <Button
+            variant="contained"
+            color="secondary"
+            startIcon={<ShareIcon />}
+            sx={{
+              borderRadius: 999,
+              boxShadow: '0 2px 8px rgba(156,39,176,0.10)',
+              transition: 'all 0.2s',
+              fontWeight: 600,
+              px: 4,
+              py: 1.5,
+              '&:hover': {
+                boxShadow: '0 4px 16px rgba(156,39,176,0.18)',
+                transform: 'scale(1.03)'
+              }
+            }}
+          >
+            Publish to Rental Sites
+          </Button>
           <Button
             variant="contained"
             color="primary"

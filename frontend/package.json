@@ -20,6 +20,8 @@
     "@mui/x-date-pickers": "^8.5.1",
     "@remix-run/react": "^2.8.1",
     "@remix-run/router": "^1.15.3",
+    "@stripe/react-stripe-js": "^2.9.0",
+    "@stripe/stripe-js": "^2.4.0",
     "axios": "^1.6.8",
     "bootstrap": "^5.3.5",
     "chart.js": "^4.5.0",
@@ -35,8 +37,11 @@
     "react-hot-toast": "^2.5.2",
     "react-icons": "^5.5.0",
     "react-leaflet": "^4.2.1",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^6.22.3",
-    "react-toastify": "^11.0.5"
+    "react-toastify": "^11.0.5",
+    "remark-gfm": "^4.0.1",
+    "remark-slug": "^8.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",
