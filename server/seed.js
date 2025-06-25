@@ -457,52 +457,52 @@ const seed = async () => {
     const tenantDocumentData = {
       proofOfIdentity: [
         {
-          path: "/opt/render/project/src/server/uploads/tenant-documents/1749609937102-644975019-secure_payments.jpg",
+          s3Key: "1749609937102-644975019-secure_payments.jpg",
           filename: "1749609937102-644975019-secure_payments.jpg",
-          uploadedAt: "2025-06-11T02:45:39.020Z",
-          _id: "6848edd34c55039273589aaf",
-          url: "http://localhost:5000/uploads/tenant-documents/1749609937102-644975019-secure_payments.jpg",
-          thumbnailUrl: "http://localhost:5000/uploads/tenant-documents/1749609937102-644975019-secure_payments.jpg"
+          originalName: "secure_payments.jpg",
+          url: "https://fake-s3-bucket-url/tenant-documents/1749609937102-644975019-secure_payments.jpg",
+          mimeType: "image/jpeg",
+          uploadedAt: "2025-06-11T02:45:39.020Z"
         }
       ],
       proofOfIncome: [
         {
-          path: "/opt/render/project/src/server/uploads/tenant-documents/1749609996587-382554318-legal_compliance.jpg",
+          s3Key: "1749609996587-382554318-legal_compliance.jpg",
           filename: "1749609996587-382554318-legal_compliance.jpg",
-          uploadedAt: "2025-06-11T02:46:38.090Z",
-          _id: "6848ee0eef1c3cbb2741f8d2",
-          url: "http://localhost:5000/uploads/tenant-documents/1749609996587-382554318-legal_compliance.jpg",
-          thumbnailUrl: "http://localhost:5000/uploads/tenant-documents/1749609996587-382554318-legal_compliance.jpg"
+          originalName: "legal_compliance.jpg",
+          url: "https://fake-s3-bucket-url/tenant-documents/1749609996587-382554318-legal_compliance.jpg",
+          mimeType: "image/jpeg",
+          uploadedAt: "2025-06-11T02:46:38.090Z"
         }
       ],
       creditHistory: [
         {
-          path: "/opt/render/project/src/server/uploads/tenant-documents/1749609998094-910255049-hero_property.png",
+          s3Key: "1749609998094-910255049-hero_property.png",
           filename: "1749609998094-910255049-hero_property.png",
-          uploadedAt: "2025-06-11T02:46:38.489Z",
-          _id: "6848ee0eef1c3cbb2741f8d3",
-          url: "http://localhost:5000/uploads/tenant-documents/1749609998094-910255049-hero_property.png",
-          thumbnailUrl: "http://localhost:5000/uploads/tenant-documents/1749609998094-910255049-hero_property.png"
+          originalName: "hero_property.png",
+          url: "https://fake-s3-bucket-url/tenant-documents/1749609998094-910255049-hero_property.png",
+          mimeType: "image/png",
+          uploadedAt: "2025-06-11T02:46:38.489Z"
         }
       ],
       rentalHistory: [
         {
-          path: "/opt/render/project/src/server/uploads/tenant-documents/1749609998490-834608717-legal_compliance.jpg",
+          s3Key: "1749609998490-834608717-legal_compliance.jpg",
           filename: "1749609998490-834608717-legal_compliance.jpg",
-          uploadedAt: "2025-06-11T02:46:39.992Z",
-          _id: "6848ee0fef1c3cbb2741f8d4",
-          url: "http://localhost:5000/uploads/tenant-documents/1749609998490-834608717-legal_compliance.jpg",
-          thumbnailUrl: "http://localhost:5000/uploads/tenant-documents/1749609998490-834608717-legal_compliance.jpg"
+          originalName: "legal_compliance.jpg",
+          url: "https://fake-s3-bucket-url/tenant-documents/1749609998490-834608717-legal_compliance.jpg",
+          mimeType: "image/jpeg",
+          uploadedAt: "2025-06-11T02:46:39.992Z"
         }
       ],
       additionalDocuments: [
         {
-          path: "/opt/render/project/src/server/uploads/tenant-documents/1749609999993-340071967-smart_management.jpg",
+          s3Key: "1749609999993-340071967-smart_management.jpg",
           filename: "1749609999993-340071967-smart_management.jpg",
-          uploadedAt: "2025-06-11T02:46:41.502Z",
-          _id: "6848ee11ef1c3cbb2741f8d5",
-          url: "http://localhost:5000/uploads/tenant-documents/1749609999993-340071967-smart_management.jpg",
-          thumbnailUrl: "http://localhost:5000/uploads/tenant-documents/1749609999993-340071967-smart_management.jpg"
+          originalName: "smart_management.jpg",
+          url: "https://fake-s3-bucket-url/tenant-documents/1749609999993-340071967-smart_management.jpg",
+          mimeType: "image/jpeg",
+          uploadedAt: "2025-06-11T02:46:41.502Z"
         }
       ],
       isCurrentlyEmployed: "yes",

@@ -31,6 +31,7 @@ import { useTickets } from '../hooks/useTickets';
 import { LoadingSpinner, ErrorDisplay, EmptyState } from '../utils/uiUtils';
 import { getImageUrl, handleImageError } from '../utils/imageUtils';
 import { tabStyles, verticalTabStyles } from '../utils/uiUtils';
+import ImageCarousel from '../components/ImageCarousel';
 
 export default function MyProperties() {
   const navigate = useNavigate();
@@ -306,7 +307,13 @@ export default function MyProperties() {
                           onSubmit={submitProperty}
                           clickedButton={clickedButton}
                           setClickedButton={setClickedButton}
-                        />
+                        >
+                          {selectedProperty && selectedProperty.images && selectedProperty.images.length > 0 && (
+                            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
+                              <ImageCarousel images={selectedProperty.images} />
+                            </div>
+                          )}
+                        </PropertyOverview>
                       </TabPanel>
                       <TabPanel value="applications" sx={{ p: 0 }}>
                         <ApplicationDetails

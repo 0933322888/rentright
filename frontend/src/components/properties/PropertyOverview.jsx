@@ -27,30 +27,10 @@ export default function PropertyOverview({
   onDelete, 
   onSubmit,
   clickedButton,
-  setClickedButton 
+  setClickedButton,
+  children
 }) {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [failedImages, setFailedImages] = useState(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
-  const handleNextImage = () => {
-    setCurrentImageIndex((prevIndex) => 
-      prevIndex === property.images.length - 1 ? 0 : prevIndex + 1
-    );
-  };
-
-  const handlePrevImage = () => {
-    setCurrentImageIndex((prevIndex) => 
-      prevIndex === 0 ? property.images.length - 1 : prevIndex - 1
-    );
-  };
-
-  const handleImageError = (docId, e) => {
-    if (!failedImages.has(docId)) {
-      setFailedImages(prev => new Set([...prev, docId]));
-      e.target.src = FALLBACK_IMAGE_DATA_URL;
-    }
-  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -67,119 +47,19 @@ export default function PropertyOverview({
 
   return (
     <Box sx={{ display: 'flex', gap: 3, height: '100%', p: 3, overflow: 'hidden' }}>
-      {/* Left side - Image */}
-      <Box sx={{ flex: '0 0 auto', width: { xs: '100%', md: '500px' }, maxWidth: '500px', minWidth: 0 }}>
-        <Card sx={{ 
-          height: '100%',
-          transition: 'transform 0.2s, box-shadow 0.2s',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-          borderRadius: 3,
-          animation: 'fadeIn 0.7s',
-          '@keyframes fadeIn': {
-            from: { opacity: 0, transform: 'translateY(24px)' },
-            to: { opacity: 1, transform: 'none' }
-          },
-          '&:hover': {
-            transform: 'translateY(-4px) scale(1.01)',
-            boxShadow: '0 8px 24px rgba(25,118,210,0.18)'
-          }
-        }}>
-          <Box sx={{ position: 'relative' }}>
-            <CardMedia
-              component="img"
-              height="400"
-              image={property.images && 
-                    property.images.length > 0 && 
-                    property.images[currentImageIndex] ? 
-                (typeof property.images[currentImageIndex] === 'string' && 
-                 property.images[currentImageIndex].startsWith('http') 
-                  ? property.images[currentImageIndex] 
-                  : getImageUrl(property.images[currentImageIndex]))
-                : FALLBACK_IMAGE_DATA_URL}
-              alt={property.title}
-              sx={{
-                position: 'relative',
-                borderRadius: 3,
-                height: { xs: '300px', sm: '400px', md: '500px' } + ' !important',
-                width: '100% !important',
-                objectFit: 'cover',
-                objectPosition: 'center',
-                transition: 'transform 0.4s cubic-bezier(0.4,0,0.2,1)',
-                '&:hover': {
-                  transform: 'scale(1.04)'
-                }
-              }}
-              onError={(e) => handleImageError(property.images[currentImageIndex], e)}
-            />
-            {property.images && property.images.length > 1 && (
-              <>
-                <IconButton
-                  onClick={handlePrevImage}
-                  sx={{
-                    position: 'absolute',
-                    left: 16,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    bgcolor: 'rgba(255, 255, 255, 0.8)',
-                    '&:hover': {
-                      bgcolor: 'rgba(255, 255, 255, 0.9)',
-                    },
-                    zIndex: 1
-                  }}
-                >
-                  <NavigateBeforeIcon />
-                </IconButton>
-                <IconButton
-                  onClick={handleNextImage}
-                  sx={{
-                    position: 'absolute',
-                    right: 16,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    bgcolor: 'rgba(255, 255, 255, 0.8)',
-                    '&:hover': {
-                      bgcolor: 'rgba(255, 255, 255, 0.9)',
-                    },
-                    zIndex: 1
-                  }}
-                >
-                  <NavigateNextIcon />
-                </IconButton>
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    bottom: 16,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    display: 'flex',
-                    gap: 1,
-                    bgcolor: 'rgba(0, 0, 0, 0.5)',
-                    padding: '4px 8px',
-                    borderRadius: '16px',
-                    zIndex: 1
-                  }}
-                >
-                  {property.images.map((_, index) => (
-                    <Box
-                      key={index}
-                      sx={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        bgcolor: index === currentImageIndex ? 'white' : 'rgba(255, 255, 255, 0.5)',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
-                      }}
-                      onClick={() => setCurrentImageIndex(index)}
-                    />
-                  ))}
-                </Box>
-              </>
-            )}
-          </Box>
-        </Card>
-      </Box>
-
+      {/* Left side - Image Carousel */}
+      <div
+        style={{
+          width: '500px',
+          height: '750px',
+          margin: '0 auto',
+          overflow: 'hidden',
+          borderRadius: '1rem',
+          position: 'relative'
+        }}
+      >
+        {children}
+      </div>
       {/* Right side - Content */}
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
         {/* Header with title and status */}

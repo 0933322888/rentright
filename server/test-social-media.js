@@ -13,7 +13,7 @@ const testUser = {
     facebook: 'https://facebook.com/testuser',
     linkedin: 'https://linkedin.com/in/testuser',
     instagram: 'https://instagram.com/testuser',
-    twitter: 'https://twitter.com/testuser',
+    x: 'https://x.com/testuser',
     website: 'https://testuser.com'
   }
 };
@@ -51,7 +51,7 @@ async function testSocialMedia() {
       facebook: 'https://facebook.com/updateduser',
       linkedin: 'https://linkedin.com/in/updateduser',
       instagram: 'https://instagram.com/updateduser',
-      twitter: 'https://twitter.com/updateduser',
+      x: 'https://x.com/updateduser',
       website: 'https://updateduser.com'
     };
 
@@ -59,7 +59,7 @@ async function testSocialMedia() {
     formData.append('socialMedia', JSON.stringify(updatedSocialMedia));
 
     const updateResponse = await axios.patch(`${API_BASE}/users/profile`, formData, {
-      headers: { 
+      headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'multipart/form-data'
       }
@@ -73,7 +73,7 @@ async function testSocialMedia() {
       facebook: 'invalid-url',
       linkedin: 'not-a-linkedin-url',
       instagram: 'https://instagram.com/valid',
-      twitter: 'https://twitter.com/valid',
+      x: 'https://x.com/valid',
       website: 'https://valid.com'
     };
 
@@ -82,7 +82,7 @@ async function testSocialMedia() {
 
     try {
       await axios.patch(`${API_BASE}/users/profile`, invalidFormData, {
-        headers: { 
+        headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         }

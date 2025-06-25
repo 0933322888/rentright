@@ -37,7 +37,7 @@ import ImageIcon from '@mui/icons-material/Image';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import InstagramIcon from '@mui/icons-material/Instagram';
-import TwitterIcon from '@mui/icons-material/Twitter';
+import XIcon from '../components/XIcon';
 import LanguageIcon from '@mui/icons-material/Language';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
@@ -111,7 +111,7 @@ export default function Profile() {
       facebook: '',
       linkedin: '',
       instagram: '',
-      twitter: '',
+      x: '',
       website: ''
     }
   });
@@ -169,7 +169,7 @@ export default function Profile() {
               facebook: '',
               linkedin: '',
               instagram: '',
-              twitter: '',
+              x: '',
               website: ''
             }
           });
@@ -311,37 +311,17 @@ export default function Profile() {
     setLoading(true);
     setValidationErrors([]);
 
-    // Client-side validation
-    const requiredFields = [
-      'isCurrentlyEmployed',
-      'employmentType',
-      'monthlyNetIncome',
-      'hasAdditionalIncome',
-      'monthlyDebtRepayment',
-      'paysChildSupport',
-      'hasBeenEvicted',
-      'currentlyPaysRent',
-      'hasTwoMonthsRentSavings',
-      'canShareFinancialDocuments',
-      'canPayMoreThanOneMonth'
-    ];
-
+    // Only validate basic profile fields for the basic profile form
+    const requiredFields = ['name', 'email'];
     const missingFields = [];
     requiredFields.forEach(field => {
-      if (!answers[field] || answers[field] === '') {
+      if (!formData[field] || formData[field] === '') {
         missingFields.push(field);
       }
     });
 
-    const requiredDocuments = ['proofOfIdentity', 'proofOfIncome'];
-    requiredDocuments.forEach(field => {
-        if (!documents[field] || documents[field].length === 0) {
-            missingFields.push(field);
-        }
-    });
-
     if (missingFields.length > 0) {
-      setError(`Please fill in all required fields and upload required documents.`);
+      setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
       setValidationErrors(missingFields);
       setLoading(false);
       return;
@@ -842,15 +822,15 @@ export default function Profile() {
                 <Grid item xs={12}>
                   <TextField
                     fullWidth
-                    label="Twitter"
-                    name="socialMedia.twitter"
-                    value={formData.socialMedia.twitter}
+                    label="X"
+                    name="socialMedia.x"
+                    value={formData.socialMedia.x}
                     onChange={handleChange}
-                    placeholder="https://twitter.com/yourprofile"
+                    placeholder="@https://x.com/yourprofile"
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <TwitterIcon />
+                          <XIcon />
                         </InputAdornment>
                       ),
                     }}
@@ -929,14 +909,14 @@ export default function Profile() {
                   </Typography>
                 </Box>
               )}
-              {formData.socialMedia.twitter && (
+              {formData.socialMedia.x && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1, borderRadius: 1, bgcolor: 'sky.50' }}>
-                  <TwitterIcon sx={{ color: 'sky.500' }} />
+                  <XIcon />
                   <Typography variant="body2" sx={{ color: 'sky.500' }}>
-                    Twitter
+                    X
                   </Typography>
                   <Typography variant="body2" sx={{ color: 'text.secondary', ml: 'auto' }}>
-                    {formData.socialMedia.twitter}
+                    {formData.socialMedia.x}
                   </Typography>
                 </Box>
               )}

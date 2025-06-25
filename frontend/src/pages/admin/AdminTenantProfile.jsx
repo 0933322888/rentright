@@ -8,7 +8,7 @@ import { getProfilePictureUrl } from '../../utils/imageUtils';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import InstagramIcon from '@mui/icons-material/Instagram';
-import TwitterIcon from '@mui/icons-material/Twitter';
+import XIcon from '../../components/XIcon';
 import LanguageIcon from '@mui/icons-material/Language';
 
 export default function AdminTenantProfile() {
@@ -240,15 +240,15 @@ export default function AdminTenantProfile() {
                           <span>Instagram</span>
                         </a>
                       )}
-                      {tenant.socialMedia.twitter && (
+                      {tenant.socialMedia.x && (
                         <a
-                          href={tenant.socialMedia.twitter}
+                          href={tenant.socialMedia.x}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-sky-500 hover:text-sky-700 transition-colors px-2 py-1 rounded hover:bg-sky-50"
+                          className="flex items-center space-x-2 text-blue-500 hover:text-blue-700"
                         >
-                          <TwitterIcon fontSize="medium" />
-                          <span>Twitter</span>
+                          <XIcon />
+                          <span>X</span>
                         </a>
                       )}
                       {tenant.socialMedia.website && (

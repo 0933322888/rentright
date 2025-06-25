@@ -13,7 +13,7 @@ const testLandlord = {
     facebook: 'https://facebook.com/testlandlord',
     linkedin: 'https://linkedin.com/in/testlandlord',
     instagram: 'https://instagram.com/testlandlord',
-    twitter: 'https://twitter.com/testlandlord',
+    x: 'https://x.com/testlandlord',
     website: 'https://testlandlord.com'
   }
 };
@@ -51,7 +51,7 @@ async function testLandlordSocialMedia() {
       facebook: 'https://facebook.com/updatedlandlord',
       linkedin: 'https://linkedin.com/in/updatedlandlord',
       instagram: 'https://instagram.com/updatedlandlord',
-      twitter: 'https://twitter.com/updatedlandlord',
+      x: 'https://x.com/updatedlandlord',
       website: 'https://updatedlandlord.com'
     };
 
@@ -59,7 +59,7 @@ async function testLandlordSocialMedia() {
     formData.append('socialMedia', JSON.stringify(updatedSocialMedia));
 
     const updateResponse = await axios.patch(`${API_BASE}/users/profile`, formData, {
-      headers: { 
+      headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'multipart/form-data'
       }

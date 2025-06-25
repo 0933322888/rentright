@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../../config/api';
@@ -7,6 +7,7 @@ import { Menu, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { adminButtonStyles } from '../../utils/uiUtils';
+import PortalMenuItems from './PortalMenuItems';
 
 export default function AdminProperties() {
   const [properties, setProperties] = useState([]);
@@ -20,6 +21,10 @@ export default function AdminProperties() {
     address: ''
   });
   const navigate = useNavigate();
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, width: 0 });
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const buttonRefs = useRef({});
+  const menuRef = useRef();
 
   useEffect(() => {
     fetchProperties();
@@ -28,6 +33,23 @@ export default function AdminProperties() {
   useEffect(() => {
     applyFilters();
   }, [filters, properties]);
+
+  useEffect(() => {
+    if (!openMenuId) return;
+    function handleClickOutside(event) {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target) &&
+        !Object.values(buttonRefs.current).some(btn => btn && btn.contains(event.target))
+      ) {
+        setOpenMenuId(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openMenuId]);
 
   const fetchProperties = async () => {
     try {
@@ -155,6 +177,23 @@ export default function AdminProperties() {
     }
   };
 
+  const handleMenuOpen = (propertyId) => {
+    const button = buttonRefs.current[propertyId];
+    if (button) {
+      const rect = button.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+      });
+      setOpenMenuId(propertyId);
+    }
+  };
+
+  const handleMenuClose = () => {
+    setOpenMenuId(null);
+  };
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -233,7 +272,7 @@ export default function AdminProperties() {
       </div>
 
       <div className="mt-8">
-        <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+        <div className="shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-300">
               <thead className="bg-gray-50">
@@ -315,67 +354,59 @@ export default function AdminProperties() {
                         </>
                       ) : '-'}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 overflow-visible">
                       <Menu as="div" className="relative inline-block text-left">
-                        <Menu.Button className="inline-flex items-center rounded-md px-2 py-1 text-sm font-medium ring-1 ring-inset focus:outline-none focus:ring-2 focus:ring-offset-2
-                          ${property.commissionStatus === 'received' ? 'bg-green-50 text-green-700 ring-green-600/20' :
-                            property.commissionStatus === 'pending' ? 'bg-yellow-50 text-yellow-700 ring-yellow-600/20' :
-                            'bg-gray-50 text-gray-700 ring-gray-600/20'}">
-                          {property.commissionStatus === 'received' ? 'Received' :
-                           property.commissionStatus === 'pending' ? 'Pending' :
-                           'Not Applicable'}
-                          <ChevronDownIcon className="ml-1 h-4 w-4" aria-hidden="true" />
-                        </Menu.Button>
-                        <Transition
-                          as={Fragment}
-                          enter="transition ease-out duration-100"
-                          enterFrom="transform opacity-0 scale-95"
-                          enterTo="transform opacity-100 scale-100"
-                          leave="transition ease-in duration-75"
-                          leaveFrom="transform opacity-100 scale-100"
-                          leaveTo="transform opacity-0 scale-95"
-                        >
-                          <Menu.Items className="absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                            <div className="py-1">
-                              <Menu.Item>
-                                {({ active }) => (
+                        {({ open }) => (
+                          <>
+                            <Menu.Button
+                              ref={el => buttonRefs.current[property._id] = el}
+                              onClick={() => handleMenuOpen(property._id)}
+                              className={`inline-flex items-center rounded-md px-2 py-1 text-sm font-medium ring-1 ring-inset focus:outline-none focus:ring-2 focus:ring-offset-2
+                                ${property.commissionStatus === 'received' ? 'bg-green-50 text-green-700 ring-green-600/20' :
+                                  property.commissionStatus === 'pending' ? 'bg-yellow-50 text-yellow-700 ring-yellow-600/20' :
+                                  'bg-gray-50 text-gray-700 ring-gray-600/20'}`}
+                            >
+                              {property.commissionStatus === 'received' ? 'Received' :
+                                property.commissionStatus === 'pending' ? 'Pending' :
+                                'Not Applicable'}
+                              <ChevronDownIcon className="ml-1 h-4 w-4" aria-hidden="true" />
+                            </Menu.Button>
+                            {openMenuId === property._id && (
+                              <PortalMenuItems
+                                ref={menuRef}
+                                style={{
+                                  position: 'absolute',
+                                  top: menuPosition.top,
+                                  left: menuPosition.left,
+                                  minWidth: menuPosition.width,
+                                  zIndex: 9999,
+                                }}
+                                className="origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                              >
+                                <div className="py-1">
                                   <button
-                                    onClick={() => handleUpdateCommissionStatus(property._id, 'received')}
-                                    className={`${
-                                      active ? 'bg-gray-100' : ''
-                                    } block w-full px-4 py-2 text-left text-sm text-gray-700`}
+                                    onClick={() => { handleUpdateCommissionStatus(property._id, 'received'); handleMenuClose(); }}
+                                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                                   >
                                     Mark as Received
                                   </button>
-                                )}
-                              </Menu.Item>
-                              <Menu.Item>
-                                {({ active }) => (
                                   <button
-                                    onClick={() => handleUpdateCommissionStatus(property._id, 'pending')}
-                                    className={`${
-                                      active ? 'bg-gray-100' : ''
-                                    } block w-full px-4 py-2 text-left text-sm text-gray-700`}
+                                    onClick={() => { handleUpdateCommissionStatus(property._id, 'pending'); handleMenuClose(); }}
+                                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                                   >
                                     Mark as Pending
                                   </button>
-                                )}
-                              </Menu.Item>
-                              <Menu.Item>
-                                {({ active }) => (
                                   <button
-                                    onClick={() => handleUpdateCommissionStatus(property._id, 'not_applicable')}
-                                    className={`${
-                                      active ? 'bg-gray-100' : ''
-                                    } block w-full px-4 py-2 text-left text-sm text-gray-700`}
+                                    onClick={() => { handleUpdateCommissionStatus(property._id, 'not_applicable'); handleMenuClose(); }}
+                                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                                   >
                                     Mark as Not Applicable
                                   </button>
-                                )}
-                              </Menu.Item>
-                            </div>
-                          </Menu.Items>
-                        </Transition>
+                                </div>
+                              </PortalMenuItems>
+                            )}
+                          </>
+                        )}
                       </Menu>
                     </td>
                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">

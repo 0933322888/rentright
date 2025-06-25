@@ -37,7 +37,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: function() {
+    required: function () {
       return !this.googleId && !this.facebookId && !this.linkedinId;
     }
   },
@@ -83,7 +83,7 @@ const userSchema = new mongoose.Schema({
     required: true,
     default: false,
     validate: {
-      validator: function(v) {
+      validator: function (v) {
         return v === true;
       },
       message: 'Terms and conditions must be accepted to register'
@@ -94,7 +94,7 @@ const userSchema = new mongoose.Schema({
       type: String,
       trim: true,
       validate: {
-        validator: function(v) {
+        validator: function (v) {
           return !v || /^https?:\/\/(www\.)?facebook\.com\/.+/.test(v);
         },
         message: 'Please provide a valid Facebook URL'
@@ -104,7 +104,7 @@ const userSchema = new mongoose.Schema({
       type: String,
       trim: true,
       validate: {
-        validator: function(v) {
+        validator: function (v) {
           return !v || /^https?:\/\/(www\.)?linkedin\.com\/.+/.test(v);
         },
         message: 'Please provide a valid LinkedIn URL'
@@ -114,27 +114,26 @@ const userSchema = new mongoose.Schema({
       type: String,
       trim: true,
       validate: {
-        validator: function(v) {
+        validator: function (v) {
           return !v || /^https?:\/\/(www\.)?instagram\.com\/.+/.test(v);
         },
         message: 'Please provide a valid Instagram URL'
       }
     },
-    twitter: {
+    x: {
       type: String,
-      trim: true,
       validate: {
-        validator: function(v) {
-          return !v || /^https?:\/\/(www\.)?twitter\.com\/.+/.test(v);
+        validator: function (v) {
+          return !v || /^@?https?:\/\/(www\.)?x\.com\/.+/.test(v);
         },
-        message: 'Please provide a valid Twitter URL'
+        message: 'Please provide a valid X (Twitter) URL'
       }
     },
     website: {
       type: String,
       trim: true,
       validate: {
-        validator: function(v) {
+        validator: function (v) {
           return !v || /^https?:\/\/.+/.test(v);
         },
         message: 'Please provide a valid website URL'
@@ -172,28 +171,28 @@ const userSchema = new mongoose.Schema({
 });
 
 // Hash password before saving
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 12);
   next();
 });
 
 // Method to check password
-userSchema.methods.comparePassword = async function(candidatePassword) {
+userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
 // Method to generate password reset token
-userSchema.methods.createPasswordResetToken = function() {
+userSchema.methods.createPasswordResetToken = function () {
   const resetToken = crypto.randomBytes(32).toString('hex');
-  
+
   this.resetPasswordToken = crypto
     .createHash('sha256')
     .update(resetToken)
     .digest('hex');
-  
+
   this.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
-  
+
   return resetToken;
 };
 

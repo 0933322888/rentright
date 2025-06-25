@@ -15,11 +15,12 @@ export default function EditTenant() {
     phone: '',
     hasProfile: false,
     rating: 0,
+    role: 'tenant',
     socialMedia: {
       facebook: '',
       linkedin: '',
       instagram: '',
-      twitter: '',
+      x: '',
       website: ''
     }
   });
@@ -41,11 +42,12 @@ export default function EditTenant() {
         phone: response.data.phone || '',
         hasProfile: response.data.hasProfile || false,
         rating: response.data.rating || 0,
+        role: response.data.role || 'tenant',
         socialMedia: response.data.socialMedia || {
           facebook: '',
           linkedin: '',
           instagram: '',
-          twitter: '',
+          x: '',
           website: ''
         }
       });
@@ -206,16 +208,16 @@ export default function EditTenant() {
                     </div>
 
                     <div>
-                      <label htmlFor="twitter" className="block text-sm font-medium text-gray-700">
-                        Twitter
+                      <label htmlFor="x" className="block text-sm font-medium text-gray-700">
+                        X
                       </label>
                       <input
                         type="url"
-                        name="socialMedia.twitter"
-                        id="twitter"
-                        value={tenant.socialMedia.twitter}
+                        name="socialMedia.x"
+                        id="x"
+                        value={tenant.socialMedia.x}
                         onChange={handleChange}
-                        placeholder="https://twitter.com/yourprofile"
+                        placeholder="https://x.com/yourprofile"
                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                       />
                     </div>

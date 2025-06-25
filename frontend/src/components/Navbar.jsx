@@ -135,7 +135,7 @@ export default function Navbar() {
                       <Menu.Button className="flex items-center rounded-full bg-white text-base focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 px-4 py-2">
                         <span className="sr-only">Open user menu</span>
                         <div className="flex items-center">
-                          <span className="mr-3 text-gray-700 font-medium">{user.name} ({user.role.charAt(0).toUpperCase() + user.role.slice(1)})</span>
+                          <span className="mr-3 text-gray-700 font-medium">{user.name ? user.name : ""} ({user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ""})</span>
                           {user.profilePicture ? (
                             <img
                               src={getProfilePictureUrl(user.profilePicture)}
@@ -144,7 +144,7 @@ export default function Navbar() {
                             />
                           ) : (
                             <div className="h-10 w-10 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 flex items-center justify-center text-white font-semibold text-lg shadow-sm">
-                              {user.name.charAt(0).toUpperCase()}
+                              {user.name ? user.name.charAt(0).toUpperCase() : ""}
                             </div>
                           )}
                         </div>
@@ -161,7 +161,7 @@ export default function Navbar() {
                     >
                       <Menu.Items className="absolute right-0 z-10 mt-3 w-72 origin-top-right rounded-xl bg-white py-2 shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none border border-gray-100">
                         <div className="px-4 py-3 border-b border-gray-100">
-                          <p className="text-sm font-medium text-gray-900">{user.name} ({user.role.charAt(0).toUpperCase() + user.role.slice(1)})</p>
+                          <p className="text-sm font-medium text-gray-900">{user.name ? user.name : ""} ({user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ""})</p>
                           <p className="text-sm text-gray-500 truncate">{user.email}</p>
                         </div>
                         <Menu.Item>
@@ -252,12 +252,12 @@ export default function Navbar() {
                       />
                     ) : (
                       <div className="h-12 w-12 rounded-full bg-gradient-to-r from-primary-500 to-primary-600 flex items-center justify-center text-white font-semibold text-xl shadow-sm">
-                        {user.name.charAt(0).toUpperCase()}
+                        {user.name ? user.name.charAt(0).toUpperCase() : ""}
                       </div>
                     )}
                   </div>
                   <div className="ml-4">
-                    <div className="text-base font-semibold text-gray-900">{user.name} ({user.role.charAt(0).toUpperCase() + user.role.slice(1)})</div>
+                    <div className="text-base font-semibold text-gray-900">{user.name ? user.name : ""} ({user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : ""})</div>
                     <div className="text-sm text-gray-500">{user.email}</div>
                   </div>
                 </div>

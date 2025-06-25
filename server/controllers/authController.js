@@ -13,15 +13,12 @@ const generateToken = (id) => {
 };
 
 // OAuth Success Handler
-const handleOAuthSuccess = (req, res) => {
+const handleOAuthSuccess = async (req, res) => {
   try {
     const user = req.user;
     const token = generateToken(user._id);
-    
-    // Check if user needs to complete registration (new OAuth user)
-    const isNewUser = !user.registrationComplete;
-    
-    // Redirect to frontend with token and user info
+    const isNewUser = req.session?.isNewUser || false;
+
     const redirectUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/oauth-success?token=${token}&user=${encodeURIComponent(JSON.stringify({
       _id: user._id,
       name: user.name,
@@ -32,7 +29,7 @@ const handleOAuthSuccess = (req, res) => {
       socialProfile: user.socialProfile,
       socialMedia: user.socialMedia || {}
     }))}&newUser=${isNewUser}`;
-    
+
     res.redirect(redirectUrl);
   } catch (error) {
     console.error('OAuth success handler error:', error);
@@ -50,9 +47,9 @@ const handleOAuthFailure = (req, res) => {
 export const googleAuth = passport.authenticate('google', { scope: ['profile', 'email'] });
 
 export const googleCallback = [
-  passport.authenticate('google', { 
+  passport.authenticate('google', {
     failureRedirect: '/api/auth/google/failure',
-    session: false 
+    session: false
   }),
   handleOAuthSuccess
 ];
@@ -61,14 +58,14 @@ export const googleFailure = (req, res) => {
   handleOAuthFailure(req, res);
 };
 
-export const facebookAuth = passport.authenticate('facebook', { 
+export const facebookAuth = passport.authenticate('facebook', {
   profileFields: ['id', 'displayName', 'photos']
 });
 
 export const facebookCallback = [
-  passport.authenticate('facebook', { 
+  passport.authenticate('facebook', {
     failureRedirect: '/api/auth/facebook/failure',
-    session: false 
+    session: false
   }),
   handleOAuthSuccess
 ];
@@ -80,9 +77,9 @@ export const facebookFailure = (req, res) => {
 export const linkedinAuth = passport.authenticate('linkedin', { scope: ['r_emailaddress', 'r_liteprofile'] });
 
 export const linkedinCallback = [
-  passport.authenticate('linkedin', { 
+  passport.authenticate('linkedin', {
     failureRedirect: '/api/auth/linkedin/failure',
-    session: false 
+    session: false
   }),
   handleOAuthSuccess
 ];
@@ -146,6 +143,7 @@ export const login = async (req, res) => {
       role: user.role,
       phone: user.phone,
       profilePicture: user.profilePicture,
+      socialMedia: user.socialMedia || {},
       token: generateToken(user._id),
     });
   } catch (error) {
@@ -164,8 +162,8 @@ export const forgotPassword = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) {
       // For security reasons, don't reveal if the email exists or not
-      return res.status(200).json({ 
-        message: 'If an account with that email exists, a password reset link has been sent.' 
+      return res.status(200).json({
+        message: 'If an account with that email exists, a password reset link has been sent.'
       });
     }
 
@@ -176,16 +174,16 @@ export const forgotPassword = async (req, res) => {
     // Send password reset email
     try {
       await sendPasswordResetEmail(user.email, resetToken, user.name);
-      
-      res.status(200).json({ 
-        message: 'If an account with that email exists, a password reset link has been sent.' 
+
+      res.status(200).json({
+        message: 'If an account with that email exists, a password reset link has been sent.'
       });
     } catch (emailError) {
       // If email fails, clear the reset token
       user.resetPasswordToken = undefined;
       user.resetPasswordExpires = undefined;
       await user.save();
-      
+
       console.error('Email sending failed:', emailError);
       res.status(500).json({ message: 'Failed to send password reset email. Please try again later.' });
     }

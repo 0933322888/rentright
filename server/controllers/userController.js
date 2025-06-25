@@ -53,8 +53,8 @@ export const updateProfile = async (req, res) => {
       // Update social media fields
       if (req.body.socialMedia) {
         try {
-          const socialMediaData = typeof req.body.socialMedia === 'string' 
-            ? JSON.parse(req.body.socialMedia) 
+          const socialMediaData = typeof req.body.socialMedia === 'string'
+            ? JSON.parse(req.body.socialMedia)
             : req.body.socialMedia;
 
           user.socialMedia = {
@@ -69,7 +69,7 @@ export const updateProfile = async (req, res) => {
 
       if (req.files && req.files.profilePicture) {
         const file = req.files.profilePicture;
-        
+
         // Validate file type
         const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
         if (!allowedTypes.includes(file.mimetype)) {
@@ -107,7 +107,7 @@ export const updateProfile = async (req, res) => {
           // Delete old profile picture from S3 if it exists
           if (user.profilePicture && user.profilePicture.startsWith('https://rentright-data.s3.ca-central-1.amazonaws.com/')) {
             const oldKey = user.profilePicture.replace('https://rentright-data.s3.ca-central-1.amazonaws.com/', '');
-            try { await deleteFileFromS3(oldKey); } catch (e) { 
+            try { await deleteFileFromS3(oldKey); } catch (e) {
               console.warn('Failed to delete old profile picture:', e.message);
             }
           }
@@ -239,8 +239,8 @@ export const updateUser = async (req, res) => {
     // Update social media fields
     if (req.body.socialMedia) {
       try {
-        const socialMediaData = typeof req.body.socialMedia === 'string' 
-          ? JSON.parse(req.body.socialMedia) 
+        const socialMediaData = typeof req.body.socialMedia === 'string'
+          ? JSON.parse(req.body.socialMedia)
           : req.body.socialMedia;
         user.socialMedia = {
           ...user.socialMedia,
