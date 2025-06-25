@@ -28,6 +28,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  dateOfBirth: { type: Date },
   email: {
     type: String,
     required: true,
@@ -49,6 +50,11 @@ const userSchema = new mongoose.Schema({
   phone: {
     type: String,
     trim: true
+  },
+  emergencyContact: {
+    name: { type: String, trim: true },
+    phone: { type: String, trim: true },
+    relationship: { type: String, trim: true }
   },
   // Social authentication fields
   googleId: {

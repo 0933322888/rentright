@@ -92,16 +92,16 @@ export default function AdminTenantProfile() {
   };
 
   const handleScoreOverride = async () => {
-    if (!tenant || !tenant.tenantDocument) return;
+    if (!tenant) return;
     setSavingScore(true);
     try {
       const response = await axios.patch(
         `${API_ENDPOINTS.ADMIN_TENANTS}/${id}`,
-        { tenantScore: Number(scoreOverride) },
+        { tenantScoring: Number(scoreOverride) },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       toast.success('Tenant score updated');
-      setTenant(prev => ({ ...prev, tenantDocument: { ...prev.tenantDocument, tenantScore: Number(scoreOverride) } }));
+      setTenant(prev => ({ ...prev, tenantScoring: Number(scoreOverride) }));
     } catch (err) {
       toast.error('Failed to update score');
     } finally {
@@ -236,8 +236,8 @@ export default function AdminTenantProfile() {
   };
 
   const getScoreColor = (score) => {
-    if (score >= 80) return 'success';
-    if (score >= 60) return 'warning';
+    if (score >= 75) return 'success';
+    if (score >= 40) return 'warning';
     return 'error';
   };
 
@@ -293,7 +293,7 @@ export default function AdminTenantProfile() {
 
       <Grid container spacing={3}>
         {/* Left column: Profile, Score, Stats */}
-        <Grid item xs={12} md={4} lg={3} sx={{ width: '14%' }}>
+        <Grid item xs={12} md={4} lg={3} sx={{ width: '19%' }}>
           {/* Profile Card */}
           <Card sx={{ height: 'auto' }}>
             <CardContent sx={{ textAlign: 'center', p: 3 }}>
@@ -326,20 +326,48 @@ export default function AdminTenantProfile() {
                   Tenant Score
                 </Typography>
               </Box>
-              {tenant.tenantDocument?.tenantScore !== undefined && (
+              {tenant.tenantScoring !== undefined && (
                 <Box sx={{ textAlign: 'center', mb: 3 }}>
-                  <Typography variant="h3" color={`${getScoreColor(tenant.tenantDocument.tenantScore)}.main`} fontWeight="bold">
-                    {tenant.tenantDocument.tenantScore}%
+                  <Typography variant="h3" color={`${getScoreColor(tenant.tenantScoring)}.main`} fontWeight="bold">
+                    {tenant.tenantScoring}%
                   </Typography>
                   <Chip 
-                    label={getScoreLabel(tenant.tenantDocument.tenantScore)}
-                    color={getScoreColor(tenant.tenantDocument.tenantScore)}
+                    label={getScoreLabel(tenant.tenantScoring)}
+                    color={getScoreColor(tenant.tenantScoring)}
                     sx={{ mt: 1 }}
                   />
                 </Box>
               )}
+
+              {/* Score Breakdown */}
+              {tenant.scoreBreakdown && (
+                <Box sx={{ mt: 2, textAlign: 'left' }}>
+                  <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                    Score Breakdown
+                  </Typography>
+                  <List dense>
+                    {Object.entries(tenant.scoreBreakdown).map(([section, data]) => (
+                      <Box key={section} sx={{ mb: 1 }}>
+                        <Typography variant="body2" fontWeight="bold" color="primary.main">
+                          {section.charAt(0).toUpperCase() + section.slice(1)}: {data.score}/{data.max}
+                        </Typography>
+                        {data.details && data.details.length > 0 && (
+                          <List dense sx={{ pl: 2 }}>
+                            {data.details.map((detail, idx) => (
+                              <ListItem key={idx} sx={{ py: 0 }}>
+                                <ListItemText primary={<Typography variant="caption">{detail}</Typography>} />
+                              </ListItem>
+                            ))}
+                          </List>
+                        )}
+                      </Box>
+                    ))}
+                  </List>
+                </Box>
+              )}
+
               {/* Score Override */}
-              {tenant.tenantDocument && (
+              {tenant.tenantScoring && (
                 <Box sx={{ mt: 2 }}>
                   <Typography variant="subtitle2" gutterBottom>
                     Override Score
@@ -350,7 +378,7 @@ export default function AdminTenantProfile() {
                       type="number"
                       value={scoreOverride}
                       onChange={(e) => setScoreOverride(e.target.value)}
-                      placeholder={tenant.tenantDocument.tenantScore || 0}
+                      placeholder={tenant.tenantScoring || 0}
                       sx={{ flex: 1 }}
                     />
                     <Button
@@ -398,7 +426,7 @@ export default function AdminTenantProfile() {
         </Grid>
 
         {/* Right column: AI Verification, Profile Details, Documents */}
-        <Grid item xs={12} md={8} lg={9} sx={{ width: '84%' }}>
+        <Grid item xs={12} md={8} lg={9} sx={{ width: '79%' }}>
           {/* AI Verification Results */}
           {aiResults && (
             <Card sx={{ mb: 3 }}>
@@ -733,14 +761,32 @@ export default function AdminTenantProfile() {
                         </Typography>
                       </Box>
                       <Typography variant="body2">
-                        <strong>Employed:</strong> {tenant.tenantDocument.isCurrentlyEmployed === 'yes' ? 'Yes' : 'No'}
+                        <strong>Status:</strong> {tenant.tenantDocument.employmentStatus ? tenant.tenantDocument.employmentStatus.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Not specified'}
                       </Typography>
+                      {tenant.tenantDocument.employerName && (
+                        <Typography variant="body2">
+                          <strong>Employer:</strong> {tenant.tenantDocument.employerName}
+                        </Typography>
+                      )}
+                      {tenant.tenantDocument.jobTitle && (
+                        <Typography variant="body2">
+                          <strong>Job Title:</strong> {tenant.tenantDocument.jobTitle}
+                        </Typography>
+                      )}
                       <Typography variant="body2">
-                        <strong>Type:</strong> {tenant.tenantDocument.employmentType}
+                        <strong>Monthly Income:</strong> ${tenant.tenantDocument.monthlyNetIncome?.toLocaleString() || 'Not specified'}
                       </Typography>
-                      <Typography variant="body2">
-                        <strong>Income:</strong> ${tenant.tenantDocument.monthlyNetIncome?.toLocaleString()}
-                      </Typography>
+                      {tenant.tenantDocument.monthlyDebtRepayment && (
+                        <Typography variant="body2">
+                          <strong>Monthly Debt:</strong> ${tenant.tenantDocument.monthlyDebtRepayment.toLocaleString()}
+                        </Typography>
+                      )}
+                      {tenant.tenantDocument.additionalIncomeAmount && (
+                        <Typography variant="body2">
+                          <strong>Additional Income:</strong> ${tenant.tenantDocument.additionalIncomeAmount.toLocaleString()}
+                          {tenant.tenantDocument.additionalIncomeSource && ` (${tenant.tenantDocument.additionalIncomeSource})`}
+                        </Typography>
+                      )}
                       {tenant.tenantDocument.creditScore && (
                         <Typography variant="body2">
                           <strong>Credit Score:</strong> {tenant.tenantDocument.creditScore}
@@ -755,36 +801,216 @@ export default function AdminTenantProfile() {
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                         <Group sx={{ mr: 1, color: 'primary.main' }} />
                         <Typography variant="subtitle2" fontWeight="bold">
-                          Lifestyle
+                          Lifestyle & Household
+                        </Typography>
+                      </Box>
+                      {tenant.tenantDocument.maritalStatus && (
+                        <Typography variant="body2">
+                          <strong>Marital Status:</strong> {tenant.tenantDocument.maritalStatus.charAt(0).toUpperCase() + tenant.tenantDocument.maritalStatus.slice(1)}
+                        </Typography>
+                      )}
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                        <Group sx={{ mr: 1, fontSize: 'small' }} />
+                        <Typography variant="body2">
+                          <strong>Adults:</strong> {tenant.tenantDocument.adultOccupants || 'Not specified'}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                        <ChildCare sx={{ mr: 1, fontSize: 'small' }} />
+                        <Typography variant="body2">
+                          <strong>Children:</strong> {tenant.tenantDocument.childOccupants || 'Not specified'}
+                        </Typography>
+                      </Box>
+                      {tenant.tenantDocument.childSupportAmount > 0 && (
+                        <Typography variant="body2">
+                          <strong>Child Support:</strong> ${tenant.tenantDocument.childSupportAmount.toLocaleString()}
+                        </Typography>
+                      )}
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
                         <Pets sx={{ mr: 1, fontSize: 'small' }} />
                         <Typography variant="body2">
-                          <strong>Pets:</strong> {tenant.tenantDocument.hasPets === 'yes' ? 'Yes' : 'No'}
-                          {tenant.tenantDocument.hasPets === 'yes' && ` (${tenant.tenantDocument.petCount} ${tenant.tenantDocument.petTypes})`}
+                          <strong>Pets:</strong> {tenant.tenantDocument.hasPets ? 'Yes' : 'No'}
+                          {tenant.tenantDocument.hasPets && tenant.tenantDocument.petCount && ` (${tenant.tenantDocument.petTypes || 'pets'})`}
                         </Typography>
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
                         <SmokingRooms sx={{ mr: 1, fontSize: 'small' }} />
                         <Typography variant="body2">
-                          <strong>Smokes:</strong> {tenant.tenantDocument.smokes === 'yes' ? 'Yes' : 'No'}
-                        </Typography>
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
-                        <Group sx={{ mr: 1, fontSize: 'small' }} />
-                        <Typography variant="body2">
-                          <strong>Adults:</strong> {tenant.tenantDocument.adultOccupants}
-                        </Typography>
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <ChildCare sx={{ mr: 1, fontSize: 'small' }} />
-                        <Typography variant="body2">
-                          <strong>Children:</strong> {tenant.tenantDocument.childOccupants}
+                          <strong>Smoking:</strong> {tenant.tenantDocument.smokingStatus ? tenant.tenantDocument.smokingStatus.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Not specified'}
                         </Typography>
                       </Box>
                     </Paper>
                   </Grid>
+
+                  {/* Financial & Credit */}
+                  <Grid item xs={12} md={6}>
+                    <Paper sx={{ p: 2, backgroundColor: '#f8f9fa' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <CreditCard sx={{ mr: 1, color: 'primary.main' }} />
+                        <Typography variant="subtitle2" fontWeight="bold">
+                          Financial & Credit
+                        </Typography>
+                      </Box>
+                      {tenant.tenantDocument.creditScore && (
+                        <Typography variant="body2">
+                          <strong>Credit Score:</strong> {tenant.tenantDocument.creditScore}
+                        </Typography>
+                      )}
+                      <Typography variant="body2">
+                        <strong>Bankruptcy History:</strong> {tenant.tenantDocument.bankruptcyHistory ? 'Yes' : 'No'}
+                      </Typography>
+                      <Typography variant="body2">
+                        <strong>Eviction History:</strong> {tenant.tenantDocument.evictionHistory ? 'Yes' : 'No'}
+                      </Typography>
+                    </Paper>
+                  </Grid>
+
+                  {/* Rental History */}
+                  <Grid item xs={12} md={6}>
+                    <Paper sx={{ p: 2, backgroundColor: '#f8f9fa' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <Home sx={{ mr: 1, color: 'primary.main' }} />
+                        <Typography variant="subtitle2" fontWeight="bold">
+                          Rental History
+                        </Typography>
+                      </Box>
+                      <Typography variant="body2">
+                        <strong>Currently Pays Rent:</strong> {tenant.tenantDocument.currentlyPaysRent === 'true' ? 'Yes' : 'No'}
+                      </Typography>
+                      {tenant.tenantDocument.currentRentAmount && (
+                        <Typography variant="body2">
+                          <strong>Current Rent:</strong> ${tenant.tenantDocument.currentRentAmount.toLocaleString()}
+                        </Typography>
+                      )}
+                    </Paper>
+                  </Grid>
+
+                  {/* Application Strengthening */}
+                  <Grid item xs={12} md={6}>
+                    <Paper sx={{ p: 2, backgroundColor: '#f8f9fa' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                        <TrendingUp sx={{ mr: 1, color: 'primary.main' }} />
+                        <Typography variant="subtitle2" fontWeight="bold">
+                          Application Strengthening
+                        </Typography>
+                      </Box>
+                      <Typography variant="body2">
+                        <strong>Can Pay in Advance:</strong> {tenant.tenantDocument.monthsAheadCanPay > 1 ? 'Yes' : 'No'}
+                      </Typography>
+                      {tenant.tenantDocument.monthsAheadCanPay > 1 && (
+                        <Typography variant="body2">
+                          <strong>Can Pay Months Ahead:</strong> {tenant.tenantDocument.monthsAheadCanPay}
+                        </Typography>
+                      )}
+                      <Typography variant="body2">
+                        <strong>Has Guarantor:</strong> {tenant.tenantDocument.hasGuarantor ? 'Yes' : 'No'}
+                      </Typography>
+                      {tenant.tenantDocument.hasGuarantor && tenant.tenantDocument.guarantorName && (
+                        <Typography variant="body2">
+                          <strong>Guarantor:</strong> {tenant.tenantDocument.guarantorName}
+                        </Typography>
+                      )}
+                    </Paper>
+                  </Grid>
+
+                  {/* Social Media Links */}
+                  {tenant.socialMedia && Object.keys(tenant.socialMedia).some(key => tenant.socialMedia[key]) && (
+                    <Grid item xs={12} md={6}>
+                      <Paper sx={{ p: 2, backgroundColor: '#f8f9fa' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                          <LanguageIcon sx={{ mr: 1, color: 'primary.main' }} />
+                          <Typography variant="subtitle2" fontWeight="bold">
+                            Social Media Links
+                          </Typography>
+                        </Box>
+                        {tenant.socialMedia.facebook && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                            <FacebookIcon sx={{ mr: 1, fontSize: 'small', color: '#1877f2' }} />
+                            <Typography variant="body2" sx={{ flex: 1 }}>
+                              <strong>Facebook:</strong> 
+                            </Typography>
+                            <Button
+                              size="small"
+                              href={tenant.socialMedia.facebook}
+                              target="_blank"
+                              variant="text"
+                              sx={{ p: 0, minWidth: 'auto', textTransform: 'none' }}
+                            >
+                              View Profile
+                            </Button>
+                          </Box>
+                        )}
+                        {tenant.socialMedia.linkedin && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                            <LinkedInIcon sx={{ mr: 1, fontSize: 'small', color: '#0077b5' }} />
+                            <Typography variant="body2" sx={{ flex: 1 }}>
+                              <strong>LinkedIn:</strong> 
+                            </Typography>
+                            <Button
+                              size="small"
+                              href={tenant.socialMedia.linkedin}
+                              target="_blank"
+                              variant="text"
+                              sx={{ p: 0, minWidth: 'auto', textTransform: 'none' }}
+                            >
+                              View Profile
+                            </Button>
+                          </Box>
+                        )}
+                        {tenant.socialMedia.instagram && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                            <InstagramIcon sx={{ mr: 1, fontSize: 'small', color: '#e4405f' }} />
+                            <Typography variant="body2" sx={{ flex: 1 }}>
+                              <strong>Instagram:</strong> 
+                            </Typography>
+                            <Button
+                              size="small"
+                              href={tenant.socialMedia.instagram}
+                              target="_blank"
+                              variant="text"
+                              sx={{ p: 0, minWidth: 'auto', textTransform: 'none' }}
+                            >
+                              View Profile
+                            </Button>
+                          </Box>
+                        )}
+                        {tenant.socialMedia.twitter && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                            <TwitterIcon sx={{ mr: 1, fontSize: 'small', color: '#1da1f2' }} />
+                            <Typography variant="body2" sx={{ flex: 1 }}>
+                              <strong>Twitter:</strong> 
+                            </Typography>
+                            <Button
+                              size="small"
+                              href={tenant.socialMedia.twitter}
+                              target="_blank"
+                              variant="text"
+                              sx={{ p: 0, minWidth: 'auto', textTransform: 'none' }}
+                            >
+                              View Profile
+                            </Button>
+                          </Box>
+                        )}
+                        {tenant.socialMedia.website && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                            <LanguageIcon sx={{ mr: 1, fontSize: 'small', color: '#666' }} />
+                            <Typography variant="body2" sx={{ flex: 1 }}>
+                              <strong>Website:</strong> 
+                            </Typography>
+                            <Button
+                              size="small"
+                              href={tenant.socialMedia.website}
+                              target="_blank"
+                              variant="text"
+                              sx={{ p: 0, minWidth: 'auto', textTransform: 'none' }}
+                            >
+                              Visit Site
+                            </Button>
+                          </Box>
+                        )}
+                      </Paper>
+                    </Grid>
+                  )}
                 </Grid>
               </CardContent>
             </Card>

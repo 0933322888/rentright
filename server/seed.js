@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import User from './models/userModel.js';
 import Property from './models/propertyModel.js';
-import TenantDocument from './models/tenantDocumentModel.js';
+import TenantProfile from './models/tenantProfileModel.js';
 import Application from './models/applicationModel.js';
 import Ticket from './models/ticketModel.js';
 import Payment from './models/paymentModel.js';
@@ -427,7 +427,7 @@ const seed = async () => {
     // Clear existing data
     await User.deleteMany({});
     await Property.deleteMany({});
-    await TenantDocument.deleteMany({});
+    await TenantProfile.deleteMany({});
     await Ticket.deleteMany({});
     await Application.deleteMany({});
     await Payment.deleteMany({});
@@ -455,56 +455,11 @@ const seed = async () => {
 
     // Create tenant documents for specific tenants
     const tenantDocumentData = {
-      proofOfIdentity: [
-        {
-          path: "/opt/render/project/src/server/uploads/tenant-documents/1749609937102-644975019-secure_payments.jpg",
-          filename: "1749609937102-644975019-secure_payments.jpg",
-          uploadedAt: "2025-06-11T02:45:39.020Z",
-          _id: "6848edd34c55039273589aaf",
-          url: "http://localhost:5000/uploads/tenant-documents/1749609937102-644975019-secure_payments.jpg",
-          thumbnailUrl: "http://localhost:5000/uploads/tenant-documents/1749609937102-644975019-secure_payments.jpg"
-        }
-      ],
-      proofOfIncome: [
-        {
-          path: "/opt/render/project/src/server/uploads/tenant-documents/1749609996587-382554318-legal_compliance.jpg",
-          filename: "1749609996587-382554318-legal_compliance.jpg",
-          uploadedAt: "2025-06-11T02:46:38.090Z",
-          _id: "6848ee0eef1c3cbb2741f8d2",
-          url: "http://localhost:5000/uploads/tenant-documents/1749609996587-382554318-legal_compliance.jpg",
-          thumbnailUrl: "http://localhost:5000/uploads/tenant-documents/1749609996587-382554318-legal_compliance.jpg"
-        }
-      ],
-      creditHistory: [
-        {
-          path: "/opt/render/project/src/server/uploads/tenant-documents/1749609998094-910255049-hero_property.png",
-          filename: "1749609998094-910255049-hero_property.png",
-          uploadedAt: "2025-06-11T02:46:38.489Z",
-          _id: "6848ee0eef1c3cbb2741f8d3",
-          url: "http://localhost:5000/uploads/tenant-documents/1749609998094-910255049-hero_property.png",
-          thumbnailUrl: "http://localhost:5000/uploads/tenant-documents/1749609998094-910255049-hero_property.png"
-        }
-      ],
-      rentalHistory: [
-        {
-          path: "/opt/render/project/src/server/uploads/tenant-documents/1749609998490-834608717-legal_compliance.jpg",
-          filename: "1749609998490-834608717-legal_compliance.jpg",
-          uploadedAt: "2025-06-11T02:46:39.992Z",
-          _id: "6848ee0fef1c3cbb2741f8d4",
-          url: "http://localhost:5000/uploads/tenant-documents/1749609998490-834608717-legal_compliance.jpg",
-          thumbnailUrl: "http://localhost:5000/uploads/tenant-documents/1749609998490-834608717-legal_compliance.jpg"
-        }
-      ],
-      additionalDocuments: [
-        {
-          path: "/opt/render/project/src/server/uploads/tenant-documents/1749609999993-340071967-smart_management.jpg",
-          filename: "1749609999993-340071967-smart_management.jpg",
-          uploadedAt: "2025-06-11T02:46:41.502Z",
-          _id: "6848ee11ef1c3cbb2741f8d5",
-          url: "http://localhost:5000/uploads/tenant-documents/1749609999993-340071967-smart_management.jpg",
-          thumbnailUrl: "http://localhost:5000/uploads/tenant-documents/1749609999993-340071967-smart_management.jpg"
-        }
-      ],
+      proofOfIdentity: [],
+      proofOfIncome: [],
+      creditHistory: [],
+      rentalHistory: [],
+      additionalDocuments: [],
       isCurrentlyEmployed: "yes",
       employmentType: "full-time",
       monthlyNetIncome: 10000,
@@ -534,7 +489,7 @@ const seed = async () => {
       }
     ];
 
-    await TenantDocument.insertMany(tenantDocuments);
+    await TenantProfile.insertMany(tenantDocuments);
     console.log('Created tenant documents');
 
     // Assign landlords to properties
@@ -552,7 +507,7 @@ const seed = async () => {
     //   tenant: createdTenants[0]._id, // Emily Davis Tenant
     //   property: createdProperties[0]._id, // Modern Downtown Apartment
     //   status: 'approved',
-    //   tenantDocument: (await TenantDocument.findOne({ tenant: createdTenants[0]._id }))._id,
+    //   tenantProfile: (await TenantProfile.findOne({ tenant: createdTenants[0]._id }))._id,
     //   viewingDate: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000), // 120 days ago
     //   viewingTime: '10:00',
     //   notes: 'Approved tenant with good credit history'

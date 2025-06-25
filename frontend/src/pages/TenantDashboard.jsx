@@ -48,22 +48,14 @@ const TenantDashboard = () => {
       const isProfileComplete = profile && 
         profile.proofOfIdentity && 
         profile.proofOfIncome && 
-        profile.creditHistory && 
-        profile.rentalHistory && 
-        profile.hasBeenEvicted !== null && 
-        profile.hasBeenEvicted !== undefined &&
-        profile.canPayMoreThanOneMonth !== null && 
-        profile.canPayMoreThanOneMonth !== undefined;
+        profile.monthsAheadCanPay;
 
       console.log('Profile completion check:', {
         profile,
         isProfileComplete,
         hasIdentity: !!profile?.proofOfIdentity,
         hasIncome: !!profile?.proofOfIncome,
-        hasCredit: !!profile?.creditHistory,
-        hasRental: !!profile?.rentalHistory,
-        evictionStatus: profile?.hasBeenEvicted,
-        paymentStatus: profile?.canPayMoreThanOneMonth
+        paymentStatus: profile?.monthsAheadCanPay
       });
 
       // Only show profile modal if profile is actually incomplete

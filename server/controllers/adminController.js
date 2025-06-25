@@ -1,7 +1,7 @@
 import Property from '../models/propertyModel.js';
 import User from '../models/userModel.js';
 import Application from '../models/applicationModel.js';
-import TenantDocument from '../models/tenantDocumentModel.js';
+import TenantProfile from '../models/tenantProfileModel.js';
 import PropertyDocument from '../models/propertyDocumentModel.js';
 import { generateViewingTimeSlots } from '../utils/timeSlotGenerator.js';
 import {
@@ -16,6 +16,7 @@ import fs from 'fs';
 import jwt from 'jsonwebtoken';
 import Escalation from '../models/escalationModel.js';
 import Ticket from '../models/ticketModel.js';
+import { getScoreBreakdown } from '../utils/tenantScoringUtils.js';
 
 // Get all properties for admin
 export const getAllProperties = async (req, res) => {
@@ -111,7 +112,7 @@ export const getAllTenants = async (req, res) => {
       tenants.map(async (tenant) => {
         const [applicationCount, tenantDocument] = await Promise.all([
           Application.countDocuments({ tenant: tenant._id }),
-          TenantDocument.findOne({ tenant: tenant._id })
+          TenantProfile.findOne({ tenant: tenant._id })
         ]);
         
         return {
@@ -193,15 +194,22 @@ export const getTenantById = async (req, res) => {
     }
 
     // Get tenant document
-    const tenantDocument = await TenantDocument.findOne({ tenant: tenant._id });
+    const tenantDocument = await TenantProfile.findOne({ tenant: tenant._id });
 
     // Get application count
     const applicationCount = await Application.countDocuments({ tenant: tenant._id });
 
+    // Get score breakdown if tenantDocument exists
+    let scoreBreakdown = null;
+    if (tenantDocument) {
+      scoreBreakdown = getScoreBreakdown({ ...tenantDocument.toObject(), tenant: tenant });
+    }
+
     res.json({
       ...tenant.toObject(),
       applicationCount,
-      tenantDocument: tenantDocument || null
+      tenantDocument: tenantDocument || null,
+      scoreBreakdown
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -227,13 +235,9 @@ export const updateTenant = async (req, res) => {
     tenant.hasProfile = req.body.hasProfile !== undefined ? req.body.hasProfile : tenant.hasProfile;
     tenant.rating = req.body.rating !== undefined ? Number(req.body.rating) : tenant.rating;
 
-    // Allow admin to override tenantScore
-    if (req.body.tenantScore !== undefined) {
-      const tenantDocument = await TenantDocument.findOne({ tenant: tenant._id });
-      if (tenantDocument) {
-        tenantDocument.tenantScore = Number(req.body.tenantScore);
-        await tenantDocument.save();
-      }
+    // Allow admin to override tenantScoring
+    if (req.body.tenantScoring !== undefined) {
+      tenant.tenantScoring = Number(req.body.tenantScoring);
     }
 
     const updatedTenant = await tenant.save();

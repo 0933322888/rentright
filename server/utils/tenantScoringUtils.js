@@ -1,39 +1,38 @@
 /**
  * Calculate tenant score based on manual data and AI-parsed document information
  * @param {Object} tenantDoc - Tenant document with profile data and uploaded documents
- * @returns {number} - Score from 0-100
+ * @returns {number} - Score as percent of max possible points
  */
 export function calculateTenantScore(tenantDoc) {
-  let score = 0;
+  let totalPoints = 0;
+  let maxPoints = 0;
   console.log('[tenantScore] --- Calculation Start ---');
   
   // Employment (manual or AI-verified)
-  if (tenantDoc.isCurrentlyEmployed === 'yes') {
-    score += 15;
-    console.log('[tenantScore] +15: Currently employed');
+  if (tenantDoc.employmentStatus === 'employed' || tenantDoc.employmentStatus === 'self-employed') {
+    totalPoints += 15;
   }
+  maxPoints += 15;
   
   // Income verification (manual + AI cross-reference)
   let income = tenantDoc.monthlyNetIncome;
   let aiIncomeVerified = false;
+  let hasIncomeDoc = false;
+  let aiIncomeMatched = false;
   
   // Check AI-parsed income from various document types
   const documentTypes = ['proofOfIncome', 'creditHistory', 'additionalDocuments'];
   for (const docType of documentTypes) {
     if (tenantDoc[docType]?.length > 0) {
+      hasIncomeDoc = true;
       for (const doc of tenantDoc[docType]) {
         if (doc.aiParsedData?.income && !isNaN(Number(doc.aiParsedData.income))) {
           const aiIncome = Number(doc.aiParsedData.income);
-          // If AI income is close to manual income (within 10%), give bonus points
           if (income && Math.abs(aiIncome - income) / income < 0.1) {
-            score += 5; // Bonus for income verification
-            aiIncomeVerified = true;
-            console.log(`[tenantScore] +5: AI income (${aiIncome}) matches manual income (${income})`);
+            aiIncomeMatched = true;
           }
-          // Use AI income if manual income not provided
           if (!income) {
             income = aiIncome;
-            console.log(`[tenantScore] Using AI income: ${aiIncome}`);
           }
           break;
         }
@@ -41,26 +40,23 @@ export function calculateTenantScore(tenantDoc) {
     }
   }
   
-  // Income scoring
-  if (income > 5000) {
-    score += 25;
-    console.log('[tenantScore] +25: Income > $5000');
-  } else if (income > 3000) {
-    score += 20;
-    console.log('[tenantScore] +20: Income > $3000');
-  } else if (income > 2000) {
-    score += 15;
-    console.log('[tenantScore] +15: Income > $2000');
-  } else if (income > 1000) {
-    score += 10;
-    console.log('[tenantScore] +10: Income > $1000');
+  // Income points only if doc exists and AI matches manual
+  if (hasIncomeDoc && aiIncomeMatched) {
+    if (income > 5000) totalPoints += 30;
+    else if (income > 3000) totalPoints += 25;
+    else if (income > 2000) totalPoints += 20;
+    else if (income > 1000) totalPoints += 15;
+    else totalPoints += 10;
+    // Bonus for AI verification
+    totalPoints += 5;
   }
+  maxPoints += 30; // Max for income section
   
   // No evictions (manual + AI verification from rental history)
-  if (tenantDoc.hasBeenEvicted === 'no') {
-    score += 15;
-    console.log('[tenantScore] +15: No eviction history');
+  if (tenantDoc.evictionHistory === false) {
+    totalPoints += 15;
   }
+  maxPoints += 15;
   
   // Check rental history documents for eviction records
   if (tenantDoc.rentalHistory?.length > 0) {
@@ -73,52 +69,48 @@ export function calculateTenantScore(tenantDoc) {
       }
     }
     if (!hasEvictionRecord) {
-      score += 5; // Bonus for clean rental history
-      console.log('[tenantScore] +5: Clean rental history (AI verified)');
+      totalPoints += 5;
     }
+    maxPoints += 5;
+  } else {
+    maxPoints += 5;
   }
   
   // Credit score (manual + AI verification)
   if (tenantDoc.creditScore >= 750) {
-    score += 20;
-    console.log('[tenantScore] +20: Credit score >= 750');
+    totalPoints += 20;
   } else if (tenantDoc.creditScore >= 650) {
-    score += 15;
-    console.log('[tenantScore] +15: Credit score >= 650');
+    totalPoints += 15;
   } else if (tenantDoc.creditScore >= 550) {
-    score += 10;
-    console.log('[tenantScore] +10: Credit score >= 550');
+    totalPoints += 10;
   }
+  maxPoints += 20;
   
   // Check AI-parsed credit information from credit history documents
   if (tenantDoc.creditHistory?.length > 0) {
-    for (const doc of tenantDoc.creditHistory) {
-      if (doc.aiParsedData?.documentType?.toLowerCase().includes('credit')) {
-        score += 5; // Bonus for credit report
-        console.log('[tenantScore] +5: Credit report provided (AI verified)');
-        break;
-      }
-    }
+    totalPoints += 5;
+    maxPoints += 5;
   }
   
   // Identity verification (AI cross-reference)
   let identityVerified = false;
   if (tenantDoc.proofOfIdentity?.length > 0) {
+    totalPoints += 5;
+    maxPoints += 5;
     for (const doc of tenantDoc.proofOfIdentity) {
       if (doc.aiParsedData?.name && doc.aiParsedData?.documentType) {
-        // Check if AI-parsed name matches tenant name (basic verification)
         const aiName = doc.aiParsedData.name.toLowerCase();
         const tenantName = tenantDoc.tenant?.name?.toLowerCase() || '';
         if (aiName.includes(tenantName.split(' ')[0]) || tenantName.includes(aiName.split(' ')[0])) {
-          score += 5; // Bonus for name verification
+          totalPoints += 5;
           identityVerified = true;
-          console.log(`[tenantScore] +5: Name verified by AI (${aiName} vs ${tenantName})`);
         }
-        score += 5; // Bonus for valid government ID
-        console.log('[tenantScore] +5: Valid government ID (AI verified)');
         break;
       }
     }
+    maxPoints += 5;
+  } else {
+    maxPoints += 10;
   }
   
   // Document completeness and quality
@@ -133,7 +125,8 @@ export function calculateTenantScore(tenantDoc) {
   if (tenantDoc.proofOfIncome?.length > 1) { documentScore += 5; console.log('[tenantScore] +5: Multiple proof of income docs'); }
   if (tenantDoc.creditHistory?.length > 1) { documentScore += 5; console.log('[tenantScore] +5: Multiple credit history docs'); }
   
-  score += documentScore;
+  totalPoints += documentScore;
+  maxPoints += 50;
   
   // AI parsing success bonus (indicates document quality)
   let aiParsingSuccess = 0;
@@ -150,25 +143,26 @@ export function calculateTenantScore(tenantDoc) {
       aiParsingSuccess += 2;
     }
   }
-  if (aiParsingSuccess > 0) {
-    console.log(`[tenantScore] +${Math.min(aiParsingSuccess, 10)}: AI parsing success bonus`);
-  }
-  score += Math.min(aiParsingSuccess, 10); // Cap at 10 points
+  totalPoints += Math.min(aiParsingSuccess, 10);
+  maxPoints += 10;
   
   // Additional factors
-  if (tenantDoc.hasTwoMonthsRentSavings === 'yes') { score += 5; console.log('[tenantScore] +5: Has 2+ months rent savings'); }
-  if (tenantDoc.canPayMoreThanOneMonth === 'yes') { score += 5; console.log('[tenantScore] +5: Can pay multiple months ahead'); }
+  if (tenantDoc.monthsAheadCanPay >= 2) { totalPoints += 5; console.log('[tenantScore] +5: Can pay 2+ months ahead'); }
+  if (tenantDoc.monthsAheadCanPay >= 1) { totalPoints += 5; console.log('[tenantScore] +5: Can pay multiple months ahead'); }
   
   // Pet and smoking factors (risk assessment)
-  if (tenantDoc.hasPets === 'no') { score += 3; console.log('[tenantScore] +3: No pets'); }
-  if (tenantDoc.smokes === 'no') { score += 3; console.log('[tenantScore] +3: Non-smoker'); }
+  if (tenantDoc.hasPets === false) { totalPoints += 3; console.log('[tenantScore] +3: No pets'); }
+  if (tenantDoc.smokingStatus === 'non-smoker') { totalPoints += 3; console.log('[tenantScore] +3: Non-smoker'); }
   
   // Occupancy factors
-  if (tenantDoc.adultOccupants <= 2) { score += 2; console.log('[tenantScore] +2: ≤2 adult occupants'); }
-  if (tenantDoc.childOccupants === 0) { score += 2; console.log('[tenantScore] +2: No children'); }
+  if (tenantDoc.adultOccupants <= 2) { totalPoints += 2; console.log('[tenantScore] +2: ≤2 adult occupants'); }
+  if (tenantDoc.childOccupants === 0) { totalPoints += 2; console.log('[tenantScore] +2: No children'); }
   
-  console.log('[tenantScore] --- Calculation End. Final Score:', Math.min(score, 100), '---');
-  return Math.min(score, 100);
+  maxPoints += 20;
+  
+  const percent = maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100) : 0;
+  console.log('[tenantScore] --- Calculation End. Points:', totalPoints, '/', maxPoints, 'Percent:', percent, '---');
+  return percent;
 }
 
 /**
@@ -189,44 +183,50 @@ export function getScoreBreakdown(tenantDoc) {
   };
 
   // Employment
-  if (tenantDoc.isCurrentlyEmployed === 'yes') {
+  if (tenantDoc.employmentStatus === 'employed' || tenantDoc.employmentStatus === 'self-employed') {
     breakdown.employment.score = 15;
     breakdown.employment.details.push('Currently employed');
   }
 
-  // Income calculation
+  // Income
   let income = tenantDoc.monthlyNetIncome;
-  let aiIncomeFound = false;
-  
+  let aiIncomeMatched = false;
+  let hasIncomeDoc = false;
   const documentTypes = ['proofOfIncome', 'creditHistory', 'additionalDocuments'];
   for (const docType of documentTypes) {
     if (tenantDoc[docType]?.length > 0) {
+      hasIncomeDoc = true;
       for (const doc of tenantDoc[docType]) {
         if (doc.aiParsedData?.income && !isNaN(Number(doc.aiParsedData.income))) {
           const aiIncome = Number(doc.aiParsedData.income);
           if (income && Math.abs(aiIncome - income) / income < 0.1) {
-            breakdown.income.score += 5;
-            breakdown.income.details.push('Income verified by AI');
+            aiIncomeMatched = true;
           }
           if (!income) income = aiIncome;
-          aiIncomeFound = true;
           break;
         }
       }
     }
   }
-
-  if (income > 5000) breakdown.income.score += 25;
-  else if (income > 3000) breakdown.income.score += 20;
-  else if (income > 2000) breakdown.income.score += 15;
-  else if (income > 1000) breakdown.income.score += 10;
-
+  if (hasIncomeDoc && aiIncomeMatched) {
+    if (income > 5000) breakdown.income.score += 30;
+    else if (income > 3000) breakdown.income.score += 25;
+    else if (income > 2000) breakdown.income.score += 20;
+    else if (income > 1000) breakdown.income.score += 15;
+    else breakdown.income.score += 10;
+    breakdown.income.score += 5; // Bonus for AI verification
+    breakdown.income.details.push('Income verified by AI');
+  } else if (!hasIncomeDoc) {
+    breakdown.income.details.push('No income document uploaded');
+  } else if (!aiIncomeMatched) {
+    breakdown.income.details.push('AI could not verify income');
+  }
   if (income) {
     breakdown.income.details.push(`Income: $${income.toLocaleString()}`);
   }
 
   // Eviction history
-  if (tenantDoc.hasBeenEvicted === 'no') {
+  if (tenantDoc.evictionHistory === false) {
     breakdown.eviction.score += 15;
     breakdown.eviction.details.push('No eviction history');
   }
@@ -308,19 +308,19 @@ export function getScoreBreakdown(tenantDoc) {
   breakdown.aiParsing.details.push(`${breakdown.aiParsing.score}/10 AI parsing points`);
 
   // Additional factors
-  if (tenantDoc.hasTwoMonthsRentSavings === 'yes') {
+  if (tenantDoc.monthsAheadCanPay >= 2) {
     breakdown.additional.score += 5;
-    breakdown.additional.details.push('Has 2+ months rent savings');
+    breakdown.additional.details.push('Can pay 2+ months ahead');
   }
-  if (tenantDoc.canPayMoreThanOneMonth === 'yes') {
+  if (tenantDoc.monthsAheadCanPay >= 1) {
     breakdown.additional.score += 5;
     breakdown.additional.details.push('Can pay multiple months ahead');
   }
-  if (tenantDoc.hasPets === 'no') {
+  if (tenantDoc.hasPets === false) {
     breakdown.additional.score += 3;
     breakdown.additional.details.push('No pets');
   }
-  if (tenantDoc.smokes === 'no') {
+  if (tenantDoc.smokingStatus === 'non-smoker') {
     breakdown.additional.score += 3;
     breakdown.additional.details.push('Non-smoker');
   }

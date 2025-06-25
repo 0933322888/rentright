@@ -1,8 +1,9 @@
-import TenantDocument from '../models/tenantDocumentModel.js';
+import TenantProfile from '../models/tenantProfileModel.js';
 import { uploadFileToS3, deleteFileFromS3, generateS3Key } from '../utils/s3.js';
 import fs from 'fs';
 import { parseDocumentWithOpenAI } from '../utils/aiImageRecognition.js';
 import { calculateTenantScore } from '../utils/tenantScoringUtils.js';
+import User from '../models/userModel.js';
 
 const documentFields = [
   'proofOfIdentity', 'proofOfIncome', 'creditHistory',
@@ -40,9 +41,9 @@ export const uploadTenantDocument = async (req, res) => {
     }
 
     // Save document metadata and AI result in MongoDB
-    let tenantDocument = await TenantDocument.findOne({ tenant: req.user._id });
+    let tenantDocument = await TenantProfile.findOne({ tenant: req.user._id });
     if (!tenantDocument) {
-      tenantDocument = new TenantDocument({ tenant: req.user._id });
+      tenantDocument = new TenantProfile({ tenant: req.user._id });
     }
     const docMeta = {
       url,
@@ -57,11 +58,8 @@ export const uploadTenantDocument = async (req, res) => {
     tenantDocument[field].push(docMeta);
     await tenantDocument.save();
 
-    console.log('[tenantScore] Before calculation (upload):', tenantDocument.tenantScore);
-    tenantDocument.tenantScore = calculateTenantScore(tenantDocument);
-    console.log('[tenantScore] After calculation (upload):', tenantDocument.tenantScore);
-    await tenantDocument.save();
-    console.log('[tenantScore] Saved to DB (upload)');
+    const score = calculateTenantScore(tenantDocument);
+    await User.findByIdAndUpdate(tenantDocument.tenant, { tenantScoring: score });
 
     res.status(201).json({
       url,
@@ -71,7 +69,7 @@ export const uploadTenantDocument = async (req, res) => {
       mimeType: file.mimetype,
       uploadedAt: new Date(),
       aiParsedData,
-      tenantScore: tenantDocument.tenantScore
+      tenantScore: score
     });
   } catch (error) {
     console.error('Error in uploadTenantDocument:', error);
@@ -86,9 +84,9 @@ export const updateTenantProfile = async (req, res) => {
       return res.status(403).json({ message: 'Only tenants can update their profile' });
     }
 
-    let tenantDocument = await TenantDocument.findOne({ tenant: req.user._id });
+    let tenantDocument = await TenantProfile.findOne({ tenant: req.user._id });
     if (!tenantDocument) {
-      tenantDocument = new TenantDocument({ tenant: req.user._id });
+      tenantDocument = new TenantProfile({ tenant: req.user._id });
     }
 
     // Directly assign document fields from req.body
@@ -99,51 +97,69 @@ export const updateTenantProfile = async (req, res) => {
     });
 
     const fieldsToUpdate = {
-      isCurrentlyEmployed: req.body.isCurrentlyEmployed,
-      employmentType: req.body.employmentType,
+      // Employment & Income
+      employmentStatus: req.body.employmentStatus,
+      employerName: req.body.employerName,
+      jobTitle: req.body.jobTitle,
       monthlyNetIncome: req.body.monthlyNetIncome,
-      hasAdditionalIncome: req.body.hasAdditionalIncome,
-      additionalIncomeDescription: req.body.additionalIncomeDescription,
-      additionalIncomeAmount: req.body.additionalIncomeAmount,
       monthlyDebtRepayment: req.body.monthlyDebtRepayment,
-      paysChildSupport: req.body.paysChildSupport,
-      childSupportAmount: req.body.childSupportAmount,
-      hasBeenEvicted: req.body.hasBeenEvicted,
-      currentlyPaysRent: req.body.currentlyPaysRent,
+      additionalIncomeAmount: req.body.additionalIncomeAmount,
+      additionalIncomeSource: req.body.additionalIncomeSource,
+
+      // Housing Preferences
       currentRentAmount: req.body.currentRentAmount,
-      hasTwoMonthsRentSavings: req.body.hasTwoMonthsRentSavings,
-      canPayMoreThanOneMonth: req.body.canPayMoreThanOneMonth,
       monthsAheadCanPay: req.body.monthsAheadCanPay,
+
+      // Family & Occupants
+      maritalStatus: req.body.maritalStatus,
+      childSupportAmount: req.body.childSupportAmount,
+      adultOccupants: req.body.adultOccupants,
+      childOccupants: req.body.childOccupants,
+
+      // Pets & Smoking
       hasPets: req.body.hasPets,
       petCount: req.body.petCount,
       petTypes: req.body.petTypes,
-      smokes: req.body.smokes,
-      adultOccupants: req.body.adultOccupants,
-      childOccupants: req.body.childOccupants,
-      creditScore: req.body.creditScore
+      petSizes: req.body.petSizes,
+      smokingStatus: req.body.smokingStatus,
+
+      // Financial & Credit
+      creditScore: req.body.creditScore,
+      bankruptcyHistory: req.body.bankruptcyHistory,
+      evictionHistory: req.body.evictionHistory,
+
+      // Rental History
+      currentlyPaysRent: req.body.currentlyPaysRent,
+
+      // Application Strengthening
+      canPayAdvance: req.body.canPayAdvance,
+      hasGuarantor: req.body.hasGuarantor,
+      guarantorName: req.body.guarantorName,
+      guarantorRelationship: req.body.guarantorRelationship,
+      guarantorPhone: req.body.guarantorPhone,
+      guarantorEmail: req.body.guarantorEmail,
+      guarantorAddress: req.body.guarantorAddress,
+      guarantorMonthlyIncome: req.body.guarantorMonthlyIncome,
+      guarantorEmployer: req.body.guarantorEmployer,
+      guarantorJobTitle: req.body.guarantorJobTitle
     };
 
     // Validate required fields before updating
     const requiredFields = [
-      'isCurrentlyEmployed',
-      'employmentType',
+      'employmentStatus',
       'monthlyNetIncome',
-      'hasAdditionalIncome',
       'monthlyDebtRepayment',
-      'paysChildSupport',
-      'hasBeenEvicted',
-      'currentlyPaysRent',
-      'hasTwoMonthsRentSavings',
-      'canPayMoreThanOneMonth',
-      'hasPets',
-      'smokes',
       'adultOccupants',
-      'childOccupants'
+      'childOccupants',
+      'hasPets',
+      'smokingStatus'
     ];
+
 
     const missingFields = [];
     requiredFields.forEach(field => {
-      if (!fieldsToUpdate[field] || fieldsToUpdate[field] === '') {
+      const value = fieldsToUpdate[field];
+      if (value === undefined || value === null) {
         missingFields.push(field);
       }
     });
@@ -159,9 +175,19 @@ export const updateTenantProfile = async (req, res) => {
     Object.entries(fieldsToUpdate).forEach(([field, value]) => {
       if (value !== undefined && value !== '') {
         // Convert numeric fields
-        if (['monthlyNetIncome', 'monthlyDebtRepayment', 'childSupportAmount', 'currentRentAmount', 'monthsAheadCanPay', 'petCount', 'adultOccupants', 'childOccupants', 'creditScore', 'additionalIncomeAmount'].includes(field)) {
+        if (['monthlyNetIncome', 'monthlyDebtRepayment', 'additionalIncomeAmount', 'currentRentAmount', 'monthsAheadCanPay', 'childSupportAmount', 'adultOccupants', 'childOccupants', 'petCount', 'creditScore', 'guarantorMonthlyIncome'].includes(field)) {
           tenantDocument[field] = Number(value);
-        } else {
+        }
+        // Convert boolean fields
+        else if (['hasPets', 'bankruptcyHistory', 'evictionHistory', 'canPayAdvance', 'hasGuarantor', 'currentlyPaysRent'].includes(field)) {
+          if (typeof value === 'string') {
+            tenantDocument[field] = value === 'true';
+          } else {
+            tenantDocument[field] = Boolean(value);
+          }
+        }
+        // Handle other fields
+        else {
           tenantDocument[field] = value;
         }
       }
@@ -169,11 +195,8 @@ export const updateTenantProfile = async (req, res) => {
 
     const savedDocument = await tenantDocument.save();
 
-    console.log('[tenantScore] Before calculation (update):', tenantDocument.tenantScore);
-    tenantDocument.tenantScore = calculateTenantScore(tenantDocument);
-    console.log('[tenantScore] After calculation (update):', tenantDocument.tenantScore);
-    await tenantDocument.save();
-    console.log('[tenantScore] Saved to DB (update)');
+    const score = calculateTenantScore(tenantDocument);
+    await User.findByIdAndUpdate(tenantDocument.tenant, { tenantScoring: score });
 
     const responseData = savedDocument.toObject();
 
@@ -197,7 +220,7 @@ export const updateTenantProfile = async (req, res) => {
 
     res.json({
       ...responseData,
-      tenantScore: tenantDocument.tenantScore
+      tenantScore: score
     });
   } catch (error) {
     console.error('Error in updateTenantProfile:', error);
@@ -207,7 +230,7 @@ export const updateTenantProfile = async (req, res) => {
 
 export const getTenantProfile = async (req, res) => {
   try {
-    const tenantDocument = await TenantDocument.findOne({ tenant: req.user._id });
+    const tenantDocument = await TenantProfile.findOne({ tenant: req.user._id });
     if (!tenantDocument) {
       return res.status(404).json({ message: 'Tenant profile not found' });
     }
@@ -239,9 +262,11 @@ export const getTenantProfile = async (req, res) => {
     delete profileData.createdAt;
     delete profileData.updatedAt;
 
+    const score = calculateTenantScore(tenantDocument);
+
     res.json({
       ...profileData,
-      tenantScore: tenantDocument.tenantScore
+      tenantScore: score
     });
   } catch (error) {
     console.error('Error in getTenantProfile:', error);
@@ -254,7 +279,7 @@ export const deleteDocument = async (req, res) => {
     const { docId } = req.params;
     const userId = req.user._id;
 
-    const tenantDocument = await TenantDocument.findOne({ tenant: userId });
+    const tenantDocument = await TenantProfile.findOne({ tenant: userId });
 
     if (!tenantDocument) {
       return res.status(404).json({ message: 'Tenant profile not found.' });

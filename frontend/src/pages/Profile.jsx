@@ -6,12 +6,12 @@ import { API_ENDPOINTS } from '../config/api';
 import DocumentUpload from '../components/DocumentUpload';
 import { toast, Toaster } from 'react-hot-toast';
 import { getProfilePictureUrl } from '../utils/imageUtils';
-import { 
-  Box, 
-  Typography, 
-  Paper, 
-  TextField, 
-  Button, 
+import {
+  Box,
+  Typography,
+  Paper,
+  TextField,
+  Button,
   Alert,
   Container,
   Divider,
@@ -33,7 +33,19 @@ import {
   Switch,
   Chip,
   ToggleButton,
-  ToggleButtonGroup
+  ToggleButtonGroup,
+  LinearProgress,
+  Stepper,
+  Step,
+  StepLabel,
+  StepContent,
+  Collapse,
+  Fade,
+  Zoom,
+  Slide,
+  Fab,
+  Backdrop,
+  CircularProgress
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
@@ -49,6 +61,14 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import PersonIcon from '@mui/icons-material/Person';
+import WorkIcon from '@mui/icons-material/Work';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import HomeIcon from '@mui/icons-material/Home';
+import SchoolIcon from '@mui/icons-material/School';
+import DescriptionIcon from '@mui/icons-material/Description';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import Tooltip from '@mui/material/Tooltip';
 
 // Custom Enhanced Radio Button Component
@@ -60,12 +80,12 @@ const EnhancedRadioButton = ({ value, label, checked, onChange, name, disabled =
         border: 2,
         borderColor: checked ? 'primary.main' : 'grey.200',
         bgcolor: checked ? 'primary.50' : 'white',
-        transition: 'all 0.2s ease-in-out',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         '&:hover': {
           borderColor: disabled ? 'grey.200' : 'primary.main',
           bgcolor: disabled ? 'white' : checked ? 'primary.50' : 'grey.50',
-          transform: disabled ? 'none' : 'translateY(-2px)',
-          boxShadow: disabled ? 'none' : 2
+          transform: disabled ? 'none' : 'translateY(-4px)',
+          boxShadow: disabled ? 'none' : '0 8px 25px rgba(0,0,0,0.15)'
         },
         opacity: disabled ? 0.6 : 1,
         minHeight: size === 'small' ? 60 : 80,
@@ -73,25 +93,28 @@ const EnhancedRadioButton = ({ value, label, checked, onChange, name, disabled =
         alignItems: 'center',
         justifyContent: 'center',
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        borderRadius: 2
       }}
       onClick={() => !disabled && onChange({ target: { name, value } })}
     >
-      <Box sx={{ 
-        position: 'absolute', 
-        top: 8, 
+      <Box sx={{
+        position: 'absolute',
+        top: 8,
         right: 8,
-        color: checked ? 'primary.main' : 'grey.400'
+        color: checked ? 'primary.main' : 'grey.400',
+        transition: 'all 0.2s ease'
       }}>
         {checked ? <CheckCircleIcon /> : <RadioButtonUncheckedIcon />}
       </Box>
-      <Typography 
-        variant={size === 'small' ? 'body2' : 'body1'} 
-        sx={{ 
+      <Typography
+        variant={size === 'small' ? 'body2' : 'body1'}
+        sx={{
           fontWeight: checked ? 600 : 400,
           color: checked ? 'primary.main' : 'text.primary',
           textAlign: 'center',
-          px: 2
+          px: 2,
+          transition: 'all 0.2s ease'
         }}
       >
         {label}
@@ -99,6 +122,249 @@ const EnhancedRadioButton = ({ value, label, checked, onChange, name, disabled =
     </Card>
   );
 };
+
+// Progress Indicator Component
+const ProfileProgress = ({ answers, documents }) => {
+  const calculateProgress = () => {
+    const requiredFields = [
+      'adultOccupants', 'childOccupants', 'hasPets', 'smokingStatus', 'maritalStatus',
+      'employmentStatus', 'monthlyNetIncome', 'monthlyDebtRepayment', 'currentlyPaysRent',
+      'currentRentAmount', 'canPayAdvance', 'hasGuarantor'
+    ];
+    
+    const optionalFields = [
+      'employerName', 'jobTitle', 'additionalIncomeAmount', 'additionalIncomeSource',
+      'childSupportAmount', 'creditScore', 'bankruptcyHistory', 'evictionHistory',
+      'monthsAheadCanPay'
+    ];
+
+    const guarantorFields = [
+      'guarantorName', 'guarantorRelationship', 'guarantorPhone', 'guarantorEmail',
+      'guarantorAddress', 'guarantorMonthlyIncome', 'guarantorEmployer', 'guarantorJobTitle'
+    ];
+
+    let completed = 0;
+    let total = requiredFields.length + optionalFields.length;
+
+    // Check required fields
+    requiredFields.forEach(field => {
+      if (answers[field] !== undefined && answers[field] !== '' && answers[field] !== null) {
+        completed++;
+      }
+    });
+
+    // Check optional fields
+    optionalFields.forEach(field => {
+      if (answers[field] !== undefined && answers[field] !== '' && answers[field] !== null) {
+        completed++;
+      }
+    });
+
+    // Check guarantor fields if hasGuarantor is true
+    if (answers.hasGuarantor) {
+      total += guarantorFields.length;
+      guarantorFields.forEach(field => {
+        if (answers[field] !== undefined && answers[field] !== '' && answers[field] !== null) {
+          completed++;
+        }
+      });
+    }
+
+    // Check documents
+    const documentFields = ['proofOfIdentity', 'proofOfIncome', 'creditHistory', 'rentalHistory', 'additionalDocuments'];
+    documentFields.forEach(field => {
+      if (documents[field] && documents[field].length > 0) {
+        completed++;
+      }
+    });
+
+    return Math.round((completed / total) * 100);
+  };
+
+  const progress = calculateProgress();
+
+  return (
+    <Paper 
+      elevation={0}
+      sx={{ 
+        p: 3, 
+        mb: 4, 
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white',
+        borderRadius: 3
+      }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          Profile Completion
+        </Typography>
+        <Typography variant="h4" sx={{ fontWeight: 700 }}>
+          {progress}%
+        </Typography>
+      </Box>
+      <LinearProgress 
+        variant="determinate" 
+        value={progress} 
+        sx={{
+          height: 8,
+          borderRadius: 4,
+          backgroundColor: 'rgba(255,255,255,0.3)',
+          '& .MuiLinearProgress-bar': {
+            borderRadius: 4,
+            background: 'linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%)'
+          }
+        }}
+      />
+      <Typography variant="body2" sx={{ mt: 1, opacity: 0.9 }}>
+        {progress < 50 ? 'Keep going! Complete more sections to improve your profile.' :
+         progress < 80 ? 'Great progress! Almost there.' :
+         'Excellent! Your profile is nearly complete.'}
+      </Typography>
+    </Paper>
+  );
+};
+
+// Section Header Component
+const SectionHeader = ({ number, title, icon: Icon, description, completed = false }) => (
+  <Box sx={{ 
+    display: 'flex', 
+    alignItems: 'center', 
+    mb: 3,
+    p: 2,
+    borderRadius: 2,
+    bgcolor: completed ? 'success.50' : 'primary.50',
+    border: '1px solid',
+    borderColor: completed ? 'success.200' : 'primary.200'
+  }}>
+    <Box sx={{
+      width: 48,
+      height: 48,
+      borderRadius: '50%',
+      bgcolor: completed ? 'success.main' : 'primary.main',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      mr: 3,
+      boxShadow: 2
+    }}>
+      {completed ? (
+        <CheckCircleIcon sx={{ color: 'white', fontSize: 24 }} />
+      ) : (
+        <Icon sx={{ color: 'white', fontSize: 24 }} />
+      )}
+    </Box>
+    <Box sx={{ flex: 1 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
+          {title}
+        </Typography>
+        {completed && (
+          <Chip 
+            label="Complete" 
+            size="small" 
+            color="success" 
+            icon={<CheckCircleIcon />}
+            sx={{ fontSize: '0.75rem' }}
+          />
+        )}
+      </Box>
+      {description && (
+        <Typography variant="body2" color="text.secondary">
+          {description}
+        </Typography>
+      )}
+    </Box>
+  </Box>
+);
+
+// Enhanced Form Field Component
+const EnhancedTextField = ({ 
+  label, 
+  name, 
+  value, 
+  onChange, 
+  required = false, 
+  error = false, 
+  helperText = '',
+  tooltip = '',
+  ...props 
+}) => (
+  <Box sx={{ position: 'relative' }}>
+    <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1 }}>
+      <TextField
+        fullWidth
+        label={label}
+        name={name}
+        value={value}
+        onChange={onChange}
+        required={required}
+        error={error}
+        helperText={helperText}
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'primary.main',
+                borderWidth: 2
+              }
+            },
+            '&.Mui-focused': {
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: 'primary.main',
+                borderWidth: 2
+              }
+            }
+          }
+        }}
+        {...props}
+      />
+      {tooltip && (
+        <Tooltip title={tooltip} arrow placement="top">
+          <InfoOutlinedIcon sx={{ color: 'action.active', cursor: 'help', mb: 1 }} />
+        </Tooltip>
+      )}
+    </Box>
+  </Box>
+);
+
+// Enhanced Radio Group Component
+const EnhancedRadioGroup = ({ 
+  name, 
+  value, 
+  onChange, 
+  options, 
+  label, 
+  required = false, 
+  error = false, 
+  helperText = '',
+  columns = 2 
+}) => (
+  <FormControl required={required} error={error} fullWidth>
+    <Typography component="legend" variant="subtitle2" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
+      {label}
+    </Typography>
+    <Grid container spacing={2}>
+      {options.map((option) => (
+        <Grid item xs={12} sm={6} md={12 / columns} key={option.value}>
+          <EnhancedRadioButton
+            value={option.value}
+            label={option.label}
+            checked={value === option.value}
+            onChange={onChange}
+            name={name}
+            size="medium"
+          />
+        </Grid>
+      ))}
+    </Grid>
+    {helperText && (
+      <FormHelperText sx={{ mt: 1, fontSize: '0.875rem' }}>
+        {helperText}
+      </FormHelperText>
+    )}
+  </FormControl>
+);
 
 // Was ToggleRadioGroup, now StyledToggleButtonGroup
 const StyledToggleButtonGroup = ({ name, value, onChange, options, error = false }) => {
@@ -221,9 +487,9 @@ const DocumentPreview = ({ file, onDelete }) => {
         </Typography>
       </CardContent>
       <CardActions sx={{ p: 0, justifyContent: 'center' }}>
-        <IconButton 
-          size="small" 
-          color="error" 
+        <IconButton
+          size="small"
+          color="error"
           onClick={onDelete}
           sx={{ position: 'absolute', top: 4, right: 4, bgcolor: 'rgba(255,255,255,0.8)' }}
         >
@@ -260,38 +526,48 @@ export default function Profile() {
   const [validationErrors, setValidationErrors] = useState([]);
   const [answers, setAnswers] = useState({
     // Employment & Income
-    isCurrentlyEmployed: '',
-    employmentType: '',
+    employmentStatus: '',
+    employerName: '',
+    jobTitle: '',
     monthlyNetIncome: '',
-    hasAdditionalIncome: '',
-    additionalIncomeDescription: '',
-    additionalIncomeAmount: '',
-    
-    // Expenses & Debts
     monthlyDebtRepayment: '',
-    paysChildSupport: '',
-    childSupportAmount: '',
-    
-    // Rental History
-    hasBeenEvicted: '',
-    currentlyPaysRent: '',
+    additionalIncomeAmount: '',
+    additionalIncomeSource: '',
+
+    // Housing Preferences
     currentRentAmount: '',
-    
-    // Financial Preparedness
-    hasTwoMonthsRentSavings: '',
-    
-    // Existing fields
-    canPayMoreThanOneMonth: '',
     monthsAheadCanPay: '',
-    
-    // New fields
-    hasPets: '',
-    petCount: '',
-    petTypes: '',
-    smokes: '',
+
+    // Family & Occupants
+    maritalStatus: '',
+    childSupportAmount: '',
     adultOccupants: '',
     childOccupants: '',
-    creditScore: ''
+
+    // Pets & Smoking
+    hasPets: false,
+    petCount: '',
+    petTypes: '',
+    petSizes: [],
+    smokingStatus: '',
+
+    // Financial & Credit
+    creditScore: '',
+    bankruptcyHistory: false,
+    evictionHistory: false,
+
+    // Application Strengthening
+    canPayAdvance: false,
+    hasGuarantor: false,
+    guarantorName: '',
+    guarantorRelationship: '',
+    guarantorPhone: '',
+    guarantorEmail: '',
+    guarantorAddress: '',
+    guarantorMonthlyIncome: '',
+    guarantorEmployer: '',
+    guarantorJobTitle: '',
+    currentlyPaysRent: false
   });
   const [documents, setDocuments] = useState({
     proofOfIdentity: [],
@@ -299,6 +575,13 @@ export default function Profile() {
     creditHistory: [],
     rentalHistory: [],
     additionalDocuments: []
+  });
+  const [documentUploading, setDocumentUploading] = useState({
+    proofOfIdentity: false,
+    proofOfIncome: false,
+    creditHistory: false,
+    rentalHistory: false,
+    additionalDocuments: false
   });
 
   const ALLOWED_FILE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
@@ -335,38 +618,48 @@ export default function Profile() {
               if (data) {
                 const newAnswers = {
                   // Employment & Income
-                  isCurrentlyEmployed: data.isCurrentlyEmployed === 'yes' ? 'true' : 'false',
-                  employmentType: data.employmentType || '',
+                  employmentStatus: data.employmentStatus || '',
+                  employerName: data.employerName || '',
+                  jobTitle: data.jobTitle || '',
                   monthlyNetIncome: data.monthlyNetIncome || '',
-                  hasAdditionalIncome: data.hasAdditionalIncome === 'yes' ? 'true' : 'false',
-                  additionalIncomeDescription: data.additionalIncomeDescription || '',
-                  additionalIncomeAmount: data.additionalIncomeAmount || '',
-                  
-                  // Expenses & Debts
                   monthlyDebtRepayment: data.monthlyDebtRepayment || '',
-                  paysChildSupport: data.paysChildSupport === 'yes' ? 'true' : 'false',
-                  childSupportAmount: data.childSupportAmount || '',
-                  
-                  // Rental History
-                  hasBeenEvicted: data.hasBeenEvicted === 'yes' ? 'true' : 'false',
-                  currentlyPaysRent: data.currentlyPaysRent === 'yes' ? 'true' : 'false',
+                  additionalIncomeAmount: data.additionalIncomeAmount || '',
+                  additionalIncomeSource: data.additionalIncomeSource || '',
+
+                  // Housing Preferences
                   currentRentAmount: data.currentRentAmount || '',
-                  
-                  // Financial Preparedness
-                  hasTwoMonthsRentSavings: data.hasTwoMonthsRentSavings === 'yes' ? 'true' : 'false',
-                  
-                  // Existing fields
-                  canPayMoreThanOneMonth: data.canPayMoreThanOneMonth === 'yes' ? 'true' : 'false',
                   monthsAheadCanPay: data.monthsAheadCanPay || '',
-                  
-                  // New fields
-                  hasPets: data.hasPets === 'yes' ? 'true' : 'false',
-                  petCount: data.petCount || '',
-                  petTypes: data.petTypes || '',
-                  smokes: data.smokes === 'yes' ? 'true' : 'false',
+
+                  // Family & Occupants
+                  maritalStatus: data.maritalStatus || '',
+                  childSupportAmount: data.childSupportAmount || '',
                   adultOccupants: data.adultOccupants || '',
                   childOccupants: data.childOccupants || '',
-                  creditScore: data.creditScore || ''
+
+                  // Pets & Smoking
+                  hasPets: data.hasPets || false,
+                  petCount: data.petCount || '',
+                  petTypes: data.petTypes || '',
+                  petSizes: data.petSizes || [],
+                  smokingStatus: data.smokingStatus || '',
+
+                  // Financial & Credit
+                  creditScore: data.creditScore || '',
+                  bankruptcyHistory: data.bankruptcyHistory || false,
+                  evictionHistory: data.evictionHistory || false,
+
+                  // Application Strengthening
+                  canPayAdvance: data.canPayAdvance || false,
+                  hasGuarantor: data.hasGuarantor || false,
+                  guarantorName: data.guarantorName || '',
+                  guarantorRelationship: data.guarantorRelationship || '',
+                  guarantorPhone: data.guarantorPhone || '',
+                  guarantorEmail: data.guarantorEmail || '',
+                  guarantorAddress: data.guarantorAddress || '',
+                  guarantorMonthlyIncome: data.guarantorMonthlyIncome || '',
+                  guarantorEmployer: data.guarantorEmployer || '',
+                  guarantorJobTitle: data.guarantorJobTitle || '',
+                  currentlyPaysRent: data.currentlyPaysRent || false
                 };
                 console.log('Setting initial answers:', newAnswers);
                 setAnswers(newAnswers);
@@ -391,27 +684,49 @@ export default function Profile() {
                 console.log('No tenant profile found yet - this is normal for new users');
                 // Initialize empty answers for new tenant
                 setAnswers({
-                  isCurrentlyEmployed: '',
-                  employmentType: '',
+                  // Employment & Income
+                  employmentStatus: '',
+                  employerName: '',
+                  jobTitle: '',
                   monthlyNetIncome: '',
-                  hasAdditionalIncome: '',
-                  additionalIncomeDescription: '',
                   monthlyDebtRepayment: '',
-                  paysChildSupport: '',
-                  childSupportAmount: '',
-                  hasBeenEvicted: '',
-                  currentlyPaysRent: '',
+                  additionalIncomeAmount: '',
+                  additionalIncomeSource: '',
+
+                  // Housing Preferences
                   currentRentAmount: '',
-                  hasTwoMonthsRentSavings: '',
-                  canPayMoreThanOneMonth: '',
                   monthsAheadCanPay: '',
-                  hasPets: '',
-                  petCount: '',
-                  petTypes: '',
-                  smokes: '',
+
+                  // Family & Occupants
+                  maritalStatus: '',
+                  childSupportAmount: '',
                   adultOccupants: '',
                   childOccupants: '',
-                  creditScore: ''
+
+                  // Pets & Smoking
+                  hasPets: false,
+                  petCount: '',
+                  petTypes: '',
+                  petSizes: [],
+                  smokingStatus: '',
+
+                  // Financial & Credit
+                  creditScore: '',
+                  bankruptcyHistory: false,
+                  evictionHistory: false,
+
+                  // Application Strengthening
+                  canPayAdvance: false,
+                  hasGuarantor: false,
+                  guarantorName: '',
+                  guarantorRelationship: '',
+                  guarantorPhone: '',
+                  guarantorEmail: '',
+                  guarantorAddress: '',
+                  guarantorMonthlyIncome: '',
+                  guarantorEmployer: '',
+                  guarantorJobTitle: '',
+                  currentlyPaysRent: false
                 });
                 setDocuments({
                   proofOfIdentity: [],
@@ -440,7 +755,7 @@ export default function Profile() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     // Handle nested social media fields
     if (name.startsWith('socialMedia.')) {
       const socialMediaField = name.split('.')[1];
@@ -474,53 +789,18 @@ export default function Profile() {
     setLoading(true);
     setValidationErrors([]);
 
-    // Client-side validation
-    const requiredFields = [
-      'isCurrentlyEmployed',
-      'employmentType',
-      'monthlyNetIncome',
-      'hasAdditionalIncome',
-      'monthlyDebtRepayment',
-      'paysChildSupport',
-      'hasBeenEvicted',
-      'currentlyPaysRent',
-      'hasTwoMonthsRentSavings',
-      'canPayMoreThanOneMonth'
-    ];
-
-    // Add conditional required fields
-    if (answers.hasAdditionalIncome === 'true') {
-      requiredFields.push('additionalIncomeDescription', 'additionalIncomeAmount');
-    }
-    if (answers.paysChildSupport === 'true') {
-      requiredFields.push('childSupportAmount');
-    }
-    if (answers.currentlyPaysRent === 'true') {
-      requiredFields.push('currentRentAmount');
-    }
-    if (answers.canPayMoreThanOneMonth === 'true') {
-      requiredFields.push('monthsAheadCanPay');
-    }
-    if (answers.hasPets === 'true') {
-      requiredFields.push('petCount', 'petTypes');
-    }
-
+    // Client-side validation for Basic Information only
+    const requiredFields = ['name', 'email'];
     const missingFields = [];
+
     requiredFields.forEach(field => {
-      if (!answers[field] || answers[field] === '') {
+      if (!formData[field] || formData[field].trim() === '') {
         missingFields.push(field);
       }
     });
 
-    const requiredDocuments = ['proofOfIdentity', 'proofOfIncome'];
-    requiredDocuments.forEach(field => {
-        if (!documents[field] || documents[field].length === 0) {
-            missingFields.push(field);
-        }
-    });
-
     if (missingFields.length > 0) {
-      setError(`Please fill in all required fields and upload required documents.`);
+      setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
       setValidationErrors(missingFields);
       setLoading(false);
       return;
@@ -532,10 +812,10 @@ export default function Profile() {
       formDataToSend.append('name', formData.name);
       formDataToSend.append('email', formData.email);
       formDataToSend.append('phone', formData.phone);
-      
+
       // Add social media data as JSON string
       formDataToSend.append('socialMedia', JSON.stringify(formData.socialMedia));
-      
+
       if (formData.profilePicture) {
         // Validate file type
         const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
@@ -560,7 +840,7 @@ export default function Profile() {
         API_ENDPOINTS.UPDATE_PROFILE,
         formDataToSend,
         {
-          headers: { 
+          headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
           }
@@ -582,6 +862,9 @@ export default function Profile() {
   };
 
   const handleDocumentUpload = async (file, field) => {
+    // Set loading state for this field
+    setDocumentUploading(prev => ({ ...prev, [field]: true }));
+    
     const token = localStorage.getItem('token');
     const formData = new FormData();
     formData.append('document', file);
@@ -605,6 +888,9 @@ export default function Profile() {
     } catch (error) {
       console.error('Error uploading document:', error);
       toast.error(`Failed to upload ${file.name}.`);
+    } finally {
+      // Clear loading state for this field
+      setDocumentUploading(prev => ({ ...prev, [field]: false }));
     }
   };
 
@@ -613,31 +899,60 @@ export default function Profile() {
     setError('');
     setSuccess('');
     setLoading(true);
+    setValidationErrors([]);
 
     try {
-      // Client-side validation
+      // Client-side validation for tenant profile
       const requiredFields = [
-        'isCurrentlyEmployed',
-        'employmentType',
+        'employmentStatus',
         'monthlyNetIncome',
-        'hasAdditionalIncome',
         'monthlyDebtRepayment',
-        'paysChildSupport',
-        'hasBeenEvicted',
-        'currentlyPaysRent',
-        'hasTwoMonthsRentSavings',
-        'canPayMoreThanOneMonth'
+        'adultOccupants',
+        'childOccupants',
+        'hasPets',
+        'smokingStatus'
       ];
+
+      // Add conditional required fields
+      if (answers.additionalIncomeAmount && answers.additionalIncomeAmount > 0) {
+        requiredFields.push('additionalIncomeSource');
+      }
+      if (answers.childSupportAmount && answers.childSupportAmount > 0) {
+        requiredFields.push('childSupportAmount');
+      }
+      if (answers.currentRentAmount && answers.currentRentAmount > 0) {
+        requiredFields.push('currentRentAmount');
+      }
+      if (answers.hasPets === true || answers.hasPets === 'true') {
+        requiredFields.push('petCount', 'petTypes');
+      }
 
       const missingFields = [];
       requiredFields.forEach(field => {
-        if (!answers[field] || answers[field] === '') {
+        const value = answers[field];
+        // Check for boolean fields differently
+        if (field === 'hasPets') {
+          if (value !== true && value !== false && value !== 'true' && value !== 'false') {
+            missingFields.push(field);
+          }
+        } else if (value === undefined || value === null || value === '') {
+          missingFields.push(field);
+        }
+      });
+
+      // Check required documents (currently none are required)
+      const requiredDocuments = []; // ['proofOfIdentity', 'proofOfIncome'];
+      requiredDocuments.forEach(field => {
+        if (!documents[field] || documents[field].length === 0) {
           missingFields.push(field);
         }
       });
 
       if (missingFields.length > 0) {
-        setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
+        console.log('Missing fields:', missingFields);
+        console.log('Current answers:', answers);
+        setError(`Please fill in all required fields and upload required documents. Missing: ${missingFields.join(', ')}`);
+        setValidationErrors(missingFields);
         setLoading(false);
         return;
       }
@@ -657,15 +972,64 @@ export default function Profile() {
       });
 
       const transformedAnswers = { ...answers };
-      for (const key in transformedAnswers) {
-        if (transformedAnswers[key] === 'true') {
-          transformedAnswers[key] = 'yes';
-        } else if (transformedAnswers[key] === 'false') {
-          transformedAnswers[key] = 'no';
-        }
+      // Convert boolean values to proper format for the schema
+      if (typeof transformedAnswers.hasPets === 'string') {
+        transformedAnswers.hasPets = transformedAnswers.hasPets === 'true';
+      }
+      if (typeof transformedAnswers.bankruptcyHistory === 'string') {
+        transformedAnswers.bankruptcyHistory = transformedAnswers.bankruptcyHistory === 'true';
+      }
+      if (typeof transformedAnswers.evictionHistory === 'string') {
+        transformedAnswers.evictionHistory = transformedAnswers.evictionHistory === 'true';
+      }
+      if (typeof transformedAnswers.canPayAdvance === 'string') {
+        transformedAnswers.canPayAdvance = transformedAnswers.canPayAdvance === 'true';
+      }
+      if (typeof transformedAnswers.hasGuarantor === 'string') {
+        transformedAnswers.hasGuarantor = transformedAnswers.hasGuarantor === 'true';
+      }
+      if (typeof transformedAnswers.currentlyPaysRent === 'string') {
+        transformedAnswers.currentlyPaysRent = transformedAnswers.currentlyPaysRent === 'true';
+      }
+
+      // Convert numeric fields
+      if (transformedAnswers.monthlyNetIncome) {
+        transformedAnswers.monthlyNetIncome = Number(transformedAnswers.monthlyNetIncome);
+      }
+      if (transformedAnswers.monthlyDebtRepayment) {
+        transformedAnswers.monthlyDebtRepayment = Number(transformedAnswers.monthlyDebtRepayment);
+      }
+      if (transformedAnswers.additionalIncomeAmount) {
+        transformedAnswers.additionalIncomeAmount = Number(transformedAnswers.additionalIncomeAmount);
+      }
+      if (transformedAnswers.currentRentAmount) {
+        transformedAnswers.currentRentAmount = Number(transformedAnswers.currentRentAmount);
+      }
+      if (transformedAnswers.monthsAheadCanPay) {
+        transformedAnswers.monthsAheadCanPay = Number(transformedAnswers.monthsAheadCanPay);
+      }
+      if (transformedAnswers.childSupportAmount) {
+        transformedAnswers.childSupportAmount = Number(transformedAnswers.childSupportAmount);
+      }
+      if (transformedAnswers.adultOccupants) {
+        transformedAnswers.adultOccupants = Number(transformedAnswers.adultOccupants);
+      }
+      if (transformedAnswers.childOccupants) {
+        transformedAnswers.childOccupants = Number(transformedAnswers.childOccupants);
+      }
+      if (transformedAnswers.petCount) {
+        transformedAnswers.petCount = Number(transformedAnswers.petCount);
+      }
+      if (transformedAnswers.creditScore) {
+        transformedAnswers.creditScore = Number(transformedAnswers.creditScore);
+      }
+      if (transformedAnswers.guarantorMonthlyIncome) {
+        transformedAnswers.guarantorMonthlyIncome = Number(transformedAnswers.guarantorMonthlyIncome);
       }
 
       const payload = { ...transformedAnswers, ...documentsToSubmit };
+
+      console.log('Submitting payload:', payload);
 
       const response = await axios.post(
         API_ENDPOINTS.UPDATE_TENANT_PROFILE,
@@ -681,40 +1045,52 @@ export default function Profile() {
       if (response.status === 200) {
         const { data } = response;
         console.log('Server response data:', data);
-        
+
         // Update the answers state with the new values from the server
         const updatedAnswers = {
           // Employment & Income
-          isCurrentlyEmployed: data.isCurrentlyEmployed === 'yes' ? 'true' : 'false',
-          employmentType: data.employmentType || '',
+          employmentStatus: data.employmentStatus || '',
+          employerName: data.employerName || '',
+          jobTitle: data.jobTitle || '',
           monthlyNetIncome: data.monthlyNetIncome || '',
-          hasAdditionalIncome: data.hasAdditionalIncome === 'yes' ? 'true' : 'false',
-          additionalIncomeDescription: data.additionalIncomeDescription || '',
-          additionalIncomeAmount: data.additionalIncomeAmount || '',
-          
-          // Expenses & Debts
           monthlyDebtRepayment: data.monthlyDebtRepayment || '',
-          paysChildSupport: data.paysChildSupport === 'yes' ? 'true' : 'false',
-          childSupportAmount: data.childSupportAmount || '',
-          
-          // Rental History
-          hasBeenEvicted: data.hasBeenEvicted === 'yes' ? 'true' : 'false',
-          currentlyPaysRent: data.currentlyPaysRent === 'yes' ? 'true' : 'false',
+          additionalIncomeAmount: data.additionalIncomeAmount || '',
+          additionalIncomeSource: data.additionalIncomeSource || '',
+
+          // Housing Preferences
           currentRentAmount: data.currentRentAmount || '',
-          
-          // Financial Preparedness
-          hasTwoMonthsRentSavings: data.hasTwoMonthsRentSavings === 'yes' ? 'true' : 'false',
-          canPayMoreThanOneMonth: data.canPayMoreThanOneMonth === 'yes' ? 'true' : 'false',
           monthsAheadCanPay: data.monthsAheadCanPay || '',
-          
-          // New fields
-          hasPets: data.hasPets === 'yes' ? 'true' : 'false',
-          petCount: data.petCount || '',
-          petTypes: data.petTypes || '',
-          smokes: data.smokes === 'yes' ? 'true' : 'false',
+
+          // Family & Occupants
+          maritalStatus: data.maritalStatus || '',
+          childSupportAmount: data.childSupportAmount || '',
           adultOccupants: data.adultOccupants || '',
           childOccupants: data.childOccupants || '',
-          creditScore: data.creditScore || ''
+
+          // Pets & Smoking
+          hasPets: data.hasPets || false,
+          petCount: data.petCount || '',
+          petTypes: data.petTypes || '',
+          petSizes: data.petSizes || [],
+          smokingStatus: data.smokingStatus || '',
+
+          // Financial & Credit
+          creditScore: data.creditScore || '',
+          bankruptcyHistory: data.bankruptcyHistory || false,
+          evictionHistory: data.evictionHistory || false,
+
+          // Application Strengthening
+          canPayAdvance: data.canPayAdvance || false,
+          hasGuarantor: data.hasGuarantor || false,
+          guarantorName: data.guarantorName || '',
+          guarantorRelationship: data.guarantorRelationship || '',
+          guarantorPhone: data.guarantorPhone || '',
+          guarantorEmail: data.guarantorEmail || '',
+          guarantorAddress: data.guarantorAddress || '',
+          guarantorMonthlyIncome: data.guarantorMonthlyIncome || '',
+          guarantorEmployer: data.guarantorEmployer || '',
+          guarantorJobTitle: data.guarantorJobTitle || '',
+          currentlyPaysRent: data.currentlyPaysRent || false
         };
         console.log('Updated answers:', updatedAnswers);
         setAnswers(updatedAnswers);
@@ -749,7 +1125,9 @@ export default function Profile() {
       toast.error(`You can upload a maximum of ${MAX_TOTAL_FILES} files in total.`);
       return;
     }
-    acceptedFiles.forEach(file => {
+    
+    // Validate each file
+    for (const file of acceptedFiles) {
       if (!ALLOWED_FILE_TYPES.includes(file.type)) {
         toast.error('Only PNG, JPEG, and WEBP images are allowed.');
         return;
@@ -758,6 +1136,10 @@ export default function Profile() {
         toast.error(`File size must be less than ${MAX_FILE_SIZE_MB}MB.`);
         return;
       }
+    }
+    
+    // Upload files sequentially to avoid overwhelming the server
+    acceptedFiles.forEach(file => {
       handleDocumentUpload(file, field);
     });
   };
@@ -765,19 +1147,19 @@ export default function Profile() {
   const handleDeleteDocument = async (field, docId) => {
     const token = localStorage.getItem('token');
     try {
-        await axios.delete(`${API_ENDPOINTS.DELETE_TENANT_DOCUMENT}/documents/${docId}`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        setDocuments(prev => ({
-            ...prev,
-            [field]: (prev[field] || []).filter(doc => doc._id !== docId)
-        }));
-        toast.success('Document deleted successfully.');
+      await axios.delete(`${API_ENDPOINTS.DELETE_TENANT_DOCUMENT}/documents/${docId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setDocuments(prev => ({
+        ...prev,
+        [field]: (prev[field] || []).filter(doc => doc._id !== docId)
+      }));
+      toast.success('Document deleted successfully.');
 
     } catch (error) {
-        console.error('Error deleting document:', error);
-        toast.error('Failed to delete document.');
+      console.error('Error deleting document:', error);
+      toast.error('Failed to delete document.');
     }
   };
 
@@ -790,14 +1172,14 @@ export default function Profile() {
   }
 
   return (
-    <Box sx={{ 
+    <Box sx={{
       minHeight: '100vh',
       px: 0,
       background: 'linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%)'
     }}>
-      <Paper 
-        elevation={3} 
-        sx={{ 
+      <Paper
+        elevation={3}
+        sx={{
           p: { xs: 2, sm: 4 },
           borderRadius: 2,
           background: 'rgba(255, 255, 255, 0.9)',
@@ -807,11 +1189,11 @@ export default function Profile() {
         }}
       >
         <Toaster position="top-right" />
-        
+
         {/* OAuth Social Media Notification */}
         {user?.socialProfile?.provider && user?.socialMedia && Object.keys(user.socialMedia).length > 0 && (
-          <Alert 
-            severity="info" 
+          <Alert
+            severity="info"
             sx={{ mb: 3 }}
             action={
               <Button color="inherit" size="small" onClick={() => setSuccess('')}>
@@ -820,7 +1202,7 @@ export default function Profile() {
             }
           >
             <Typography variant="body2">
-              <strong>Social Media Connected!</strong> Your {user.socialProfile.provider} account has been linked to your profile. 
+              <strong>Social Media Connected!</strong> Your {user.socialProfile.provider} account has been linked to your profile.
               You can edit these links below or add additional social media accounts.
             </Typography>
           </Alert>
@@ -846,25 +1228,37 @@ export default function Profile() {
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                />
+                <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1 }}>
+                  <TextField
+                    fullWidth
+                    label="Name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    error={validationErrors.includes('name')}
+                  />
+                  <Tooltip title={validationErrors.includes('name') ? 'Name is required' : 'Required'} arrow>
+                    <InfoOutlinedIcon sx={{ color: validationErrors.includes('name') ? 'error.main' : 'action.active', cursor: 'help', mb: 1 }} />
+                  </Tooltip>
+                </Box>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
+                <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1 }}>
+                  <TextField
+                    fullWidth
+                    label="Email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    error={validationErrors.includes('email')}
+                  />
+                  <Tooltip title={validationErrors.includes('email') ? 'Email is required' : 'Required'} arrow>
+                    <InfoOutlinedIcon sx={{ color: validationErrors.includes('email') ? 'error.main' : 'action.active', cursor: 'help', mb: 1 }} />
+                  </Tooltip>
+                </Box>
               </Grid>
               <Grid item xs={12}>
                 <TextField
@@ -888,8 +1282,8 @@ export default function Profile() {
                     {/* Current Profile Picture Display */}
                     <Avatar
                       src={profilePreview ? URL.createObjectURL(profilePreview) : (user?.profilePicture ? getProfilePictureUrl(user.profilePicture) : null)}
-                      sx={{ 
-                        width: 120, 
+                      sx={{
+                        width: 120,
                         height: 120,
                         border: '3px solid',
                         borderColor: 'primary.main',
@@ -902,7 +1296,7 @@ export default function Profile() {
                         </Typography>
                       )}
                     </Avatar>
-                    
+
                     {/* Upload Button */}
                     <Button
                       variant="outlined"
@@ -939,7 +1333,7 @@ export default function Profile() {
                         }}
                       />
                     </Button>
-                    
+
                     {/* Remove Button */}
                     {(profilePreview || user?.profilePicture) && (
                       <Button
@@ -957,20 +1351,20 @@ export default function Profile() {
                     )}
                   </Box>
                 </Grid>
-                
+
                 <Grid item xs={12} sm={8}>
                   <Stack spacing={2}>
                     <Typography variant="body2" color="text.secondary">
-                      Upload a profile picture to personalize your account. 
+                      Upload a profile picture to personalize your account.
                       Supported formats: JPEG, PNG, GIF. Maximum size: 5MB.
                     </Typography>
-                    
+
                     {uploadError && (
                       <Alert severity="error" onClose={() => setUploadError('')}>
                         {uploadError}
                       </Alert>
                     )}
-                    
+
                     {profilePreview && (
                       <Alert severity="info">
                         New profile picture selected: {profilePreview.name}
@@ -1156,19 +1550,27 @@ export default function Profile() {
 
         {/* Tenant Profile Section */}
         {user?.role === 'tenant' && (
-          <Paper sx={{ p: 4, mb: 3 }}>
+          <Paper sx={{ p: 4, mb: 3, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
             <Box sx={{ mb: 4 }}>
-              <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
+              <Typography variant="h4" gutterBottom sx={{ 
+                fontWeight: 700, 
+                color: 'primary.main',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
+              }}>
                 Tenant Application Profile
               </Typography>
-              <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 3, fontSize: '1.1rem' }}>
                 Complete your profile to streamline your property applications. This information helps landlords make informed decisions.
               </Typography>
-              <Alert severity="info" sx={{ 
-                '& .MuiAlert-message': { fontSize: '0.9rem' },
+              <Alert severity="info" sx={{
+                '& .MuiAlert-message': { fontSize: '0.95rem' },
                 backgroundColor: 'primary.50',
                 border: '1px solid',
-                borderColor: 'primary.200'
+                borderColor: 'primary.200',
+                borderRadius: 2
               }}>
                 <Typography variant="body2">
                   <strong>Required Fields:</strong> All fields marked with an asterisk (*) must be completed to submit your profile.
@@ -1176,27 +1578,34 @@ export default function Profile() {
               </Alert>
             </Box>
 
+            {/* Progress Indicator */}
+            <ProfileProgress answers={answers} documents={documents} />
+
             <Box component="form" onSubmit={handleTenantSubmit}>
               {/* Personal & Household Information */}
-              <Paper variant="outlined" sx={{ p: 4, mb: 4, borderColor: 'primary.200' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                  <Box sx={{ 
-                    width: 40, 
-                    height: 40, 
-                    borderRadius: '50%', 
-                    bgcolor: 'primary.main', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    mr: 2
-                  }}>
-                    <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>1</Typography>
-                  </Box>
-                  <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                    Personal & Household Information
-                  </Typography>
-                </Box>
-                
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: 4, 
+                  mb: 4, 
+                  border: '2px solid',
+                  borderColor: 'primary.200',
+                  borderRadius: 3,
+                  background: 'linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
+                    transform: 'translateY(-2px)'
+                  }
+                }}
+              >
+                <SectionHeader
+                  title="Personal & Household Information"
+                  icon={PersonIcon}
+                  description="Tell us about yourself and your household"
+                  completed={answers.adultOccupants && answers.childOccupants && answers.hasPets !== undefined && answers.smokingStatus}
+                />
+
                 <Grid container spacing={3} alignItems="flex-end">
                   {/* Occupants */}
                   <Grid item xs={12} sm={6} md={4}>
@@ -1205,8 +1614,7 @@ export default function Profile() {
                     </Typography>
                     <Grid container spacing={1}>
                       <Grid item xs={6}>
-                        <TextField
-                          fullWidth
+                        <EnhancedTextField
                           label="Adults (18+)"
                           name="adultOccupants"
                           type="number"
@@ -1216,11 +1624,11 @@ export default function Profile() {
                           required
                           error={validationErrors.includes('adultOccupants')}
                           size="small"
+                          tooltip="Number of adults (18+) who will be living in the property"
                         />
                       </Grid>
                       <Grid item xs={6}>
-                        <TextField
-                          fullWidth
+                        <EnhancedTextField
                           label="Children (<18)"
                           name="childOccupants"
                           type="number"
@@ -1230,6 +1638,7 @@ export default function Profile() {
                           required
                           error={validationErrors.includes('childOccupants')}
                           size="small"
+                          tooltip="Number of children under 18 who will be living in the property"
                         />
                       </Grid>
                     </Grid>
@@ -1237,122 +1646,183 @@ export default function Profile() {
 
                   {/* Pets */}
                   <Grid item xs={12} sm={6} md={4}>
-                    <FormControl required error={validationErrors.includes('hasPets')} fullWidth>
-                      <Typography component="legend" variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
-                        Do you have pets? *
-                      </Typography>
-                      <StyledToggleButtonGroup
-                        name="hasPets"
-                        value={answers.hasPets}
-                        onChange={handleAnswerChange}
-                        options={[ { value: 'true', label: 'Yes' }, { value: 'false', label: 'No' } ]}
-                        error={validationErrors.includes('hasPets')}
-                      />
-                    </FormControl>
+                    <EnhancedRadioGroup
+                      name="hasPets"
+                      value={answers.hasPets}
+                      onChange={handleAnswerChange}
+                      options={[
+                        { value: true, label: 'Yes' },
+                        { value: false, label: 'No' }
+                      ]}
+                      label="Do you have pets? *"
+                      required
+                      error={validationErrors.includes('hasPets')}
+                      columns={2}
+                    />
                   </Grid>
-                  
+
                   {/* Smoking */}
                   <Grid item xs={12} sm={6} md={4}>
-                     <FormControl required error={validationErrors.includes('smokes')} fullWidth>
-                      <Typography component="legend" variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
-                        Do you smoke? *
-                      </Typography>
-                      <StyledToggleButtonGroup
-                        name="smokes"
-                        value={answers.smokes}
-                        onChange={handleAnswerChange}
-                        options={[ { value: 'true', label: 'Yes' }, { value: 'false', label: 'No' } ]}
-                        error={validationErrors.includes('smokes')}
-                      />
-                    </FormControl>
+                    <EnhancedRadioGroup
+                      name="smokingStatus"
+                      value={answers.smokingStatus}
+                      onChange={handleAnswerChange}
+                      options={[
+                        { value: 'non-smoker', label: 'Non-smoker' },
+                        { value: 'smoker', label: 'Smoker' },
+                        { value: 'former-smoker', label: 'Former smoker' }
+                      ]}
+                      label="Smoking Status *"
+                      required
+                      error={validationErrors.includes('smokingStatus')}
+                      columns={1}
+                    />
+                  </Grid>
+
+                  {/* Marital Status */}
+                  <Grid item xs={12} sm={6} md={4}>
+                    <EnhancedTextField
+                      fullWidth
+                      select
+                      label="Marital Status"
+                      name="maritalStatus"
+                      value={answers.maritalStatus}
+                      onChange={handleAnswerChange}
+                      size="small"
+                      tooltip="Your current marital status"
+                    >
+                      <MenuItem value="" disabled>Select marital status</MenuItem>
+                      <MenuItem value="single">Single</MenuItem>
+                      <MenuItem value="married">Married</MenuItem>
+                      <MenuItem value="divorced">Divorced</MenuItem>
+                      <MenuItem value="widowed">Widowed</MenuItem>
+                      <MenuItem value="other">Other</MenuItem>
+                    </EnhancedTextField>
                   </Grid>
 
                   {/* Conditional Pet Fields */}
-                  {answers.hasPets === 'true' && (
-                    <Grid item xs={12} md={8} sx={{ alignSelf: 'flex-start', pl: { md: '16.67%' } }}>
-                      <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600, color: 'text.primary' }}>
-                        Pet Details *
-                      </Typography>
-                      <Grid container spacing={1}>
-                          <Grid item xs={6}>
-                              <TextField fullWidth label="Number of Pets" name="petCount" type="number" value={answers.petCount} onChange={handleAnswerChange} inputProps={{ min: 1 }} required size="small" />
+                  <Collapse in={answers.hasPets} timeout="auto" unmountOnExit>
+                    <Grid item xs={12}>
+                      <Box sx={{ 
+                        p: 3, 
+                        bgcolor: 'primary.50', 
+                        borderRadius: 2, 
+                        border: '1px solid',
+                        borderColor: 'primary.200',
+                        mt: 2
+                      }}>
+                        <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 600 }}>
+                          Pet Information
+                        </Typography>
+                        <Grid container spacing={3}>
+                          <Grid item xs={12} md={6}>
+                            <EnhancedTextField
+                              label="Number of Pets"
+                              name="petCount"
+                              type="number"
+                              value={answers.petCount}
+                              onChange={handleAnswerChange}
+                              inputProps={{ min: 1 }}
+                              required
+                              error={validationErrors.includes('petCount')}
+                              size="small"
+                              tooltip="Total number of pets you have"
+                            />
                           </Grid>
-                          <Grid item xs={6}>
-                              <TextField fullWidth label="Types" name="petTypes" value={answers.petTypes} onChange={handleAnswerChange} placeholder="e.g., 2 dogs, 1 cat" required size="small" />
+                          <Grid item xs={12} md={6}>
+                            <EnhancedTextField
+                              label="Pet Types"
+                              name="petTypes"
+                              value={answers.petTypes}
+                              onChange={handleAnswerChange}
+                              placeholder="e.g., 2 dogs, 1 cat"
+                              required
+                              error={validationErrors.includes('petTypes')}
+                              size="small"
+                              tooltip="Describe your pets (type, breed, size)"
+                            />
                           </Grid>
-                      </Grid>
+                        </Grid>
+                      </Box>
                     </Grid>
-                  )}
+                  </Collapse>
                 </Grid>
               </Paper>
 
               {/* Employment & Income */}
-              <Paper variant="outlined" sx={{ p: 4, mb: 4, borderColor: 'primary.200' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                  <Box sx={{ 
-                    width: 40, 
-                    height: 40, 
-                    borderRadius: '50%', 
-                    bgcolor: 'primary.main', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    mr: 2
-                  }}>
-                    <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>2</Typography>
-                  </Box>
-                  <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                    Employment & Income
-                  </Typography>
-                </Box>
-                
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: 4, 
+                  mb: 4, 
+                  border: '2px solid',
+                  borderColor: 'primary.200',
+                  borderRadius: 3,
+                  background: 'linear-gradient(135deg, #fff8f0 0%, #fff4e6 100%)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
+                    transform: 'translateY(-2px)'
+                  }
+                }}
+              >
+                <SectionHeader
+                  title="Employment & Income"
+                  icon={WorkIcon}
+                  description="Your employment status and income information"
+                  completed={answers.employmentStatus && answers.monthlyNetIncome}
+                />
+
                 <Grid container spacing={3} alignItems="flex-end">
                   <Grid item xs={12} md={6}>
-                    <FormControl required error={validationErrors.includes('isCurrentlyEmployed')} fullWidth>
-                      <Typography component="legend" variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
-                        Currently Employed? *
-                      </Typography>
-                      <StyledToggleButtonGroup
-                        name="isCurrentlyEmployed"
-                        value={answers.isCurrentlyEmployed}
-                        onChange={handleAnswerChange}
-                        options={[ { value: 'true', label: 'Yes' }, { value: 'false', label: 'No' } ]}
-                        error={validationErrors.includes('isCurrentlyEmployed')}
-                      />
-                    </FormControl>
-                  </Grid>
-
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
+                    <EnhancedTextField
                       select
-                      label="Employment Type *"
-                      name="employmentType"
-                      value={answers.employmentType}
+                      label="Employment Status"
+                      name="employmentStatus"
+                      value={answers.employmentStatus}
                       onChange={handleAnswerChange}
-                      placeholder="Select employment type"
+                      placeholder="Select employment status"
                       required
-                      error={validationErrors.includes('employmentType')}
-                      helperText={validationErrors.includes('employmentType') ? 'Required' : undefined}
+                      error={validationErrors.includes('employmentStatus')}
                       size="small"
-                      InputProps={{
-                        style: { minWidth: 220 }
-                      }}
+                      tooltip="Your current employment status"
                     >
-                      <MenuItem value="" disabled>Select employment type</MenuItem>
-                      <MenuItem value="full-time">Full-time</MenuItem>
-                      <MenuItem value="part-time">Part-time</MenuItem>
+                      <MenuItem value="" disabled>Select employment status</MenuItem>
+                      <MenuItem value="employed">Employed</MenuItem>
                       <MenuItem value="self-employed">Self-employed</MenuItem>
-                      <MenuItem value="contractor">Contractor</MenuItem>
                       <MenuItem value="student">Student</MenuItem>
-                      <MenuItem value="unemployed">Unemployed</MenuItem>
                       <MenuItem value="retired">Retired</MenuItem>
-                    </TextField>
+                      <MenuItem value="unemployed">Unemployed</MenuItem>
+                      <MenuItem value="other">Other</MenuItem>
+                    </EnhancedTextField>
                   </Grid>
 
                   <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
+                    <EnhancedTextField
+                      label="Employer Name"
+                      name="employerName"
+                      value={answers.employerName}
+                      onChange={handleAnswerChange}
+                      placeholder="Company name"
+                      size="small"
+                      tooltip="Name of your current employer or company"
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <EnhancedTextField
+                      label="Job Title"
+                      name="jobTitle"
+                      value={answers.jobTitle}
+                      onChange={handleAnswerChange}
+                      placeholder="Your job title"
+                      size="small"
+                      tooltip="Your current job title or position"
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <EnhancedTextField
                       label="Monthly Net Income"
                       name="monthlyNetIncome"
                       type="number"
@@ -1361,304 +1831,105 @@ export default function Profile() {
                       inputProps={{ min: 0, step: 0.01 }}
                       required
                       error={validationErrors.includes('monthlyNetIncome')}
-                      helperText={validationErrors.includes('monthlyNetIncome') ? 'Required' : undefined}
                       InputProps={{
                         startAdornment: <InputAdornment position="start">$</InputAdornment>,
                       }}
                       size="small"
+                      tooltip="Your monthly take-home pay after taxes and deductions"
                     />
                   </Grid>
 
                   <Grid item xs={12} md={6}>
-                    <FormControl required error={validationErrors.includes('hasAdditionalIncome')} fullWidth>
-                      <Typography component="legend" variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
-                        Additional Income? *
-                      </Typography>
-                      <StyledToggleButtonGroup
-                        name="hasAdditionalIncome"
-                        value={answers.hasAdditionalIncome}
-                        onChange={handleAnswerChange}
-                        options={[ { value: 'true', label: 'Yes' }, { value: 'false', label: 'No' } ]}
-                        error={validationErrors.includes('hasAdditionalIncome')}
-                      />
-                    </FormControl>
+                    <EnhancedTextField
+                      label="Monthly Debt Repayment"
+                      name="monthlyDebtRepayment"
+                      type="number"
+                      value={answers.monthlyDebtRepayment}
+                      onChange={handleAnswerChange}
+                      inputProps={{ min: 0, step: 0.01 }}
+                      required
+                      error={validationErrors.includes('monthlyDebtRepayment')}
+                      InputProps={{
+                        startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                      }}
+                      size="small"
+                      tooltip="Total monthly payments for loans, credit cards, etc."
+                    />
                   </Grid>
 
-                  {answers.hasAdditionalIncome === 'true' && (
-                    <Grid container spacing={3}>
-                      <Grid item xs={12} md={6}>
-                        <TextField
-                          fullWidth
-                          label="Additional Income Amount *"
-                          name="additionalIncomeAmount"
-                          type="number"
-                          value={answers.additionalIncomeAmount}
-                          onChange={handleAnswerChange}
-                          placeholder="0.00"
-                          inputProps={{ min: 0, step: 0.01 }}
-                          required
-                          error={validationErrors.includes('additionalIncomeAmount')}
-                          helperText={validationErrors.includes('additionalIncomeAmount') ? 'Required' : undefined}
-                          InputProps={{
-                            startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                          }}
-                          size="small"
-                        />
-                      </Grid>
-                      <Grid item xs={12} md={6}>
-                        <TextField
-                          fullWidth
-                          label="Additional Income Description *"
-                          name="additionalIncomeDescription"
-                          multiline
-                          rows={1}
-                          value={answers.additionalIncomeDescription}
-                          onChange={handleAnswerChange}
-                          placeholder="Describe your additional income sources..."
-                          required
-                          error={validationErrors.includes('additionalIncomeDescription')}
-                          helperText={validationErrors.includes('additionalIncomeDescription') ? 'Required' : undefined}
-                          size="small"
-                        />
-                      </Grid>
-                    </Grid>
-                  )}
+                  <Grid item xs={12} md={6}>
+                    <EnhancedTextField
+                      label="Additional Income Amount"
+                      name="additionalIncomeAmount"
+                      type="number"
+                      value={answers.additionalIncomeAmount}
+                      onChange={handleAnswerChange}
+                      inputProps={{ min: 0, step: 0.01 }}
+                      InputProps={{
+                        startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                      }}
+                      size="small"
+                      tooltip="Any additional monthly income (freelance, investments, etc.)"
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <EnhancedTextField
+                      label="Additional Income Source"
+                      name="additionalIncomeSource"
+                      value={answers.additionalIncomeSource}
+                      onChange={handleAnswerChange}
+                      placeholder="e.g., freelance, investments"
+                      size="small"
+                      tooltip="Description of your additional income source"
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <EnhancedTextField
+                      label="Child Support Amount"
+                      name="childSupportAmount"
+                      type="number"
+                      value={answers.childSupportAmount}
+                      onChange={handleAnswerChange}
+                      inputProps={{ min: 0, step: 0.01 }}
+                      InputProps={{
+                        startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                      }}
+                      size="small"
+                      tooltip="Monthly child support payments you receive or pay"
+                    />
+                  </Grid>
                 </Grid>
               </Paper>
 
-              {/* Financial Information */}
-              <Paper variant="outlined" sx={{ p: 4, mb: 4, borderColor: 'primary.200' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                  <Box sx={{ 
-                    width: 40, 
-                    height: 40, 
-                    borderRadius: '50%', 
-                    bgcolor: 'primary.main', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    mr: 2
-                  }}>
-                    <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>3</Typography>
-                  </Box>
-                  <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                    Financial Information
-                  </Typography>
-                </Box>
-                
-                <Grid container spacing={3} alignItems="flex-end">
-                  <Grid item xs={12} md={6}>
-                    <Box display="flex" flexDirection="column">
-                      <Box display="flex" alignItems="center" gap={0.5} mb={0.5}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                          Monthly Debt Payments
-                        </Typography>
-                        <Tooltip title="Credit cards, loans, etc." arrow>
-                          <InfoOutlinedIcon fontSize="small" color="action" sx={{ cursor: 'pointer' }} />
-                        </Tooltip>
-                      </Box>
-                      <TextField
-                        fullWidth
-                        name="monthlyDebtRepayment"
-                        type="number"
-                        value={answers.monthlyDebtRepayment}
-                        onChange={handleAnswerChange}
-                        inputProps={{ min: 0, step: 0.01 }}
-                        required
-                        error={validationErrors.includes('monthlyDebtRepayment')}
-                        helperText={validationErrors.includes('monthlyDebtRepayment') ? 'Required' : undefined}
-                        InputProps={{
-                          startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                        }}
-                        size="small"
-                      />
-                    </Box>
-                  </Grid>
+              {/* Financial & Credit */}
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: 4, 
+                  mb: 4, 
+                  border: '2px solid',
+                  borderColor: 'primary.200',
+                  borderRadius: 3,
+                  background: 'linear-gradient(135deg, #f0fff4 0%, #e6ffe6 100%)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
+                    transform: 'translateY(-2px)'
+                  }
+                }}
+              >
+                <SectionHeader
+                  title="Financial & Credit Information"
+                  icon={AccountBalanceIcon}
+                  description="Your credit history and financial background"
+                  completed={answers.bankruptcyHistory !== undefined && answers.evictionHistory !== undefined}
+                />
 
-                  <Grid item xs={12} md={6}>
-                    <FormControl required error={validationErrors.includes('paysChildSupport')} fullWidth>
-                      <Typography component="legend" variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
-                        Child/Spousal Support? *
-                      </Typography>
-                      <StyledToggleButtonGroup
-                        name="paysChildSupport"
-                        value={answers.paysChildSupport}
-                        onChange={handleAnswerChange}
-                        options={[ { value: 'true', label: 'Yes' }, { value: 'false', label: 'No' } ]}
-                        error={validationErrors.includes('paysChildSupport')}
-                      />
-                    </FormControl>
-                  </Grid>
-
-                  {answers.paysChildSupport === 'true' && (
-                    <Grid item xs={12} md={6}>
-                      <TextField
-                        fullWidth
-                        label="Monthly Support Amount"
-                        name="childSupportAmount"
-                        type="number"
-                        value={answers.childSupportAmount}
-                        onChange={handleAnswerChange}
-                        inputProps={{ min: 0, step: 0.01 }}
-                        InputProps={{
-                          startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                        }}
-                        size="small"
-                      />
-                    </Grid>
-                  )}
-
-                  <Grid item xs={12} md={6}>
-                    <FormControl required error={validationErrors.includes('hasTwoMonthsRentSavings')} fullWidth>
-                      <Typography component="legend" variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
-                        2+ Months Rent Savings? *
-                      </Typography>
-                      <StyledToggleButtonGroup
-                        name="hasTwoMonthsRentSavings"
-                        value={answers.hasTwoMonthsRentSavings}
-                        onChange={handleAnswerChange}
-                        options={[ { value: 'true', label: 'Yes' }, { value: 'false', label: 'No' } ]}
-                        error={validationErrors.includes('hasTwoMonthsRentSavings')}
-                      />
-                    </FormControl>
-                  </Grid>
-
-                  <Grid item xs={12} md={6}>
-                    <FormControl required error={validationErrors.includes('canPayMoreThanOneMonth')} fullWidth>
-                      <Typography component="legend" variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
-                        Can Pay Multiple Months? *
-                      </Typography>
-                      <StyledToggleButtonGroup
-                        name="canPayMoreThanOneMonth"
-                        value={answers.canPayMoreThanOneMonth}
-                        onChange={handleAnswerChange}
-                        options={[ { value: 'true', label: 'Yes' }, { value: 'false', label: 'No' } ]}
-                        error={validationErrors.includes('canPayMoreThanOneMonth')}
-                      />
-                    </FormControl>
-                  </Grid>
-
-                  {answers.canPayMoreThanOneMonth === 'true' && (
-                    <Grid item xs={12} md={6}>
-                      <Box display="flex" flexDirection="column">
-                        <Box display="flex" alignItems="center" gap={0.5} mb={0.5}>
-                          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                            Months Ahead Can Pay
-                          </Typography>
-                          <Tooltip title="Minimum 2 months" arrow>
-                            <InfoOutlinedIcon fontSize="small" color="action" sx={{ cursor: 'pointer' }} />
-                          </Tooltip>
-                        </Box>
-                        <TextField
-                          fullWidth
-                          name="monthsAheadCanPay"
-                          type="number"
-                          value={answers.monthsAheadCanPay}
-                          onChange={handleAnswerChange}
-                          inputProps={{ min: 2 }}
-                          size="small"
-                        />
-                      </Box>
-                    </Grid>
-                  )}
-                </Grid>
-              </Paper>
-
-              {/* Rental History */}
-              <Paper variant="outlined" sx={{ p: 4, mb: 4, borderColor: 'primary.200' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                  <Box sx={{ 
-                    width: 40, 
-                    height: 40, 
-                    borderRadius: '50%', 
-                    bgcolor: 'primary.main', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    mr: 2
-                  }}>
-                    <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>4</Typography>
-                  </Box>
-                  <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                    Rental History
-                  </Typography>
-                </Box>
-                
-                <Grid container spacing={3} alignItems="flex-end">
-                  <Grid item xs={12} md={6}>
-                    <FormControl required error={validationErrors.includes('hasBeenEvicted')} fullWidth>
-                      <Typography component="legend" variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
-                        Ever Been Evicted? *
-                      </Typography>
-                      <StyledToggleButtonGroup
-                        name="hasBeenEvicted"
-                        value={answers.hasBeenEvicted}
-                        onChange={handleAnswerChange}
-                        options={[ { value: 'true', label: 'Yes' }, { value: 'false', label: 'No' } ]}
-                        error={validationErrors.includes('hasBeenEvicted')}
-                      />
-                    </FormControl>
-                  </Grid>
-
-                  <Grid item xs={12} md={6}>
-                    <FormControl required error={validationErrors.includes('currentlyPaysRent')} fullWidth>
-                      <Typography component="legend" variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
-                        Currently Paying Rent? *
-                      </Typography>
-                      <StyledToggleButtonGroup
-                        name="currentlyPaysRent"
-                        value={answers.currentlyPaysRent}
-                        onChange={handleAnswerChange}
-                        options={[ { value: 'true', label: 'Yes' }, { value: 'false', label: 'No' } ]}
-                        error={validationErrors.includes('currentlyPaysRent')}
-                      />
-                    </FormControl>
-                  </Grid>
-
-                  {answers.currentlyPaysRent === 'true' && (
-                    <Grid item xs={12} md={6}>
-                      <TextField
-                        fullWidth
-                        label="Current Monthly Rent"
-                        name="currentRentAmount"
-                        type="number"
-                        value={answers.currentRentAmount}
-                        onChange={handleAnswerChange}
-                        inputProps={{ min: 0, step: 0.01 }}
-                        InputProps={{
-                          startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                        }}
-                        size="small"
-                      />
-                    </Grid>
-                  )}
-                </Grid>
-              </Paper>
-
-              {/* Credit Score */}
-              <Paper variant="outlined" sx={{ p: 4, mb: 4, borderColor: 'primary.200' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                  <Box sx={{ 
-                    width: 40, 
-                    height: 40, 
-                    borderRadius: '50%', 
-                    bgcolor: 'primary.main', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    mr: 2
-                  }}>
-                    <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>5</Typography>
-                  </Box>
-                  <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                    Credit Information
-                  </Typography>
-                </Box>
-                
                 <Grid container spacing={3} alignItems="center">
                   <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
+                    <EnhancedTextField
                       label="Credit Score (Optional)"
                       name="creditScore"
                       type="number"
@@ -1666,49 +1937,333 @@ export default function Profile() {
                       onChange={handleAnswerChange}
                       inputProps={{ min: 300, max: 850 }}
                       placeholder="e.g., 750"
-                      helperText="Range: 300-850"
                       size="small"
+                      tooltip="Your credit score (range: 300-850)"
                     />
                   </Grid>
                   <Grid item xs={12} md={6}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                      <Button
-                        variant="outlined"
-                        color="primary"
-                        onClick={() => window.open('https://www.creditkarma.com/', '_blank')}
-                        startIcon={<CloudUploadIcon />}
-                        sx={{ alignSelf: 'flex-start' }}
-                      >
-                        Get Free Credit Score
-                      </Button>
-                      <Typography variant="caption" color="text.secondary">
-                        Free from Credit Karma, AnnualCreditReport.com, or your bank
-                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          onClick={() => window.open('https://www.creditkarma.com/', '_blank')}
+                          startIcon={<CloudUploadIcon />}
+                          sx={{ 
+                            borderRadius: 2,
+                            textTransform: 'none',
+                            fontWeight: 600
+                          }}
+                        >
+                          Get Free Credit Score
+                        </Button>
+                        <Tooltip title="Free from Credit Karma, AnnualCreditReport.com, or your bank" arrow>
+                          <InfoOutlinedIcon sx={{ color: 'action.active', cursor: 'help' }} />
+                        </Tooltip>
+                      </Box>
                     </Box>
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <EnhancedRadioGroup
+                      name="bankruptcyHistory"
+                      value={answers.bankruptcyHistory}
+                      onChange={handleAnswerChange}
+                      options={[
+                        { value: true, label: 'Yes' },
+                        { value: false, label: 'No' }
+                      ]}
+                      label="Bankruptcy History"
+                      columns={2}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <EnhancedRadioGroup
+                      name="evictionHistory"
+                      value={answers.evictionHistory}
+                      onChange={handleAnswerChange}
+                      options={[
+                        { value: true, label: 'Yes' },
+                        { value: false, label: 'No' }
+                      ]}
+                      label="Eviction History"
+                      columns={2}
+                    />
                   </Grid>
                 </Grid>
               </Paper>
 
-              {/* Documents */}
-              <Paper variant="outlined" sx={{ p: 4, mb: 4, borderColor: 'primary.200' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+              {/* Rental History */}
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: 4, 
+                  mb: 4, 
+                  border: '2px solid',
+                  borderColor: 'primary.200',
+                  borderRadius: 3,
+                  background: 'linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
+                    transform: 'translateY(-2px)'
+                  }
+                }}
+              >
+                <SectionHeader
+                  title="Rental History"
+                  icon={HomeIcon}
+                  description="Your current and previous rental information"
+                  completed={answers.currentlyPaysRent !== undefined && answers.currentRentAmount}
+                />
+
+                <Grid container spacing={3} alignItems="flex-end">
+                  <Grid item xs={12} md={6}>
+                    <EnhancedRadioGroup
+                      name="currentlyPaysRent"
+                      value={answers.currentlyPaysRent}
+                      onChange={handleAnswerChange}
+                      options={[
+                        { value: "true", label: 'Yes' },
+                        { value: "false", label: 'No' }
+                      ]}
+                      label="Currently Paying Rent?"
+                      required
+                      error={validationErrors.includes('currentlyPaysRent')}
+                      columns={2}
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <EnhancedTextField
+                      label="Current Monthly Rent"
+                      name="currentRentAmount"
+                      type="number"
+                      value={answers.currentRentAmount}
+                      onChange={handleAnswerChange}
+                      inputProps={{ min: 0, step: 0.01 }}
+                      required
+                      error={validationErrors.includes('currentRentAmount')}
+                      InputProps={{
+                        startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                      }}
+                      size="small"
+                      tooltip="Your current monthly rent amount"
+                    />
+                  </Grid>
+                </Grid>
+              </Paper>
+
+              {/* Application Strengthening */}
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: 4, 
+                  mb: 4, 
+                  border: '2px solid',
+                  borderColor: 'primary.200',
+                  borderRadius: 3,
+                  background: 'linear-gradient(135deg, #fff0f8 0%, #ffe6f3 100%)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
+                    transform: 'translateY(-2px)'
+                  }
+                }}
+              >
+                <SectionHeader
+                  title="Application Strengthening"
+                  icon={SchoolIcon}
+                  description="Additional information to strengthen your application"
+                  completed={answers.canPayAdvance !== undefined && answers.hasGuarantor !== undefined}
+                />
+
+                <Grid container spacing={3} alignItems="flex-end">
+                  <Grid item xs={12} md={6}>
+                    <EnhancedRadioGroup
+                      name="canPayAdvance"
+                      value={answers.canPayAdvance}
+                      onChange={handleAnswerChange}
+                      options={[
+                        { value: true, label: 'Yes' },
+                        { value: false, label: 'No' }
+                      ]}
+                      label="Can you pay rent for several months in advance?"
+                      columns={2}
+                    />
+                  </Grid>
+
+                  <Collapse in={answers.canPayAdvance} timeout="auto" unmountOnExit>
+                    <Grid item xs={12} md={6}>
+                      <EnhancedTextField
+                        label="Months Ahead Can Pay"
+                        name="monthsAheadCanPay"
+                        type="number"
+                        value={answers.monthsAheadCanPay}
+                        onChange={handleAnswerChange}
+                        inputProps={{ min: 1 }}
+                        size="small"
+                        tooltip="How many months of rent you can pay in advance"
+                      />
+                    </Grid>
+                  </Collapse>
+
+                  <Grid item xs={12} md={6}>
+                    <EnhancedRadioGroup
+                      name="hasGuarantor"
+                      value={answers.hasGuarantor}
+                      onChange={handleAnswerChange}
+                      options={[
+                        { value: true, label: 'Yes' },
+                        { value: false, label: 'No' }
+                      ]}
+                      label="Do you have a lease guarantor?"
+                      columns={2}
+                    />
+                  </Grid>
+                </Grid>
+
+                {/* Guarantor Information - Only show if hasGuarantor is true */}
+                <Collapse in={answers.hasGuarantor} timeout="auto" unmountOnExit>
                   <Box sx={{ 
-                    width: 40, 
-                    height: 40, 
-                    borderRadius: '50%', 
-                    bgcolor: 'primary.main', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    mr: 2
+                    mt: 4, 
+                    p: 3, 
+                    bgcolor: 'primary.50', 
+                    borderRadius: 2, 
+                    border: '1px solid',
+                    borderColor: 'primary.200'
                   }}>
-                    <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>6</Typography>
+                    <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: 'primary.main', mb: 3 }}>
+                      Guarantor Information
+                    </Typography>
+                    <Grid container spacing={3}>
+                      <Grid item xs={12} md={6}>
+                        <EnhancedTextField
+                          label="Guarantor Full Name"
+                          name="guarantorName"
+                          value={answers.guarantorName}
+                          onChange={handleAnswerChange}
+                          required
+                          size="small"
+                          tooltip="Full legal name of your guarantor"
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <EnhancedTextField
+                          label="Relationship to You"
+                          name="guarantorRelationship"
+                          value={answers.guarantorRelationship}
+                          onChange={handleAnswerChange}
+                          placeholder="e.g., Parent, Spouse, Friend"
+                          required
+                          size="small"
+                          tooltip="Your relationship to the guarantor"
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <EnhancedTextField
+                          label="Phone Number"
+                          name="guarantorPhone"
+                          value={answers.guarantorPhone}
+                          onChange={handleAnswerChange}
+                          required
+                          size="small"
+                          tooltip="Guarantor's phone number"
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <EnhancedTextField
+                          label="Email Address"
+                          name="guarantorEmail"
+                          type="email"
+                          value={answers.guarantorEmail}
+                          onChange={handleAnswerChange}
+                          required
+                          size="small"
+                          tooltip="Guarantor's email address"
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <EnhancedTextField
+                          label="Full Address"
+                          name="guarantorAddress"
+                          value={answers.guarantorAddress}
+                          onChange={handleAnswerChange}
+                          multiline
+                          rows={2}
+                          required
+                          size="small"
+                          tooltip="Guarantor's complete address"
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <EnhancedTextField
+                          label="Monthly Income"
+                          name="guarantorMonthlyIncome"
+                          type="number"
+                          value={answers.guarantorMonthlyIncome}
+                          onChange={handleAnswerChange}
+                          inputProps={{ min: 0, step: 0.01 }}
+                          required
+                          InputProps={{
+                            startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                          }}
+                          size="small"
+                          tooltip="Guarantor's monthly income"
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <EnhancedTextField
+                          label="Employer/Company"
+                          name="guarantorEmployer"
+                          value={answers.guarantorEmployer}
+                          onChange={handleAnswerChange}
+                          required
+                          size="small"
+                          tooltip="Guarantor's employer or company name"
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={6}>
+                        <EnhancedTextField
+                          label="Job Title"
+                          name="guarantorJobTitle"
+                          value={answers.guarantorJobTitle}
+                          onChange={handleAnswerChange}
+                          required
+                          size="small"
+                          tooltip="Guarantor's job title or position"
+                        />
+                      </Grid>
+                    </Grid>
                   </Box>
-                  <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                    Supporting Documents
-                  </Typography>
-                </Box>
-                
+                </Collapse>
+              </Paper>
+
+              {/* Documents */}
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: 4, 
+                  mb: 4, 
+                  border: '2px solid',
+                  borderColor: 'primary.200',
+                  borderRadius: 3,
+                  background: 'linear-gradient(135deg, #f8f0ff 0%, #f0e6ff 100%)',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
+                    transform: 'translateY(-2px)'
+                  }
+                }}
+              >
+                <SectionHeader
+                  title="Supporting Documents"
+                  icon={DescriptionIcon}
+                  description="Upload documents to support your application"
+                  completed={documents.proofOfIdentity?.length > 0 && documents.proofOfIncome?.length > 0}
+                />
+
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                   Upload documents to support your application. Required documents help landlords make faster decisions.
                 </Typography>
@@ -1723,6 +2278,7 @@ export default function Profile() {
                       maxFiles={5}
                       required={true}
                       error={validationErrors.includes('proofOfIdentity')}
+                      isLoading={documentUploading.proofOfIdentity}
                     />
                   </Grid>
 
@@ -1735,6 +2291,7 @@ export default function Profile() {
                       maxFiles={5}
                       required={true}
                       error={validationErrors.includes('proofOfIncome')}
+                      isLoading={documentUploading.proofOfIncome}
                     />
                   </Grid>
 
@@ -1746,6 +2303,7 @@ export default function Profile() {
                       onDelete={(field, index) => handleDeleteDocument(field, documents.creditHistory[index]._id)}
                       maxFiles={5}
                       required={false}
+                      isLoading={documentUploading.creditHistory}
                     />
                   </Grid>
 
@@ -1757,6 +2315,7 @@ export default function Profile() {
                       onDelete={(field, index) => handleDeleteDocument(field, documents.rentalHistory[index]._id)}
                       maxFiles={5}
                       required={false}
+                      isLoading={documentUploading.rentalHistory}
                     />
                   </Grid>
 
@@ -1768,38 +2327,54 @@ export default function Profile() {
                       onDelete={(field, index) => handleDeleteDocument(field, documents.additionalDocuments[index]._id)}
                       maxFiles={5}
                       required={false}
+                      isLoading={documentUploading.additionalDocuments}
                     />
                   </Grid>
                 </Grid>
               </Paper>
 
               {/* Submit Button */}
-              <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                pt: 2,
-                borderColor: 'primary.100'
+              <Box sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                pt: 4,
+                pb: 2
               }}>
                 <Button
                   type="submit"
                   variant="contained"
                   size="large"
                   disabled={loading}
-                  sx={{ 
-                    minWidth: 250,
-                    py: 1.5,
-                    px: 4,
-                    fontSize: '1.1rem',
-                    fontWeight: 600,
-                    borderRadius: 2,
-                    boxShadow: 3,
+                  sx={{
+                    minWidth: 300,
+                    py: 2,
+                    px: 6,
+                    fontSize: '1.2rem',
+                    fontWeight: 700,
+                    borderRadius: 3,
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     '&:hover': {
-                      boxShadow: 6,
-                      transform: 'translateY(-2px)'
+                      boxShadow: '0 12px 35px rgba(102, 126, 234, 0.6)',
+                      transform: 'translateY(-3px)',
+                      background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)'
+                    },
+                    '&:disabled': {
+                      background: 'grey.400',
+                      transform: 'none',
+                      boxShadow: 'none'
                     }
                   }}
                 >
-                  {loading ? 'Updating Profile...' : 'Save & Complete Profile'}
+                  {loading ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <CircularProgress size={20} color="inherit" />
+                      Updating Profile...
+                    </Box>
+                  ) : (
+                    'Save & Complete Profile'
+                  )}
                 </Button>
               </Box>
             </Box>

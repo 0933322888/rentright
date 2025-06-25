@@ -283,18 +283,19 @@ export default function AdminTenants() {
                           <span className={`${
                             tenant.tenantScoring >= 80 ? 'text-green-600' :
                             tenant.tenantScoring >= 60 ? 'text-yellow-600' :
+                            tenant.tenantScoring >= 40 ? 'text-yellow-500' :
                             'text-red-600'
                           }`}>
-                            {tenant.tenantScoring || 0}%
+                            {tenant.tenantScoring ?? 0}%
                           </span>
                           <div className="ml-2 w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                             <div
-                              className={`h-full ${
-                                tenant.tenantScoring >= 80 ? 'bg-green-500' :
+                              className={`h-full ${tenant.tenantScoring >= 80 ? 'bg-green-500' :
                                 tenant.tenantScoring >= 60 ? 'bg-yellow-500' :
-                                'bg-red-500'
+                                tenant.tenantScoring >= 40 ? 'bg-yellow-400' :
+                                'bg-red-500'}
                               }`}
-                              style={{ width: `${tenant.tenantScoring || 0}%` }}
+                              style={{ width: `${tenant.tenantScoring ?? 0}%` }}
                             />
                           </div>
                         </div>
