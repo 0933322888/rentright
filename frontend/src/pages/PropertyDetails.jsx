@@ -97,6 +97,7 @@ const PropertyDetails = () => {
     const requirements = {
       // proofOfIdentity: tenantProfile.proofOfIdentity?.length > 0,
       // proofOfIncome: tenantProfile.proofOfIncome?.length > 0,
+
       hasBeenEvicted: tenantProfile.evictionHistory !== undefined,
       // New required fields
       hasPets: tenantProfile.hasPets !== undefined,
