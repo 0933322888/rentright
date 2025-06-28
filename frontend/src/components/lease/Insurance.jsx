@@ -296,6 +296,236 @@ const Insurance = ({ leaseDetails, onInsuranceUpdate }) => {
   // Render year-based documents
   if (isLandlord) {
     return (
+      <>
+        <Stack spacing={3}>
+          {sortedYears.map(year => {
+            const documents = insuranceDocuments[year] || [];
+            const hasDocument = documents.length > 0;
+            const summaryObj = aiSummaries[year];
+            const summaryText = typeof summaryObj === 'string' ? summaryObj : summaryObj?.content;
+            const isLoadingSummary = summaryLoading[year];
+            return (
+              <Box key={year}>
+                <Card>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                      <Typography variant="h6" fontWeight="bold">
+                        {year}
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Chip 
+                          label={hasDocument ? 'Document Uploaded' : 'No Document'} 
+                          color={hasDocument ? 'success' : 'default'}
+                          size="small"
+                        />
+                        {isTenant && (
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<UploadIcon />}
+                            onClick={() => {
+                              setSelectedYear(year);
+                              setShowUploadDialog(true);
+                            }}
+                          >
+                            {hasDocument ? 'Replace' : 'Upload'}
+                          </Button>
+                        )}
+                      </Box>
+                    </Box>
+
+                    {hasDocument ? (
+                      <Box>
+                        {documents.map((doc, index) => (
+                          <ListItem key={doc._id} sx={{ px: 0, py: 1, alignItems: 'center' }}>
+                            <Box sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              width: '100%',
+                            }}>
+                              <Box>
+                                <Typography
+                                  variant="body2"
+                                  sx={{ fontWeight: 500 }}
+                                  title={doc.originalName || doc.filename}
+                                >
+                                  {doc.originalName || doc.filename}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  Uploaded on {format(new Date(doc.uploadedAt), 'PPP')}
+                                </Typography>
+                              </Box>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Tooltip title="Preview">
+                                  <IconButton
+                                    onClick={() => window.open(doc.url, '_blank')}
+                                    color="primary"
+                                    sx={{ mr: 1 }}
+                                  >
+                                    <PreviewIcon />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Download">
+                                  <IconButton
+                                    onClick={() => handleDownload(doc)}
+                                    color="primary"
+                                    sx={{ mr: 1 }}
+                                  >
+                                    <DownloadIcon />
+                                  </IconButton>
+                                </Tooltip>
+                                {isTenant && (
+                                  <Tooltip title="Delete">
+                                    <IconButton
+                                      onClick={() => handleDeleteDocument(year)}
+                                      color="error"
+                                    >
+                                      <DeleteIcon />
+                                    </IconButton>
+                                  </Tooltip>
+                                )}
+                              </Box>
+                            </Box>
+                          </ListItem>
+                        ))}
+
+                        {/* AI Summary Section for Landlords */}
+                        <Box sx={{ mt: 2 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <SmartToyIcon sx={{ mr: 1, color: 'primary.main', fontSize: 20 }} />
+                              <Typography variant="subtitle2" fontWeight="bold">
+                                AI Summary
+                              </Typography>
+                            </Box>
+                            <Button
+                              variant="contained"
+                              color="primary"
+                              size="small"
+                              startIcon={<SmartToyIcon />}
+                              onClick={() => handleGenerateSummary(year)}
+                              disabled={isLoadingSummary || !!summaryText}
+                              sx={{
+                                background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                                boxShadow: '0 3px 5px 2px rgba(33, 150, 243, .3)',
+                              }}
+                            >
+                              {isLoadingSummary ? 'Generating...' : 'Generate Summary'}
+                            </Button>
+                          </Box>
+
+                          {isLoadingSummary && (
+                            <Box sx={{ mb: 2 }}>
+                              <LinearProgress />
+                              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                AI is analyzing your insurance document for {year}...
+                              </Typography>
+                            </Box>
+                          )}
+
+                          {/* Collapsible summary section */}
+                          {summaryText && (
+                            <Accordion sx={{ mt: 1, bgcolor: 'grey.50', borderRadius: 2, boxShadow: 1 }} defaultExpanded={false}>
+                              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                <Typography variant="subtitle2" fontWeight="bold">
+                                  Insurance Policy Summary for {year}
+                                </Typography>
+                              </AccordionSummary>
+                              <AccordionDetails>
+                                {/* Metadata */}
+                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 2 }}>
+                                  {summaryObj?.generatedAt && (
+                                    <Typography variant="caption" color="text.secondary">
+                                      Generated: {new Date(summaryObj.generatedAt).toLocaleString()}
+                                    </Typography>
+                                  )}
+
+                                  <CopyToClipboardButton text={summaryText} />
+                                </Box>
+                                {/* Table of Contents */}
+                                <SummaryTOC markdown={summaryText} onSectionOpen={id => setOpenSections(s => ({ ...s, [id]: true }))} />
+                                {/* Render Markdown with collapsible sections */}
+                                <EnhancedMarkdown markdown={summaryText} openSections={openSections} setOpenSections={setOpenSections} />
+                              </AccordionDetails>
+                            </Accordion>
+                          )}
+                        </Box>
+                      </Box>
+                    ) : (
+                      <EmptyState
+                        title="No Insurance Document"
+                        message={`No insurance document uploaded for ${year}.`}
+                        icon={SecurityIcon}
+                      />
+                    )}
+                  </CardContent>
+                </Card>
+              </Box>
+            );
+          })}
+        </Stack>
+
+        {/* Upload Dialog */}
+        <Dialog open={showUploadDialog} onClose={() => setShowUploadDialog(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <UploadIcon sx={{ mr: 1 }} />
+              Upload Insurance Document for {selectedYear}
+            </Box>
+          </DialogTitle>
+          <DialogContent>
+            <Box sx={{ mt: 2 }}>
+              <input
+                accept=".pdf"
+                style={{ display: 'none' }}
+                id="insurance-file-input"
+                type="file"
+                onChange={handleFileSelect}
+              />
+              <label htmlFor="insurance-file-input">
+                <Button
+                  variant="outlined"
+                  component="span"
+                  startIcon={<UploadIcon />}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                >
+                  Select PDF File
+                </Button>
+              </label>
+              {selectedFile && (
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  Selected file: {selectedFile.name}
+                </Alert>
+              )}
+              {uploadError && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {uploadError}
+                </Alert>
+              )}
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setShowUploadDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpload}
+              variant="contained"
+              disabled={!selectedFile || uploading}
+              startIcon={uploading ? <CircularProgress size={16} /> : <UploadIcon />}
+            >
+              {uploading ? 'Uploading...' : 'Upload'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </>
+    );
+  }
+  // For tenants, keep the existing Grid layout
+  return (
+    <>
       <Stack spacing={3}>
         {sortedYears.map(year => {
           const documents = insuranceDocuments[year] || [];
@@ -303,6 +533,7 @@ const Insurance = ({ leaseDetails, onInsuranceUpdate }) => {
           const summaryObj = aiSummaries[year];
           const summaryText = typeof summaryObj === 'string' ? summaryObj : summaryObj?.content;
           const isLoadingSummary = summaryLoading[year];
+
           return (
             <Box key={year}>
               <Card>
@@ -311,42 +542,42 @@ const Insurance = ({ leaseDetails, onInsuranceUpdate }) => {
                     <Typography variant="h6" fontWeight="bold">
                       {year}
                     </Typography>
-                    <Chip 
-                      label={hasDocument ? 'Document Uploaded' : 'No Document'} 
-                      color={hasDocument ? 'success' : 'default'}
-                      size="small"
-                    />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Chip 
+                        label={hasDocument ? 'Document Uploaded' : 'No Document'} 
+                        color={hasDocument ? 'success' : 'default'}
+                        size="small"
+                      />
+                      {isTenant && (
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<UploadIcon />}
+                          onClick={() => {
+                            setSelectedYear(year);
+                            setShowUploadDialog(true);
+                          }}
+                        >
+                          {hasDocument ? 'Replace' : 'Upload'}
+                        </Button>
+                      )}
+                    </Box>
                   </Box>
 
                   {hasDocument ? (
                     <Box>
                       {documents.map((doc, index) => (
-                        <ListItem key={doc._id} sx={{ px: 0, alignItems: 'flex-start' }}>
+                        <ListItem key={doc._id} sx={{ px: 0, py: 1, alignItems: 'center' }}>
                           <Box sx={{
                             display: 'flex',
                             alignItems: 'center',
+                            justifyContent: 'space-between',
                             width: '100%',
-                            gap: 1,
                           }}>
-                            <Box
-                              sx={{
-                                flex: 1,
-                                minWidth: 0,
-                                maxWidth: { xs: '60%', sm: '70%', md: '75%' },
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
+                            <Box>
                               <Typography
                                 variant="body2"
-                                sx={{
-                                  fontWeight: 500,
-                                  textOverflow: 'ellipsis',
-                                  overflow: 'hidden',
-                                  whiteSpace: 'nowrap',
-                                  maxWidth: '100%',
-                                }}
+                                sx={{ fontWeight: 500 }}
                                 title={doc.originalName || doc.filename}
                               >
                                 {doc.originalName || doc.filename}
@@ -355,7 +586,7 @@ const Insurance = ({ leaseDetails, onInsuranceUpdate }) => {
                                 Uploaded on {format(new Date(doc.uploadedAt), 'PPP')}
                               </Typography>
                             </Box>
-                            <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                               <Tooltip title="Preview">
                                 <IconButton
                                   onClick={() => window.open(doc.url, '_blank')}
@@ -390,66 +621,72 @@ const Insurance = ({ leaseDetails, onInsuranceUpdate }) => {
                       ))}
 
                       {/* AI Summary Section for Landlords */}
-                      <Box sx={{ mt: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <SmartToyIcon sx={{ mr: 1, color: 'primary.main', fontSize: 20 }} />
-                            <Typography variant="subtitle2" fontWeight="bold">
-                              AI Summary
-                            </Typography>
-                          </Box>
-                          <Button
-                            variant="contained"
-                            color="primary"
-                            size="small"
-                            startIcon={<SmartToyIcon />}
-                            onClick={() => handleGenerateSummary(year)}
-                            disabled={isLoadingSummary || !!summaryText}
-                            sx={{
-                              background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
-                              boxShadow: '0 3px 5px 2px rgba(33, 150, 243, .3)',
-                            }}
-                          >
-                            {isLoadingSummary ? 'Generating...' : 'Generate Summary'}
-                          </Button>
-                        </Box>
-
-                        {isLoadingSummary && (
-                          <Box sx={{ mb: 2 }}>
-                            <LinearProgress />
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                              AI is analyzing your insurance document for {year}...
-                            </Typography>
-                          </Box>
-                        )}
-
-                        {/* Collapsible summary section */}
-                        {summaryText && (
-                          <Accordion sx={{ mt: 1, bgcolor: 'grey.50', borderRadius: 2, boxShadow: 1 }} defaultExpanded={false}>
-                            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                      {isLandlord && (
+                        <Box sx={{ mt: 2 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <SmartToyIcon sx={{ mr: 1, color: 'primary.main', fontSize: 20 }} />
                               <Typography variant="subtitle2" fontWeight="bold">
-                                Insurance Policy Summary for {year}
+                                AI Summary
                               </Typography>
-                            </AccordionSummary>
-                            <AccordionDetails>
-                              {/* Metadata */}
-                              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 2 }}>
-                                {summaryObj?.generatedAt && (
-                                  <Typography variant="caption" color="text.secondary">
-                                    Generated: {new Date(summaryObj.generatedAt).toLocaleString()}
-                                  </Typography>
-                                )}
+                            </Box>
+                            <Button
+                              variant="contained"
+                              color="primary"
+                              size="small"
+                              startIcon={<SmartToyIcon />}
+                              onClick={() => handleGenerateSummary(year)}
+                              disabled={isLoadingSummary || !!summaryText}
+                              sx={{
+                                background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                                boxShadow: '0 3px 5px 2px rgba(33, 150, 243, .3)',
+                              }}
+                            >
+                              {isLoadingSummary ? 'Generating...' : 'Generate Summary'}
+                            </Button>
+                          </Box>
 
-                                <CopyToClipboardButton text={summaryText} />
-                              </Box>
-                              {/* Table of Contents */}
-                              <SummaryTOC markdown={summaryText} onSectionOpen={id => setOpenSections(s => ({ ...s, [id]: true }))} />
-                              {/* Render Markdown with collapsible sections */}
-                              <EnhancedMarkdown markdown={summaryText} openSections={openSections} setOpenSections={setOpenSections} />
-                            </AccordionDetails>
-                          </Accordion>
-                        )}
-                      </Box>
+                          {isLoadingSummary && (
+                            <Box sx={{ mb: 2 }}>
+                              <LinearProgress />
+                              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                AI is analyzing your insurance document for {year}...
+                              </Typography>
+                            </Box>
+                          )}
+
+                          {/* Collapsible summary section */}
+                          {summaryText && (
+                            <Accordion sx={{ mt: 1, bgcolor: 'grey.50', borderRadius: 2, boxShadow: 1 }} defaultExpanded={false}>
+                              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                <Typography variant="subtitle2" fontWeight="bold">
+                                  Insurance Policy Summary for {year}
+                                </Typography>
+                              </AccordionSummary>
+                              <AccordionDetails>
+                                {/* Metadata */}
+                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 2 }}>
+                                  {summaryObj?.generatedAt && (
+                                    <Typography variant="caption" color="text.secondary">
+                                      Generated: {new Date(summaryObj.generatedAt).toLocaleString()}
+                                    </Typography>
+                                  )}
+                                  {summaryObj?.generatedBy && (
+                                    <Typography variant="caption" color="text.secondary">
+                                      By: {summaryObj.generatedBy}
+                                    </Typography>
+                                  )}
+                                  <CopyToClipboardButton text={summaryText} />
+                                </Box>
+                                {/* Table of Contents */}
+                                <SummaryTOC markdown={summaryText} onSectionOpen={id => setOpenSections(s => ({ ...s, [id]: true }))} />
+                                {/* Render Markdown with collapsible sections */}
+                                <EnhancedMarkdown markdown={summaryText} openSections={openSections} setOpenSections={setOpenSections} />
+                              </AccordionDetails>
+                            </Accordion>
+                          )}
+                        </Box>
+                      )}
                     </Box>
                   ) : (
                     <EmptyState
@@ -464,185 +701,62 @@ const Insurance = ({ leaseDetails, onInsuranceUpdate }) => {
           );
         })}
       </Stack>
-    );
-  }
-  // For tenants, keep the existing Grid layout
-  return (
-    <Grid container spacing={3}>
-      {sortedYears.map(year => {
-        const documents = insuranceDocuments[year] || [];
-        const hasDocument = documents.length > 0;
-        const summaryObj = aiSummaries[year];
-        const summaryText = typeof summaryObj === 'string' ? summaryObj : summaryObj?.content;
-        const isLoadingSummary = summaryLoading[year];
 
-        return (
-          <Grid item xs={12} key={year}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                  <Typography variant="h6" fontWeight="bold">
-                    {year}
-                  </Typography>
-                  <Chip 
-                    label={hasDocument ? 'Document Uploaded' : 'No Document'} 
-                    color={hasDocument ? 'success' : 'default'}
-                    size="small"
-                  />
-                </Box>
-
-                {hasDocument ? (
-                  <Box>
-                    {documents.map((doc, index) => (
-                      <ListItem key={doc._id} sx={{ px: 0, alignItems: 'flex-start' }}>
-                        <Box sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          width: '100%',
-                          gap: 1,
-                        }}>
-                          <Box
-                            sx={{
-                              flex: 1,
-                              minWidth: 0,
-                              maxWidth: { xs: '60%', sm: '70%', md: '75%' },
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                fontWeight: 500,
-                                textOverflow: 'ellipsis',
-                                overflow: 'hidden',
-                                whiteSpace: 'nowrap',
-                                maxWidth: '100%',
-                              }}
-                              title={doc.originalName || doc.filename}
-                            >
-                              {doc.originalName || doc.filename}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              Uploaded on {format(new Date(doc.uploadedAt), 'PPP')}
-                            </Typography>
-                          </Box>
-                          <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-                            <Tooltip title="Preview">
-                              <IconButton
-                                onClick={() => window.open(doc.url, '_blank')}
-                                color="primary"
-                                sx={{ mr: 1 }}
-                              >
-                                <PreviewIcon />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Download">
-                              <IconButton
-                                onClick={() => handleDownload(doc)}
-                                color="primary"
-                                sx={{ mr: 1 }}
-                              >
-                                <DownloadIcon />
-                              </IconButton>
-                            </Tooltip>
-                            {isTenant && (
-                              <Tooltip title="Delete">
-                                <IconButton
-                                  onClick={() => handleDeleteDocument(year)}
-                                  color="error"
-                                >
-                                  <DeleteIcon />
-                                </IconButton>
-                              </Tooltip>
-                            )}
-                          </Box>
-                        </Box>
-                      </ListItem>
-                    ))}
-
-                    {/* AI Summary Section for Landlords */}
-                    {isLandlord && (
-                      <Box sx={{ mt: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <SmartToyIcon sx={{ mr: 1, color: 'primary.main', fontSize: 20 }} />
-                            <Typography variant="subtitle2" fontWeight="bold">
-                              AI Summary
-                            </Typography>
-                          </Box>
-                          <Button
-                            variant="contained"
-                            color="primary"
-                            size="small"
-                            startIcon={<SmartToyIcon />}
-                            onClick={() => handleGenerateSummary(year)}
-                            disabled={isLoadingSummary || !!summaryText}
-                            sx={{
-                              background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
-                              boxShadow: '0 3px 5px 2px rgba(33, 150, 243, .3)',
-                            }}
-                          >
-                            {isLoadingSummary ? 'Generating...' : 'Generate Summary'}
-                          </Button>
-                        </Box>
-
-                        {isLoadingSummary && (
-                          <Box sx={{ mb: 2 }}>
-                            <LinearProgress />
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                              AI is analyzing your insurance document for {year}...
-                            </Typography>
-                          </Box>
-                        )}
-
-                        {/* Collapsible summary section */}
-                        {summaryText && (
-                          <Accordion sx={{ mt: 1, bgcolor: 'grey.50', borderRadius: 2, boxShadow: 1 }} defaultExpanded={false}>
-                            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                              <Typography variant="subtitle2" fontWeight="bold">
-                                Insurance Policy Summary for {year}
-                              </Typography>
-                            </AccordionSummary>
-                            <AccordionDetails>
-                              {/* Metadata */}
-                              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 2 }}>
-                                {summaryObj?.generatedAt && (
-                                  <Typography variant="caption" color="text.secondary">
-                                    Generated: {new Date(summaryObj.generatedAt).toLocaleString()}
-                                  </Typography>
-                                )}
-                                {summaryObj?.generatedBy && (
-                                  <Typography variant="caption" color="text.secondary">
-                                    By: {summaryObj.generatedBy}
-                                  </Typography>
-                                )}
-                                <CopyToClipboardButton text={summaryText} />
-                              </Box>
-                              {/* Table of Contents */}
-                              <SummaryTOC markdown={summaryText} onSectionOpen={id => setOpenSections(s => ({ ...s, [id]: true }))} />
-                              {/* Render Markdown with collapsible sections */}
-                              <EnhancedMarkdown markdown={summaryText} openSections={openSections} setOpenSections={setOpenSections} />
-                            </AccordionDetails>
-                          </Accordion>
-                        )}
-                      </Box>
-                    )}
-                  </Box>
-                ) : (
-                  <EmptyState
-                    title="No Insurance Document"
-                    message={`No insurance document uploaded for ${year}.`}
-                    icon={SecurityIcon}
-                  />
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-        );
-      })}
-    </Grid>
+      {/* Upload Dialog */}
+      <Dialog open={showUploadDialog} onClose={() => setShowUploadDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <UploadIcon sx={{ mr: 1 }} />
+            Upload Insurance Document for {selectedYear}
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2 }}>
+            <input
+              accept=".pdf"
+              style={{ display: 'none' }}
+              id="insurance-file-input"
+              type="file"
+              onChange={handleFileSelect}
+            />
+            <label htmlFor="insurance-file-input">
+              <Button
+                variant="outlined"
+                component="span"
+                startIcon={<UploadIcon />}
+                fullWidth
+                sx={{ mb: 2 }}
+              >
+                Select PDF File
+              </Button>
+            </label>
+            {selectedFile && (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Selected file: {selectedFile.name}
+              </Alert>
+            )}
+            {uploadError && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {uploadError}
+              </Alert>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowUploadDialog(false)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleUpload}
+            variant="contained"
+            disabled={!selectedFile || uploading}
+            startIcon={uploading ? <CircularProgress size={16} /> : <UploadIcon />}
+          >
+            {uploading ? 'Uploading...' : 'Upload'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 
