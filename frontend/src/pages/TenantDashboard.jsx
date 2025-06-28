@@ -350,7 +350,13 @@ const TenantDashboard = () => {
           {/* Next Action Section */}
           <Row className="mb-6">
             <Col md={12}>
-              <Card className="shadow-sm hover:shadow-md transition-shadow duration-300">
+              <Card 
+                className="shadow-lg hover:shadow-xl transition-shadow duration-300"
+                style={{
+                  backgroundColor: '#f0f8ff', // Light blue background
+                  border: '1px solid #d9e2ec'  // Subtle border
+                }}
+              >
                 <Card.Body>
                   <h5 className="mb-3">Next Action</h5>
                   {(() => {
@@ -358,7 +364,7 @@ const TenantDashboard = () => {
                     return (
                       <div className="d-flex align-items-center">
                         <div className="me-4">
-                          {nextAction.icon}
+                          {React.cloneElement(nextAction.icon, { size: 32, className: "text-primary" })} 
                         </div>
                         <div className="flex-grow-1">
                           <h6 className="mb-1">{nextAction.title}</h6>
@@ -387,7 +393,7 @@ const TenantDashboard = () => {
               {/* Tickets Section */}
               <Col md={6} className="mb-4 mb-md-0">
                 <Card className="h-100 shadow-sm hover:shadow-md transition-shadow duration-300">
-                  <Card.Body>
+                  <Card.Body className="p-4">
                     <div className="d-flex justify-content-between align-items-center mb-3">
                       <div className="d-flex align-items-center">
                         <FaTicketAlt className="text-primary me-2" size={24} />
@@ -454,7 +460,7 @@ const TenantDashboard = () => {
               {/* Recent Payments Section */}
               <Col md={6}>
                 <Card className="h-100 shadow-sm hover:shadow-md transition-shadow duration-300">
-                  <Card.Body>
+                  <Card.Body className="p-4">
                     <div className="d-flex justify-content-between align-items-center mb-3">
                       <div className="d-flex align-items-center">
                         <FaMoneyBillWave className="text-primary me-2" size={24} />

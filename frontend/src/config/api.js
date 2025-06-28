@@ -19,6 +19,7 @@ export const API_ENDPOINTS = {
   PROPERTIES: `${BASE_URL}/api/properties`,
   PROPERTY: (id) => `${BASE_URL}/api/properties/${id}`,
   AVAILABLE_PROPERTIES: `${BASE_URL}/api/properties/available`,
+  MY_PROPERTIES: `${BASE_URL}/api/user-properties/my-properties`,
   GENERATE_PROPERTY_PRICE: `${BASE_URL}/api/properties/generate-price`,
   IMAGES: `${BASE_URL}/api/properties/images`,
   GET_PROPERTIES: `${BASE_URL}/api/properties`,
@@ -67,4 +68,10 @@ export const API_ENDPOINTS = {
 
   // Escalation endpoints
   ESCALATIONS: `${BASE_URL}/api/escalations`,
+
+  // Landlord-specific endpoints
+  LANDLORD_STATISTICS: `${BASE_URL}/api/landlord/statistics`,
+  LANDLORD_APPLICATIONS: `${BASE_URL}/api/landlord/applications`,
+  LANDLORD_PAYMENTS: `${BASE_URL}/api/landlord/payments`,
+  LANDLORD_TICKETS: `${BASE_URL}/api/landlord/tickets`,
 }; 

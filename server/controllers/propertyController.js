@@ -176,15 +176,37 @@ const getProperties = async (req, res) => {
     if (furnished) filter['features.furnished'] = furnished === 'true';
     if (available) filter.available = available === 'true';
     if (landlord) {
-      try {
-        filter.landlord = new mongoose.Types.ObjectId(landlord);
-      } catch (e) {
-        // fallback to string if not a valid ObjectId
-        filter.landlord = landlord;
+      if (landlord === 'me') {
+        // Return properties owned by the authenticated user
+        if (!req.user) {
+          return res.status(401).json({ message: 'Authentication required' });
+        }
+        filter.landlord = req.user._id;
+      } else {
+        try {
+          filter.landlord = new mongoose.Types.ObjectId(landlord);
+        } catch (e) {
+          // fallback to string if not a valid ObjectId
+          filter.landlord = landlord;
+        }
       }
     }
 
     const properties = await Property.find(filter)
+      .populate('landlord', 'name email phone')
+      .populate('tenant', 'name email phone')
+      .sort('-createdAt');
+
+    res.json(properties);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// Get properties for the authenticated user
+const getMyProperties = async (req, res) => {
+  try {
+    const properties = await Property.find({ landlord: req.user._id })
       .populate('landlord', 'name email phone')
       .populate('tenant', 'name email phone')
       .sort('-createdAt');
@@ -876,6 +898,7 @@ export const uploadImages = (req, res) => {
 export {
   createProperty,
   getProperties,
+  getMyProperties,
   getPropertyById,
   updateProperty,
   deleteProperty,

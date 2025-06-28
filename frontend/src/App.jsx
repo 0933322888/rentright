@@ -41,6 +41,7 @@ import PropertyDetails from './pages/PropertyDetails';
 import MyLease from './pages/MyLease';
 import TenantDashboard from './pages/TenantDashboard';
 import LeaseAgreements from './pages/admin/LeaseAgreements';
+import LandlordDashboard from './pages/LandlordDashboard';
 
 // Role-based home redirect component
 function HomeRedirect() {
@@ -110,6 +111,12 @@ function AppRoutes() {
               <>
                 <Route path="dashboard" element={<TenantDashboard />} />
                 <Route path="my-lease" element={<MyLease />} />
+              </>
+            )}
+            {/* Landlord specific routes */}
+            {user?.role === 'landlord' && (
+              <>
+                <Route path="landlord-dashboard" element={<LandlordDashboard />} />
               </>
             )}
           </Route>

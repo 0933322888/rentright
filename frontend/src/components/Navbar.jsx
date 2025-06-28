@@ -71,14 +71,16 @@ export default function Navbar() {
 
     if (user.role === 'landlord') {
       return [
+        { name: 'Dashboard', href: '/landlord-dashboard' },
         { name: 'My Properties', href: '/my-properties' },
         { name: 'Contact', href: '/contact' },
+
       ];
     }
 
     // Tenant navigation
     const tenantItems = [
-      { name: 'Dashboard', href: '/dashboard' },
+      { name: 'Dashboard', href: '/tenant-dashboard' },
       { name: 'My Lease', href: '/my-lease', show: hasApprovedApplication },
       { name: 'Properties', href: '/properties' },
       { name: 'My Applications', href: '/applications' }
@@ -104,7 +106,7 @@ export default function Navbar() {
                 <div className="flex flex-shrink-0 items-center">
                   <img src={logo} alt="RentRight Logo" className="w-10 h-8 object-contain" />
                   <Link 
-                    to={user?.role === 'landlord' ? '/my-properties' : '/'} 
+                    to="/" 
                     className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent hover:from-primary-700 hover:to-primary-800 transition-all duration-300 navbar-link flex items-center"
                   >
                     RentRight
