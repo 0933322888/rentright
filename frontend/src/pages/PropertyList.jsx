@@ -10,6 +10,30 @@ import { getImageUrl } from '../utils/imageUtils';
 // Lazy load the map components
 const MapComponent = lazy(() => import('../components/MapComponent'));
 
+function DarkModeToggle({ isDark, setIsDark }) {
+  return (
+    <button
+      onClick={() => setIsDark((d) => !d)}
+      className="p-2 rounded-full shadow-md border border-gray-200 bg-white dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+      aria-label="Toggle dark mode"
+      type="button"
+    >
+      {isDark ? (
+        // Sun icon
+        <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="2" />
+          <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" d="M12 1v2m0 18v2m11-11h-2M3 12H1m16.95 6.95l-1.414-1.414M6.464 6.464L5.05 5.05m13.9 0l-1.414 1.414M6.464 17.536l-1.414 1.414" />
+        </svg>
+      ) : (
+        // Moon icon
+        <svg className="w-6 h-6 text-gray-700 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
 export default function PropertyList() {
   const { user } = useAuth();
   const [properties, setProperties] = useState([]);
@@ -37,6 +61,18 @@ export default function PropertyList() {
   });
 
   const [priceRange, setPriceRange] = useState([0, 5000]);
+
+  const [isDark, setIsDark] = useState(() =>
+    typeof window !== 'undefined' && document.documentElement.classList.contains('dark')
+  );
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDark]);
 
   useEffect(() => {
     fetchProperties();
@@ -513,6 +549,7 @@ export default function PropertyList() {
                 zoom={mapZoom}
                 onMarkerClick={handleMarkerClick}
                 selectedPropertyId={selectedPropertyId}
+                darkModeToggle={<DarkModeToggle isDark={isDark} setIsDark={setIsDark} />}
               />
             </Suspense>
           ) : (

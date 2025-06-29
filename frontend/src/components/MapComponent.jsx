@@ -268,7 +268,7 @@ MapMarkers.propTypes = {
 };
 
 // Map Controls Component
-function MapControls({ onLocateMe, onFullscreen }) {
+function MapControls({ onLocateMe, onFullscreen, darkModeToggle }) {
   return (
     <div className="absolute top-4 right-4 z-[1000] map-controls-container" style={{
       display: 'flex',
@@ -280,32 +280,36 @@ function MapControls({ onLocateMe, onFullscreen }) {
       {/* Locate me button */}
       <button
         onClick={onLocateMe}
-        className="map-control-button bg-white p-2 rounded-lg shadow-md hover:bg-gray-50 transition-colors border border-gray-200"
+        className="map-control-button bg-white p-2 rounded-lg shadow-md hover:bg-gray-50 transition-colors border border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
         title="Find my location"
       >
-        <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-5 h-5 text-gray-700 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
       </button>
-      
       {/* Fullscreen button */}
       <button
         onClick={onFullscreen}
-        className="map-control-button bg-white p-2 rounded-lg shadow-md hover:bg-gray-50 transition-colors border border-gray-200"
+        className="map-control-button bg-white p-2 rounded-lg shadow-md hover:bg-gray-50 transition-colors border border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
         title="Toggle fullscreen"
       >
-        <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-5 h-5 text-gray-700 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
         </svg>
       </button>
+      {/* Dark mode toggle button */}
+      {darkModeToggle && (
+        <div>{darkModeToggle}</div>
+      )}
     </div>
   );
 }
 
 MapControls.propTypes = {
   onLocateMe: PropTypes.func.isRequired,
-  onFullscreen: PropTypes.func.isRequired
+  onFullscreen: PropTypes.func.isRequired,
+  darkModeToggle: PropTypes.node
 };
 
 // Map Legend Component
@@ -506,13 +510,25 @@ MapSearch.propTypes = {
   onClear: PropTypes.func.isRequired
 };
 
-export default function MapComponent({ properties, center, zoom, onMarkerClick, selectedPropertyId }) {
+export default function MapComponent({ properties, center, zoom, onMarkerClick, selectedPropertyId, darkModeToggle }) {
   const [isClient, setIsClient] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const mapRef = useRef(null);
 
   useEffect(() => {
     setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    // Listen for dark mode changes
+    const checkDark = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    };
+    checkDark();
+    const observer = new MutationObserver(checkDark);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
   }, []);
 
   const handleLocateMe = () => {
@@ -569,10 +585,10 @@ export default function MapComponent({ properties, center, zoom, onMarkerClick, 
 
   if (!isClient) {
     return (
-      <div className="h-full w-full flex items-center justify-center bg-gray-100 map-loading-state">
+      <div className="h-full w-full flex items-center justify-center bg-gray-100 dark:bg-gray-900 map-loading-state">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading map...</p>
+          <p className="mt-2 text-gray-600 dark:text-gray-300">Loading map...</p>
         </div>
       </div>
     );
@@ -580,7 +596,7 @@ export default function MapComponent({ properties, center, zoom, onMarkerClick, 
 
   if (!center || !Array.isArray(center) || center.length !== 2) {
     return (
-      <div className="h-full w-full flex items-center justify-center bg-gray-100 map-loading-state">
+      <div className="h-full w-full flex items-center justify-center bg-gray-100 dark:bg-gray-900 map-loading-state">
         <div className="text-center">
           <svg className="mx-auto h-12 w-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -596,7 +612,7 @@ export default function MapComponent({ properties, center, zoom, onMarkerClick, 
 
   return (
     <MapErrorBoundary>
-      <div className="relative h-full w-full enhanced-map-container map-fade-in z-1">
+      <div className="relative h-full w-full enhanced-map-container map-fade-in z-1 dark:bg-gray-900 dark:border-gray-800">
         <MapContainer
           ref={mapRef}
           center={center}
@@ -609,8 +625,11 @@ export default function MapComponent({ properties, center, zoom, onMarkerClick, 
           }}
         >
           <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url={isDarkMode
+              ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+            }
+            attribution='&copy; <a href="https://carto.com/attributions">CARTO</a> contributors'
           />
           <ZoomControl position="bottomright" />
           <MapController center={center} zoom={zoom} />
@@ -635,6 +654,7 @@ export default function MapComponent({ properties, center, zoom, onMarkerClick, 
         <MapControls 
           onLocateMe={handleLocateMe}
           onFullscreen={handleFullscreen}
+          darkModeToggle={darkModeToggle}
         />
         
         <PropertyCountBadge 
@@ -667,5 +687,6 @@ MapComponent.propTypes = {
   center: PropTypes.arrayOf(PropTypes.number).isRequired,
   zoom: PropTypes.number.isRequired,
   onMarkerClick: PropTypes.func.isRequired,
-  selectedPropertyId: PropTypes.string
+  selectedPropertyId: PropTypes.string,
+  darkModeToggle: PropTypes.node
 }; 
