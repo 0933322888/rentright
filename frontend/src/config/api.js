@@ -60,6 +60,35 @@ export const API_ENDPOINTS = {
   ADMIN_PROPERTY_VIEWING_DATES: (propertyId, dateId) =>
     `${BASE_URL}/api/admin/properties/${propertyId}/viewing-dates/${dateId}`,
 
+  // Commission endpoints (legacy - will be deprecated)
+  COMMISSIONS: `${BASE_URL}/api/commissions`,
+  COMMISSION_STATS: `${BASE_URL}/api/commissions/stats`,
+  COMMISSION_OVERDUE: `${BASE_URL}/api/commissions/overdue`,
+  COMMISSION_BY_LANDLORD: (landlordId) => `${BASE_URL}/api/commissions/landlord/${landlordId}`,
+  COMMISSION_BY_PROPERTY: (propertyId) => `${BASE_URL}/api/commissions/property/${propertyId}`,
+  COMMISSION_DETAILS: (id) => `${BASE_URL}/api/commissions/${id}`,
+  MARK_COMMISSION_PAID: (id) => `${BASE_URL}/api/commissions/${id}/mark-paid`,
+  GENERATE_MONTHLY_FEES: `${BASE_URL}/api/commissions/generate-monthly-fees`,
+
+  // Fee Management endpoints (new unified system)
+  FEES: `${BASE_URL}/api/fees`,
+  FEE_STATS: `${BASE_URL}/api/fees/stats`,
+  FEE_DETAILS: (id) => `${BASE_URL}/api/fees/${id}`,
+  MARK_FEE_PAID: (id) => `${BASE_URL}/api/fees/${id}/mark-paid`,
+  GENERATE_RECURRING_FEES: `${BASE_URL}/api/fees/generate-recurring`,
+  GENERATE_MONTHLY_FEES: `${BASE_URL}/api/fees/generate-monthly-fees`,
+  OVERDUE_FEES: `${BASE_URL}/api/fees/overdue`,
+  FEES_BY_LANDLORD: (landlordId) => `${BASE_URL}/api/fees/landlord/${landlordId}`,
+  FEES_BY_PROPERTY: (propertyId) => `${BASE_URL}/api/fees/property/${propertyId}`,
+
+  // Settings endpoints
+  SETTINGS: `${BASE_URL}/api/settings`,
+  SETTINGS_BY_CATEGORY: (category) => `${BASE_URL}/api/settings/category/${category}`,
+  SETTING_BY_KEY: (key) => `${BASE_URL}/api/settings/key/${key}`,
+  COMMISSION_SETTINGS: `${BASE_URL}/api/settings/commission`,
+  UPDATE_COMMISSION_SETTINGS: `${BASE_URL}/api/settings/commission`,
+  INITIALIZE_SETTINGS: `${BASE_URL}/api/settings/initialize`,
+
   // Ticket endpoints
   TICKETS: `${BASE_URL}/api/tickets`,
   MY_TICKETS: `${BASE_URL}/api/tickets/my-tickets`,

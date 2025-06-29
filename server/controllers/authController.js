@@ -6,8 +6,8 @@ import passport from 'passport';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+const generateToken = (id, role) => {
+  return jwt.sign({ id, role }, process.env.JWT_SECRET, {
     expiresIn: '30d',
   });
 };
@@ -16,7 +16,7 @@ const generateToken = (id) => {
 const handleOAuthSuccess = (req, res) => {
   try {
     const user = req.user;
-    const token = generateToken(user._id);
+    const token = generateToken(user._id, user.role);
     
     // Check if user needs to complete registration (new OAuth user)
     const isNewUser = !user.registrationComplete;
@@ -122,7 +122,7 @@ export const register = async (req, res) => {
         role: user.role,
         phone: user.phone,
         termsAccepted: user.termsAccepted,
-        token: generateToken(user._id),
+        token: generateToken(user._id, user.role),
       });
     }
   } catch (error) {
@@ -146,7 +146,7 @@ export const login = async (req, res) => {
       role: user.role,
       phone: user.phone,
       profilePicture: user.profilePicture,
-      token: generateToken(user._id),
+      token: generateToken(user._id, user.role),
     });
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -292,7 +292,7 @@ export const completeOAuthRegistration = async (req, res) => {
     await user.save();
 
     // Generate new token
-    const token = generateToken(user._id);
+    const token = generateToken(user._id, user.role);
 
     res.json({
       user: {

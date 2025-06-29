@@ -109,11 +109,6 @@ const propertySchema = new mongoose.Schema({
   leaseEndDate: {
     type: Date
   },
-  commissionStatus: {
-    type: String,
-    enum: ['pending', 'received', 'not_applicable'],
-    default: 'not_applicable'
-  },
   applications: [{
     tenant: {
       type: mongoose.Schema.Types.ObjectId,
@@ -151,6 +146,49 @@ const propertySchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Virtual for getting all fees associated with this property
+propertySchema.virtual('fees', {
+  ref: 'Fee',
+  localField: '_id',
+  foreignField: 'property'
+});
+
+// Virtual for getting commission fees
+propertySchema.virtual('commissionFees', {
+  ref: 'Fee',
+  localField: '_id',
+  foreignField: 'property',
+  match: { category: 'commission' }
+});
+
+// Virtual for getting monthly fees
+propertySchema.virtual('monthlyFees', {
+  ref: 'Fee',
+  localField: '_id',
+  foreignField: 'property',
+  match: { category: 'monthly_fee' }
+});
+
+// Virtual for getting pending fees
+propertySchema.virtual('pendingFees', {
+  ref: 'Fee',
+  localField: '_id',
+  foreignField: 'property',
+  match: { status: 'pending' }
+});
+
+// Virtual for getting overdue fees
+propertySchema.virtual('overdueFees', {
+  ref: 'Fee',
+  localField: '_id',
+  foreignField: 'property',
+  match: { status: 'overdue' }
+});
+
+// Ensure virtuals are included when converting to JSON
+propertySchema.set('toJSON', { virtuals: true });
+propertySchema.set('toObject', { virtuals: true });
 
 const Property = mongoose.model('Property', propertySchema);
 

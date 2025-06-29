@@ -14,10 +14,20 @@ export const protect = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(decoded.id).select('-password');
+    
+    // Set user info from JWT payload (includes role)
+    req.user = {
+      _id: decoded.id,
+      role: decoded.role
+    };
 
-    if (!req.user) {
-      return res.status(401).json({ message: 'User not found' });
+    // Optionally fetch full user data if needed
+    if (req.needFullUser) {
+      const fullUser = await User.findById(decoded.id).select('-password');
+      if (!fullUser) {
+        return res.status(401).json({ message: 'User not found' });
+      }
+      req.user = fullUser;
     }
 
     next();
@@ -28,7 +38,6 @@ export const protect = async (req, res, next) => {
 
 export const restrictTo = (...roles) => {
   return (req, res, next) => {
-
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({
         message: 'You do not have permission to perform this action'

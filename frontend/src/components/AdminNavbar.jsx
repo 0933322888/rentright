@@ -22,7 +22,8 @@ export default function AdminNavbar() {
     { name: 'Escalations', href: '/admin/escalations' },
     { name: 'Landlords', href: '/admin/landlords' },
     { name: 'Tenants', href: '/admin/tenants' },
-    { name: 'Lease Agreements', href: '/admin/lease-agreements' }
+    { name: 'Lease Agreements', href: '/admin/lease-agreements' },
+    { name: 'Commissions', href: '/admin/commissions' }
   ];
 
   const handleLogout = () => {

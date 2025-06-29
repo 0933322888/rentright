@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import session from 'express-session';
 import connectDB from './config/db.js';
 import passport from './config/passport.js';
+import { initializeDefaultSettings } from './initializeSettings.js';
 import userRoutes from './routes/userRoutes.js';
 import propertyRoutes from './routes/propertyRoutes.js';
 import userPropertyRoutes from './routes/userPropertyRoutes.js';
@@ -17,6 +18,9 @@ import paymentSetupRoutes from './routes/paymentSetupRoutes.js';
 import insuranceRoutes from './routes/insuranceRoutes.js';
 import docusignRoutes from './routes/docusign.js';
 import escalationRoutes from './routes/escalationRoutes.js';
+import commissionRoutes from './routes/commissionRoutes.js';
+import feeRoutes from './routes/feeRoutes.js';
+import settingsRoutes from './routes/settingsRoutes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -31,6 +35,9 @@ const app = express();
 
 // Connect to MongoDB
 connectDB();
+
+// Initialize default settings
+initializeDefaultSettings().catch(console.error);
 
 // Middleware
 app.use(cors({
@@ -69,6 +76,9 @@ app.use('/api/payment-setup', paymentSetupRoutes);
 app.use('/api/insurance', insuranceRoutes);
 app.use('/api/docusign', docusignRoutes);
 app.use('/api/escalations', escalationRoutes);
+app.use('/api/commissions', commissionRoutes);
+app.use('/api/fees', feeRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Serve uploaded files statically (for local storage fallback)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
