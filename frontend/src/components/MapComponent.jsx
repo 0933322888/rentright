@@ -612,7 +612,7 @@ export default function MapComponent({ properties, center, zoom, onMarkerClick, 
 
   return (
     <MapErrorBoundary>
-      <div className="relative h-full w-full enhanced-map-container map-fade-in z-1 dark:bg-gray-900 dark:border-gray-800">
+      <div className="relative h-full w-full enhanced-map-container map-fade-in z-1 dark:bg-gray-300 dark:border-gray-300">
         <MapContainer
           ref={mapRef}
           center={center}
