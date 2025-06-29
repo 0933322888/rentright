@@ -270,7 +270,13 @@ MapMarkers.propTypes = {
 // Map Controls Component
 function MapControls({ onLocateMe, onFullscreen }) {
   return (
-    <div className="absolute top-4 right-4 z-[1000] space-y-2 map-controls-container">
+    <div className="absolute top-4 right-4 z-[1000] map-controls-container" style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '10px',
+      backgroundColor: 'transparent',
+      border: 'none',
+    }}>
       {/* Locate me button */}
       <button
         onClick={onLocateMe}
@@ -590,7 +596,7 @@ export default function MapComponent({ properties, center, zoom, onMarkerClick, 
 
   return (
     <MapErrorBoundary>
-      <div className="relative h-full w-full enhanced-map-container map-fade-in">
+      <div className="relative h-full w-full enhanced-map-container map-fade-in z-1">
         <MapContainer
           ref={mapRef}
           center={center}
