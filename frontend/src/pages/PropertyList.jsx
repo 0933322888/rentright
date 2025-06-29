@@ -22,6 +22,7 @@ export default function PropertyList() {
   const [mapZoom, setMapZoom] = useState(13);
   const [isMapReady, setIsMapReady] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [selectedPropertyId, setSelectedPropertyId] = useState(null);
   const searchTimeoutRef = useRef(null);
 
   const [filters, setFilters] = useState({
@@ -196,10 +197,36 @@ export default function PropertyList() {
   };
 
   const handleMarkerClick = (property) => {
-    setSelectedLocation({
-      lat: property.location.coordinates[1],
-      lng: property.location.coordinates[0]
-    });
+    if (property) {
+      setSelectedPropertyId(property._id);
+      setSelectedLocation({
+        lat: property.location.coordinates[1],
+        lng: property.location.coordinates[0]
+      });
+      
+      // Scroll to the property in the list
+      const propertyElement = document.getElementById(`property-${property._id}`);
+      if (propertyElement) {
+        propertyElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+      }
+    } else {
+      setSelectedPropertyId(null);
+    }
+  };
+
+  const handlePropertyCardClick = (propertyId) => {
+    setSelectedPropertyId(propertyId);
+    
+    // Find the property and center map on it
+    const property = properties.find(p => p._id === propertyId);
+    if (property && property.location?.coordinates) {
+      const [lng, lat] = property.location.coordinates;
+      setMapCenter([lat, lng]);
+      setMapZoom(16); // Zoom in closer when selecting from list
+    }
   };
 
   // Effect to handle map initialization
@@ -220,7 +247,7 @@ export default function PropertyList() {
   }, []);
 
   return (
-    <div className="h-screen flex flex-col w-full">
+    <div className="h-screen flex flex-col w-full px-4 mt-2">
       {/* Filter Header */}
       <div className="px-6 py-6 bg-white border-b border-gray-200">
         {/* Main Filters Row */}
@@ -473,7 +500,7 @@ export default function PropertyList() {
         <div className="flex-[2] h-full pr-2">
           {isMapReady ? (
             <Suspense fallback={
-              <div className="h-full w-full flex items-center justify-center bg-gray-100">
+              <div className="h-full w-full flex items-center justify-center bg-gray-100 map-loading">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
                   <p className="mt-2 text-gray-600">Loading map...</p>
@@ -485,10 +512,11 @@ export default function PropertyList() {
                 center={mapCenter}
                 zoom={mapZoom}
                 onMarkerClick={handleMarkerClick}
+                selectedPropertyId={selectedPropertyId}
               />
             </Suspense>
           ) : (
-            <div className="h-full w-full flex items-center justify-center bg-gray-100">
+            <div className="h-full w-full flex items-center justify-center bg-gray-100 map-loading">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
                 <p className="mt-2 text-gray-600">Initializing map...</p>
@@ -531,13 +559,24 @@ export default function PropertyList() {
           ) : (
             <div className="space-y-6 px-0">
               {filteredProperties.map(property => (
-                <Link
+                <div
                   key={property._id}
-                  to={`/properties/${property._id}`}
-                  className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
-                  onClick={() => trackPropertyClick(property._id)}
+                  id={`property-${property._id}`}
+                  className={`block bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer ${
+                    selectedPropertyId === property._id 
+                      ? 'ring-2 ring-primary-500 shadow-lg transform scale-[1.02]' 
+                      : ''
+                  }`}
+                  onClick={() => handlePropertyCardClick(property._id)}
                 >
-                  <div className="p-8">
+                  <Link
+                    to={`/properties/${property._id}`}
+                    className="block p-8"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      trackPropertyClick(property._id);
+                    }}
+                  >
                     <div className="flex gap-10">
                       {/* Property Image - wider */}
                       <div className="w-56 h-56 flex-shrink-0">
@@ -627,8 +666,8 @@ export default function PropertyList() {
                         </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
+                  </Link>
+                </div>
               ))}
             </div>
           )}
