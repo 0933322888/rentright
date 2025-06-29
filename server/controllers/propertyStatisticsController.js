@@ -4,10 +4,10 @@ import Property from '../models/propertyModel.js';
 // Get statistics for a property
 export const getPropertyStatistics = async (req, res) => {
     try {
-        const { propertyId } = req.params;
+        const { id } = req.params;
 
         // Check if property exists and user has access
-        const property = await Property.findById(propertyId);
+        const property = await Property.findById(id);
         if (!property) {
             return res.status(404).json({ message: 'Property not found' });
         }
@@ -23,7 +23,7 @@ export const getPropertyStatistics = async (req, res) => {
         startDate.setDate(startDate.getDate() - 30);
 
         // Get statistics
-        const statistics = await PropertyStatistics.getStatistics(propertyId, startDate, endDate);
+        const statistics = await PropertyStatistics.getStatistics(id, startDate, endDate);
 
         res.json(statistics);
     } catch (error) {
@@ -35,16 +35,16 @@ export const getPropertyStatistics = async (req, res) => {
 // Track a view for a property
 export const trackPropertyView = async (req, res) => {
     try {
-        const { propertyId } = req.params;
+        const { id } = req.params;
 
         // Check if property exists
-        const property = await Property.findById(propertyId);
+        const property = await Property.findById(id);
         if (!property) {
             return res.status(404).json({ message: 'Property not found' });
         }
 
         // Increment view count for today
-        await PropertyStatistics.incrementViews(propertyId, new Date());
+        await PropertyStatistics.incrementViews(id, new Date());
 
         res.json({ message: 'View tracked successfully' });
     } catch (error) {
@@ -56,16 +56,16 @@ export const trackPropertyView = async (req, res) => {
 // Track a click for a property (when user clicks on property details)
 export const trackPropertyClick = async (req, res) => {
     try {
-        const { propertyId } = req.params;
+        const { id } = req.params;
 
         // Check if property exists
-        const property = await Property.findById(propertyId);
+        const property = await Property.findById(id);
         if (!property) {
             return res.status(404).json({ message: 'Property not found' });
         }
 
         // Increment click count for today
-        await PropertyStatistics.incrementClicks(propertyId, new Date());
+        await PropertyStatistics.incrementClicks(id, new Date());
 
         res.json({ message: 'Click tracked successfully' });
     } catch (error) {

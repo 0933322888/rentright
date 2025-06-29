@@ -165,7 +165,7 @@ const PropertyStatistics = ({ propertyId }) => {
                 </Typography>
               </Box>
               <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
-                {((statistics.totalClicks / statistics.totalViews) * 100).toFixed(1)}%
+                {statistics.totalViews > 0 ? ((statistics.totalClicks / statistics.totalViews) * 100).toFixed(1) : '0.0'}%
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Clicks per view
@@ -261,9 +261,9 @@ const PropertyStatistics = ({ propertyId }) => {
                   </TableCell>
                   <TableCell align="right">
                     <Chip
-                      label={`${((day.clicks / day.views) * 100).toFixed(1)}%`}
+                      label={`${day.views > 0 ? ((day.clicks / day.views) * 100).toFixed(1) : '0.0'}%`}
                       size="small"
-                      color={day.clicks / day.views > 0.1 ? 'success' : 'default'}
+                      color={day.views > 0 && day.clicks / day.views > 0.1 ? 'success' : 'default'}
                       variant="outlined"
                     />
                   </TableCell>

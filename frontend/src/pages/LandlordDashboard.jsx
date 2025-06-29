@@ -4,12 +4,12 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api';
 import { useAuth } from '../context/AuthContext';
-import { 
-  FaHome, 
-  FaKey, 
-  FaFileContract, 
-  FaMoneyBillWave, 
-  FaUsers, 
+import {
+  FaHome,
+  FaKey,
+  FaFileContract,
+  FaMoneyBillWave,
+  FaUsers,
   FaExclamationTriangle,
   FaCheckCircle,
   FaClock,
@@ -43,7 +43,7 @@ const LandlordDashboard = () => {
       try {
         setLoading(true);
         const token = localStorage.getItem('token');
-        
+
         // Fetch all data in parallel
         const [propertiesRes, applicationsRes, ticketsRes, paymentsRes, statsRes] = await Promise.all([
           axios.get(API_ENDPOINTS.MY_PROPERTIES, {
@@ -132,10 +132,10 @@ const LandlordDashboard = () => {
   const getUpcomingPayments = () => {
     const today = new Date();
     const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-    
+
     return payments
-      .filter(payment => 
-        payment.status === 'pending' && 
+      .filter(payment =>
+        payment.status === 'pending' &&
         new Date(payment.dueDate) <= nextWeek
       )
       .slice(0, 5);
@@ -161,8 +161,8 @@ const LandlordDashboard = () => {
 
   const getOverduePayments = () => {
     const today = new Date();
-    return payments.filter(payment => 
-      payment.status === 'pending' && 
+    return payments.filter(payment =>
+      payment.status === 'pending' &&
       new Date(payment.dueDate) < today
     );
   };
@@ -195,7 +195,7 @@ const LandlordDashboard = () => {
       {/* Statistics Cards */}
       <Row className="mb-6">
         <Col md={3} className="mb-3">
-          <Card className="h-100 border-0 shadow-sm">
+          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: 18, background: '#eaf3fb' }}>
             <Card.Body className="text-center">
               <div className="d-flex align-items-center justify-content-center mb-3">
                 <div className="bg-primary bg-opacity-10 rounded-circle p-3">
@@ -214,7 +214,7 @@ const LandlordDashboard = () => {
         </Col>
 
         <Col md={3} className="mb-3">
-          <Card className="h-100 border-0 shadow-sm">
+          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: 18, background: '#f0f7f4' }}>
             <Card.Body className="text-center">
               <div className="d-flex align-items-center justify-content-center mb-3">
                 <div className="bg-success bg-opacity-10 rounded-circle p-3">
@@ -233,7 +233,7 @@ const LandlordDashboard = () => {
         </Col>
 
         <Col md={3} className="mb-3">
-          <Card className="h-100 border-0 shadow-sm">
+          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: 18, background: '#eaf3fb' }}>
             <Card.Body className="text-center">
               <div className="d-flex align-items-center justify-content-center mb-3">
                 <div className="bg-warning bg-opacity-10 rounded-circle p-3">
@@ -252,7 +252,7 @@ const LandlordDashboard = () => {
         </Col>
 
         <Col md={3} className="mb-3">
-          <Card className="h-100 border-0 shadow-sm">
+          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: 18, background: '#f0f7f4' }}>
             <Card.Body className="text-center">
               <div className="d-flex align-items-center justify-content-center mb-3">
                 <div className="bg-danger bg-opacity-10 rounded-circle p-3">
@@ -271,146 +271,49 @@ const LandlordDashboard = () => {
         </Col>
       </Row>
 
-      {/* Main Content */}
-      <Row>
-        {/* Left Column */}
-        <Col lg={8}>
-          {/* Properties Overview */}
-          <Card className="mb-4 border-0 shadow-sm">
-            <Card.Header className="bg-white border-bottom">
-              <div className="d-flex justify-content-between align-items-center">
-                <h5 className="mb-0">
-                  <FaHome className="me-2 text-primary" />
-                  Properties Overview
-                </h5>
-                <Button as={Link} to="/my-properties" variant="outline-primary" size="sm">
-                  View All
-                </Button>
-              </div>
-            </Card.Header>
-            <Card.Body>
-              {properties.length === 0 ? (
-                <div className="text-center py-4">
-                  <FaHome className="text-muted mb-3" size={48} />
-                  <h6>No Properties Yet</h6>
-                  <p className="text-muted">Start by adding your first property</p>
-                  <Button as={Link} to="/properties/create" variant="primary">
-                    Add Property
-                  </Button>
-                </div>
-              ) : (
-                <div>
-                  {properties.slice(0, 3).map(property => (
-                    <div key={property._id} className="d-flex justify-content-between align-items-center py-3 border-bottom">
-                      <div className="flex-grow-1">
-                        <h6 className="mb-1">{property.title}</h6>
-                        <p className="text-muted mb-1">
-                          <FaMapMarkerAlt className="me-1" />
-                          {property.location?.street}, {property.location?.city}
-                        </p>
-                        <div className="d-flex gap-2">
-                          {getStatusBadge(property.status)}
-                          <span className="text-muted">${property.price}/month</span>
-                        </div>
-                      </div>
-                      <div className="d-flex gap-2">
-                        <Button as={Link} to={`/properties/${property._id}`} variant="outline-primary" size="sm">
-                          <FaEye />
-                        </Button>
-                        <Button as={Link} to={`/edit-property/${property._id}`} variant="outline-secondary" size="sm">
-                          <FaEdit />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card.Body>
-          </Card>
-
-          {/* Recent Applications */}
-          <Card className="mb-4 border-0 shadow-sm">
-            <Card.Header className="bg-white border-bottom">
-              <div className="d-flex justify-content-between align-items-center">
-                <h5 className="mb-0">
-                  <FaUsers className="me-2 text-warning" />
-                  Recent Applications
-                </h5>
-                <Button as={Link} to="/my-properties" variant="outline-primary" size="sm">
-                  View All
-                </Button>
-              </div>
-            </Card.Header>
-            <Card.Body>
-              {getRecentApplications().length === 0 ? (
-                <div className="text-center py-4">
-                  <FaUsers className="text-muted mb-3" size={48} />
-                  <h6>No Pending Applications</h6>
-                  <p className="text-muted">All caught up!</p>
-                </div>
-              ) : (
-                <div>
-                  {getRecentApplications().map(application => (
-                    <div key={application._id} className="d-flex justify-content-between align-items-center py-3 border-bottom">
-                      <div className="flex-grow-1">
-                        <h6 className="mb-1">{application.property?.title}</h6>
-                        <p className="text-muted mb-1">
-                          Applicant: {application.tenant?.name}
-                        </p>
-                        <div className="d-flex gap-2 align-items-center">
-                          {getApplicationStatusBadge(application.status)}
-                          <small className="text-muted">
-                            <FaCalendarAlt className="me-1" />
-                            {new Date(application.createdAt).toLocaleDateString()}
-                          </small>
-                        </div>
-                      </div>
-                      <Button as={Link} to={`/my-properties`} variant="outline-primary" size="sm">
-                        Review
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
-
-        {/* Right Column */}
-        <Col lg={4}>
-          {/* Quick Actions */}
-          <Card className="mb-4 border-0 shadow-sm">
-            <Card.Header className="bg-white border-bottom">
-              <h5 className="mb-0">
+      {/* New row for Quick Actions, Recent Tickets, Occupancy Rate */}
+      <Row className="mb-6">
+        <Col md={4} className="mb-3">
+          {/* Quick Actions card */}
+          <Card className="h-100 border-1 shadow-sm" style={{ borderRadius: 18, background: '#f0f7f4' }}>
+            <Card.Header className="bg-white border-bottom" style={{ borderRadius: 18 }}>
+              <div className="d-flex align-items-center">
                 <FaBell className="me-2 text-primary" />
-                Quick Actions
-              </h5>
+                <span className="fw-bold" style={{ fontSize: '1.1rem' }}>Quick Actions</span>
+              </div>
             </Card.Header>
             <Card.Body>
               <div className="d-grid gap-2">
-                <Button as={Link} to="/properties/create" variant="primary" size="sm">
-                  <FaPlus className="me-2" />
-                  Add New Property
+                <Button variant="success" size="sm">
+                  <div className="d-flex align-items-center gap-1 justify-content-center py-2">
+                    <FaPlus className="me-2" />
+                    <span>Add New Property</span>
+                  </div>
                 </Button>
-                <Button as={Link} to="/my-properties" variant="outline-primary" size="sm">
-                  <FaHome className="me-2" />
-                  Manage Properties
+                <Button variant="primary" size="sm">
+                  <div className="d-flex align-items-center gap-1 justify-content-center py-2">
+                    <FaHome className="me-2" />
+                    <span>Manage Properties</span>
+                  </div>
                 </Button>
-                <Button as={Link} to="/my-tickets" variant="outline-warning" size="sm">
-                  <FaTicketAlt className="me-2" />
-                  View Tickets
+                <Button variant="warning" size="sm">
+                  <div className="d-flex align-items-center gap-1 justify-content-center py-2">
+                    <FaTicketAlt className="me-2" />
+                    <span>View Tickets</span>
+                  </div>
                 </Button>
               </div>
             </Card.Body>
           </Card>
-
-          {/* Recent Tickets */}
-          <Card className="mb-4 border-0 shadow-sm">
-            <Card.Header className="bg-white border-bottom">
-              <h5 className="mb-0">
+        </Col>
+        <Col md={4} className="mb-3">
+          {/* Recent Tickets card */}
+          <Card className="h-100 border-1 shadow-sm" style={{ borderRadius: 18, background: '#eaf3fb' }}>
+            <Card.Header className="bg-white border-bottom" style={{ borderRadius: 18 }}>
+              <div className="d-flex align-items-center">
                 <FaExclamationTriangle className="me-2 text-danger" />
-                Recent Tickets
-              </h5>
+                <span className="fw-bold" style={{ fontSize: '1.1rem' }}>Recent Tickets</span>
+              </div>
             </Card.Header>
             <Card.Body>
               {getRecentTickets().length === 0 ? (
@@ -440,21 +343,22 @@ const LandlordDashboard = () => {
               )}
             </Card.Body>
           </Card>
-
-          {/* Occupancy Rate */}
-          <Card className="border-0 shadow-sm">
-            <Card.Header className="bg-white border-bottom">
-              <h5 className="mb-0">
+        </Col>
+        <Col md={4} className="mb-3">
+          {/* Occupancy Rate card */}
+          <Card className="h-100 border-1 shadow-sm" style={{ borderRadius: 18, background: '#f0f7f4' }}>
+            <Card.Header className="bg-white border-bottom" style={{ borderRadius: 18 }}>
+              <div className="d-flex align-items-center">
                 <FaChartLine className="me-2 text-success" />
-                Occupancy Rate
-              </h5>
+                <span className="fw-bold" style={{ fontSize: '1.1rem' }}>Occupancy Rate</span>
+              </div>
             </Card.Header>
             <Card.Body>
               <div className="text-center">
                 <h2 className="mb-3">{calculateOccupancyRate()}%</h2>
-                <ProgressBar 
-                  now={calculateOccupancyRate()} 
-                  variant="success" 
+                <ProgressBar
+                  now={calculateOccupancyRate()}
+                  variant="success"
                   className="mb-3"
                 />
                 <p className="text-muted mb-0">
@@ -465,6 +369,66 @@ const LandlordDashboard = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* Main Content */}
+      <Row>
+        <Col lg={12}>
+          {/* Recent Applications */}
+          {applications.filter(
+            app => app.status !== 'cancelled' && app.status !== 'rejected' && app.status !== 'approved'
+          ).length > 0 && (
+              <Card className="mb-4 border-0 shadow-sm">
+                <Card.Header className="bg-white border-bottom">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <h5 className="mb-0">
+                      <FaUsers className="me-2 text-warning" />
+                      Recent Applications
+                    </h5>
+                    <Button as={Link} to="/my-properties" variant="outline-primary" size="sm">
+                      View All
+                    </Button>
+                  </div>
+                </Card.Header>
+                <Card.Body>
+                  {applications.filter(
+                    app => app.status !== 'cancelled' && app.status !== 'rejected'
+                  ).length === 0 ? (
+                    <div className="text-center py-4">
+                      <FaUsers className="text-muted mb-3" size={48} />
+                      <h6>No Pending Applications</h6>
+                      <p className="text-muted">All caught up!</p>
+                    </div>
+                  ) : (
+                    <div>
+                      {applications.filter(
+                        app => app.status !== 'cancelled' && app.status !== 'rejected'
+                      ).slice(0, 5).map(application => (
+                        <div key={application._id} className="d-flex justify-content-between align-items-center py-3 border-bottom">
+                          <div className="flex-grow-1">
+                            <h6 className="mb-1">{application.property?.title}</h6>
+                            <p className="text-muted mb-1">
+                              Applicant: {application.tenant?.name}
+                            </p>
+                            <div className="d-flex gap-2 align-items-center">
+                              {getApplicationStatusBadge(application.status)}
+                              <small className="text-muted">
+                                <FaCalendarAlt className="me-1" />
+                                {new Date(application.createdAt).toLocaleDateString()}
+                              </small>
+                            </div>
+                          </div>
+                          <Button as={Link} to={`/my-properties`} variant="outline-primary" size="sm">
+                            Review
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card.Body>
+              </Card>
+            )}
+        </Col>
+      </Row>
     </>
   );
 
@@ -473,7 +437,7 @@ const LandlordDashboard = () => {
       {/* Financial Statistics Cards */}
       <Row className="mb-6">
         <Col md={3} className="mb-3">
-          <Card className="h-100 border-0 shadow-sm">
+          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: 18, background: '#eaf3fb' }}>
             <Card.Body className="text-center">
               <div className="d-flex align-items-center justify-content-center mb-3">
                 <div className="bg-success bg-opacity-10 rounded-circle p-3">
@@ -492,7 +456,7 @@ const LandlordDashboard = () => {
         </Col>
 
         <Col md={3} className="mb-3">
-          <Card className="h-100 border-0 shadow-sm">
+          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: 18, background: '#f0f7f4' }}>
             <Card.Body className="text-center">
               <div className="d-flex align-items-center justify-content-center mb-3">
                 <div className="bg-warning bg-opacity-10 rounded-circle p-3">
@@ -511,7 +475,7 @@ const LandlordDashboard = () => {
         </Col>
 
         <Col md={3} className="mb-3">
-          <Card className="h-100 border-0 shadow-sm">
+          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: 18, background: '#eaf3fb' }}>
             <Card.Body className="text-center">
               <div className="d-flex align-items-center justify-content-center mb-3">
                 <div className="bg-danger bg-opacity-10 rounded-circle p-3">
@@ -530,7 +494,7 @@ const LandlordDashboard = () => {
         </Col>
 
         <Col md={3} className="mb-3">
-          <Card className="h-100 border-0 shadow-sm">
+          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: 18, background: '#f0f7f4' }}>
             <Card.Body className="text-center">
               <div className="d-flex align-items-center justify-content-center mb-3">
                 <div className="bg-info bg-opacity-10 rounded-circle p-3">
@@ -549,21 +513,106 @@ const LandlordDashboard = () => {
         </Col>
       </Row>
 
+      {/* New row for Financial Summary, Quick Actions, Monthly Revenue Trend */}
+      <Row className="mb-6">
+        <Col md={4} className="mb-3">
+          {/* Financial Summary card */}
+          <Card className="mb-4 border-1 shadow-sm" style={{ borderRadius: 18 }}>
+            <Card.Header className="bg-white border-bottom" style={{ borderRadius: 18 }}>
+              <div className="d-flex align-items-center" >
+                <FaChartBar className="me-2 text-primary" />
+                <span className="fw-bold" style={{ fontSize: '1.1rem' }}>Financial Summary</span>
+              </div>
+            </Card.Header>
+            <Card.Body>
+              <div className="space-y-3">
+                <div className="d-flex justify-content-between align-items-center">
+                  <span className="text-muted">Monthly Revenue</span>
+                  <span className="fw-bold text-success">${getTotalMonthlyRent().toLocaleString()}</span>
+                </div>
+                <div className="d-flex justify-content-between align-items-center">
+                  <span className="text-muted">Annual Revenue</span>
+                  <span className="fw-bold">${getTotalAnnualRent().toLocaleString()}</span>
+                </div>
+                <div className="d-flex justify-content-between align-items-center">
+                  <span className="text-muted">Occupancy Rate</span>
+                  <span className="fw-bold text-info">{calculateOccupancyRate()}%</span>
+                </div>
+                <div className="d-flex justify-content-between align-items-center">
+                  <span className="text-muted">Pending Payments</span>
+                  <span className="fw-bold text-warning">{getPaymentStatusCount('pending')}</span>
+                </div>
+                <div className="d-flex justify-content-between align-items-center">
+                  <span className="text-muted">Overdue Amount</span>
+                  <span className="fw-bold text-danger">${getOverduePayments().reduce((total, p) => total + (p.amount || 0), 0).toLocaleString()}</span>
+                </div>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={4} className="mb-3">
+          {/* Quick Actions card */}
+          <Card className="mb-4 border-1 shadow-sm" style={{ borderRadius: 18, background: '#f0f7f4' }}>
+            <Card.Header className="bg-white border-bottom" style={{ borderRadius: 18 }}>
+              <div className="d-flex align-items-center">
+                <FaDollarSign className="me-2 text-success" />
+                <span className="fw-bold" style={{ fontSize: '1.1rem' }}>Quick Actions</span>
+              </div>
+            </Card.Header>
+            <Card.Body>
+              <div className="d-grid gap-2">
+                <Button variant="success" size="sm">
+                  <div className="d-flex align-items-center gap-1 justify-content-center py-2">
+                    <FaCreditCard className="me-2" />
+                    <span>Record Payment</span>
+                  </div>
+                </Button>
+                <Button variant="primary" size="sm">
+                  <div className="d-flex align-items-center gap-1 justify-content-center py-2">
+                    <FaReceipt className="me-2" />
+                    <span>Generate Report</span>
+                  </div>
+                </Button>
+                <Button variant="warning" size="sm">
+                  <div className="d-flex align-items-center gap-1 justify-content-center py-2">
+                    <FaExclamationTriangle className="me-2" />
+                    <span>Send Reminders</span>
+                  </div>
+                </Button>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={4} className="mb-3">
+          {/* Monthly Revenue Trend card */}
+          <Card className="border-1 shadow-sm" style={{ borderRadius: 18 }}>
+            <Card.Header className="bg-white border-bottom" style={{ borderRadius: 18 }}>
+              <div className="d-flex align-items-center">
+                <FaChartLine className="me-2 text-success" />
+                <span className="fw-bold" style={{ fontSize: '1.1rem' }}>Monthly Revenue Trend</span>
+              </div>
+            </Card.Header>
+            <Card.Body>
+              <div className="text-center py-4">
+                <FaChartLine className="text-muted mb-3" size={48} />
+                <h6>Revenue Chart</h6>
+                <p className="text-muted mb-0">Monthly revenue visualization will be displayed here.</p>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
       {/* Financial Content */}
       <Row>
         {/* Left Column */}
-        <Col lg={8}>
+        <Col lg={12}>
           {/* Upcoming Payments */}
-          <Card className="mb-4 border-0 shadow-sm">
-            <Card.Header className="bg-white border-bottom">
-              <div className="d-flex justify-content-between align-items-center">
-                <h5 className="mb-0">
-                  <FaCalendarAlt className="me-2 text-warning" />
-                  Upcoming Payments
-                </h5>
-                <Button as={Link} to="/my-properties" variant="outline-primary" size="sm">
-                  View All
-                </Button>
+          <Card className="mb-4 border-1 shadow-sm">
+            <Card.Header className="bg-white border-bottom" style={{ borderRadius: 18 }}>
+              <div className="d-flex align-items-center" style={{ borderRadius: 18 }}>
+                <FaCalendarAlt className="me-2 text-warning" />
+                <span className="fw-bold" style={{ fontSize: '1.1rem' }}>Upcoming Payments</span>
               </div>
             </Card.Header>
             <Card.Body>
@@ -604,16 +653,11 @@ const LandlordDashboard = () => {
           </Card>
 
           {/* Payment History */}
-          <Card className="mb-4 border-0 shadow-sm">
-            <Card.Header className="bg-white border-bottom">
-              <div className="d-flex justify-content-between align-items-center">
-                <h5 className="mb-0">
-                  <FaReceipt className="me-2 text-info" />
-                  Recent Payment History
-                </h5>
-                <Button as={Link} to="/my-properties" variant="outline-primary" size="sm">
-                  View All
-                </Button>
+          <Card className="mb-4 border-1 shadow-sm">
+            <Card.Header className="bg-white border-bottom" style={{ borderRadius: 18 }}>
+              <div className="d-flex align-items-center">
+                <FaReceipt className="me-2 text-info" />
+                <span className="fw-bold" style={{ fontSize: '1.1rem' }}>Recent Payment History</span>
               </div>
             </Card.Header>
             <Card.Body>
@@ -649,86 +693,6 @@ const LandlordDashboard = () => {
             </Card.Body>
           </Card>
         </Col>
-
-        {/* Right Column */}
-        <Col lg={4}>
-          {/* Financial Summary */}
-          <Card className="mb-4 border-0 shadow-sm">
-            <Card.Header className="bg-white border-bottom">
-              <h5 className="mb-0">
-                <FaChartBar className="me-2 text-primary" />
-                Financial Summary
-              </h5>
-            </Card.Header>
-            <Card.Body>
-              <div className="space-y-3">
-                <div className="d-flex justify-content-between align-items-center">
-                  <span className="text-muted">Monthly Revenue</span>
-                  <span className="fw-bold text-success">${getTotalMonthlyRent().toLocaleString()}</span>
-                </div>
-                <div className="d-flex justify-content-between align-items-center">
-                  <span className="text-muted">Annual Revenue</span>
-                  <span className="fw-bold">${getTotalAnnualRent().toLocaleString()}</span>
-                </div>
-                <div className="d-flex justify-content-between align-items-center">
-                  <span className="text-muted">Occupancy Rate</span>
-                  <span className="fw-bold text-info">{calculateOccupancyRate()}%</span>
-                </div>
-                <div className="d-flex justify-content-between align-items-center">
-                  <span className="text-muted">Pending Payments</span>
-                  <span className="fw-bold text-warning">{getPaymentStatusCount('pending')}</span>
-                </div>
-                <div className="d-flex justify-content-between align-items-center">
-                  <span className="text-muted">Overdue Amount</span>
-                  <span className="fw-bold text-danger">${getOverduePayments().reduce((total, p) => total + (p.amount || 0), 0).toLocaleString()}</span>
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
-
-          {/* Quick Financial Actions */}
-          <Card className="mb-4 border-0 shadow-sm">
-            <Card.Header className="bg-white border-bottom">
-              <h5 className="mb-0">
-                <FaDollarSign className="me-2 text-success" />
-                Quick Actions
-              </h5>
-            </Card.Header>
-            <Card.Body>
-              <div className="d-grid gap-2">
-                <Button variant="success" size="sm">
-                  <FaCreditCard className="me-2" />
-                  Record Payment
-                </Button>
-                <Button variant="outline-primary" size="sm">
-                  <FaReceipt className="me-2" />
-                  Generate Report
-                </Button>
-                <Button variant="outline-warning" size="sm">
-                  <FaExclamationTriangle className="me-2" />
-                  Send Reminders
-                </Button>
-              </div>
-            </Card.Body>
-          </Card>
-
-          {/* Revenue Chart Placeholder */}
-          <Card className="border-0 shadow-sm">
-            <Card.Header className="bg-white border-bottom">
-              <h5 className="mb-0">
-                <FaChartLine className="me-2 text-success" />
-                Monthly Revenue Trend
-              </h5>
-            </Card.Header>
-            <Card.Body>
-              <div className="text-center py-4">
-                <FaChartLine className="text-muted mb-3" size={48} />
-                <h6>Revenue Chart</h6>
-                <p className="text-muted mb-0">Monthly revenue visualization will be displayed here.</p>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
       </Row>
     </>
   );
@@ -736,8 +700,6 @@ const LandlordDashboard = () => {
   return (
     <div className="bg-white min-h-screen">
       <div className="px-6 py-8">
-        {/* Header Section */}
-       
 
         {/* Tabs */}
         <Tab.Container activeKey={activeTab} onSelect={(k) => setActiveTab(k)}>
@@ -746,26 +708,24 @@ const LandlordDashboard = () => {
               <div className="bg-light rounded p-3">
                 <Nav variant="tabs" className="border-0">
                   <Nav.Item className="me-3">
-                    <Nav.Link 
-                      eventKey="overview" 
-                      className={`border-0 px-3 py-2 fw-medium ${
-                        activeTab === 'overview' 
-                          ? 'text-primary border-bottom border-2 border-primary' 
+                    <Nav.Link
+                      eventKey="overview"
+                      className={`border-0 px-3 py-2 fw-medium ${activeTab === 'overview'
+                          ? 'text-primary border-bottom border-2 border-primary'
                           : 'text-muted'
-                      }`}
+                        }`}
                     >
                       <FaHome className="me-2" size={14} />
                       Overview
                     </Nav.Link>
                   </Nav.Item>
                   <Nav.Item>
-                    <Nav.Link 
-                      eventKey="finances" 
-                      className={`border-0 px-3 py-2 fw-medium ${
-                        activeTab === 'finances' 
-                          ? 'text-primary border-bottom border-2 border-primary' 
+                    <Nav.Link
+                      eventKey="finances"
+                      className={`border-0 px-3 py-2 fw-medium ${activeTab === 'finances'
+                          ? 'text-primary border-bottom border-2 border-primary'
                           : 'text-muted'
-                      }`}
+                        }`}
                     >
                       <FaMoneyBillWave className="me-2" size={14} />
                       Finances
@@ -790,4 +750,4 @@ const LandlordDashboard = () => {
   );
 };
 
-export default LandlordDashboard; 
+export default LandlordDashboard;
