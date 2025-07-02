@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import 'leaflet/dist/leaflet.css';
 import { trackPropertyClick } from '../utils/statisticsUtils';
 import { getImageUrl } from '../utils/imageUtils';
+import { FaMapMarkerAlt, FaShower } from 'react-icons/fa';
 
 // Lazy load the map components
 const MapComponent = lazy(() => import('../components/MapComponent'));
@@ -26,7 +27,7 @@ function DarkModeToggle({ isDark, setIsDark }) {
         </svg>
       ) : (
         // Moon icon
-        <svg className="w-6 h-6 text-gray-700 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-7 h-6 text-gray-700 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" />
         </svg>
       )}
@@ -283,9 +284,13 @@ export default function PropertyList() {
   }, []);
 
   return (
-    <div className="h-screen flex flex-col w-full px-4 mt-2">
+    <div className="min-h-screen flex flex-col w-full px-4 mt-2">
       {/* Filter Header */}
-      <div className="px-6 py-6 bg-white border-b border-gray-200">
+      <div
+        id="filter-header"
+        className="px-6 py-6 bg-white border-b border-gray-200"
+        style={{ background: 'linear-gradient(180deg, #4a64ad42 0%, #ffffff 100%)', borderRadius: '12px' }}
+      >
         {/* Main Filters Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {/* Bedrooms */}
@@ -531,8 +536,8 @@ export default function PropertyList() {
       )}
 
       {/* Map and Property List Container */}
-      <div className="flex flex-row w-full h-full">
-        {/* Map Section - even smaller */}
+      <div className="flex flex-row my-2 w-full h-[calc(100vh-200px)]">
+        {/* Map Section - full height */}
         <div className="flex-[2] h-full pr-2">
           {isMapReady ? (
             <Suspense fallback={
@@ -599,7 +604,7 @@ export default function PropertyList() {
                 <div
                   key={property._id}
                   id={`property-${property._id}`}
-                  className={`block bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer ${
+                  className={`block bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer border border-[#cdcdcd] ${
                     selectedPropertyId === property._id 
                       ? 'ring-2 ring-primary-500 shadow-lg transform scale-[1.02]' 
                       : ''
@@ -608,7 +613,8 @@ export default function PropertyList() {
                 >
                   <Link
                     to={`/properties/${property._id}`}
-                    className="block p-8"
+                    className="block p-4 no-underline hover:no-underline"
+                    style={{ textDecoration: 'none' }}
                     onClick={(e) => {
                       e.stopPropagation();
                       trackPropertyClick(property._id);
@@ -634,8 +640,26 @@ export default function PropertyList() {
                         <div className="flex flex-col h-full justify-between">
                           <div>
                             <h3 className="text-xl font-semibold text-gray-900 truncate mb-2">{property.title}</h3>
-                            <p className="text-base text-gray-600 mb-4">
+                            <p className="text-base text-gray-600 mb-2 flex items-center gap-2">
+                              <FaMapMarkerAlt className="text-primary-500 mr-2" />
                               {property.location.street}, {property.location.city}
+                              <button
+                                type="button"
+                                className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors border border-blue-200 focus:outline-none"
+                                style={{ fontWeight: 500 }}
+                                onClick={e => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  if (property.location?.coordinates) {
+                                    const [lng, lat] = property.location.coordinates;
+                                    setMapCenter([lat, lng]);
+                                    setMapZoom(16);
+                                    setSelectedPropertyId(property._id);
+                                  }
+                                }}
+                              >
+                                View on Map
+                              </button>
                             </p>
                             
                             {/* Property Features */}
@@ -651,9 +675,7 @@ export default function PropertyList() {
                               )}
                               {property.features?.bathrooms && (
                                 <div className="flex items-center text-sm text-gray-600">
-                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
-                                  </svg>
+                                  <FaShower className="w-4 h-4 mr-1" />
                                   {property.features.bathrooms} bath{property.features.bathrooms !== 1 ? 's' : ''}
                                 </div>
                               )}
@@ -690,7 +712,7 @@ export default function PropertyList() {
                             </div>
                             
                             <div className="space-y-2">
-                              <p className="text-lg font-semibold text-gray-900">${property.price}/month</p>
+                              <p className="text-lg font-bold bg-blue-50 px-4 py-1 rounded-lg inline-block shadow-sm border border-blue-200" style={{ color: '#4a64ad' }}>${property.price}/month</p>
                             </div>
                           </div>
                           {user?.role === 'tenant' && appliedProperties.has(property._id) && (

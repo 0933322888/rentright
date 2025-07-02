@@ -348,34 +348,57 @@ const TenantDashboard = () => {
           show={showProfileModal} 
           onHide={() => setShowProfileModal(false)} 
         />
-        <div className="bg-white">
+        <div>
           <div>
             {/* Next Action Section - colorful card */}
-            <Row className="mb-6">
+            <Row className="mb-6 mx-2 my-2">
               <Col md={12}>
-                <Card className="shadow-sm border-0 mb-4" style={{ borderRadius: 18, background: 'linear-gradient(90deg, #eaf3fb 0%, #f0f7f4 100%)', boxShadow: '0 2px 12px rgba(30,34,90,0.04)' }}>
+                <Card className="shadow-sm border-0 mb-4" style={{ borderRadius: 18, background: 'linear-gradient(85deg, #4a64ad 0%, #e6ecf7 100%)', boxShadow: '0 2px 12px rgba(30,34,90,0.04)' }}>
                   <Card.Body>
-                    <h5 className="mb-3">Next Action</h5>
                     {(() => {
                       const nextAction = getNextAction();
+                      const getHeaderIcon = (type) => {
+                        switch (type) {
+                          case 'profile': return <FaUser className="text-white" size={24} />;
+                          case 'application': return <FaHome className="text-white" size={24} />;
+                          case 'viewing': return <FaCalendarCheck className="text-white" size={24} />;
+                          case 'payment': return <FaExclamationTriangle className="text-white" size={24} />;
+                          default: return <FaCheckCircle className="text-white" size={24} />;
+                        }
+                      };
+                      // Always use green for icon background as in screenshot
+                      const iconBg = '#43c463';
                       return (
-                        <div className="d-flex align-items-center">
-                          <div className="me-4">
-                            {React.cloneElement(nextAction.icon, { size: 32, className: "text-primary" })} 
+                        <div>
+                          <div className="mb-2">
+                            <span className="badge bg-light text-muted px-3 py-2" style={{ fontSize: '0.8rem', fontWeight: '500' }}>
+                              Next Action
+                            </span>
                           </div>
-                          <div className="flex-grow-1">
-                            <h6 className="mb-1">{nextAction.title}</h6>
-                            <p className="text-muted mb-0">{nextAction.description}</p>
-                          </div>
-                          {nextAction.action && (
-                            <div>
-                              <Link to={nextAction.action.link}>
-                                <Button variant="primary">
-                                  {nextAction.action.text}
-                                </Button>
-                              </Link>
+                          <div className="d-flex align-items-center">
+                            <div className="me-4">
+                              <div className="rounded-circle d-flex align-items-center justify-content-center" style={{
+                                width: '48px',
+                                height: '48px',
+                                backgroundColor: iconBg
+                              }}>
+                                {getHeaderIcon(nextAction.type)}
+                              </div>
                             </div>
-                          )}
+                            <div className="flex-grow-1">
+                              <h5 className="mb-1 fw-bold" style={{ color: 'white' }}>{nextAction.title}</h5>
+                              <p className="mb-0" style={{ color: '#e6ecf7' }}>{nextAction.description}</p>
+                            </div>
+                            {nextAction.action && (
+                              <div>
+                                <Link to={nextAction.action.link}>
+                                  <Button style={{ background: '#4a64ad', border: 'none' }}>
+                                    {nextAction.action.text}
+                                  </Button>
+                                </Link>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       );
                     })()}
@@ -386,7 +409,7 @@ const TenantDashboard = () => {
 
             {/* Tickets and Recent Payments Section - Only visible for approved tenants */}
             {approvedApplication && (
-              <Row className="mb-6">
+              <Row className="mb-6 mx-2">
                 {/* Tickets Section */}
                 <Col md={6} className="mb-4 mb-md-0">
                   <Card className="h-100 shadow-sm hover:shadow-md transition-shadow duration-300">
@@ -564,11 +587,12 @@ const TenantDashboard = () => {
               </Row>
             )}
 
-            {/* Active Applications Section */}
+            {/* Active Applications and Upcoming Viewings Section */}
             {!hideApplicationsAndViewings && (
-              <Row className="mb-6">
-                <Col md={12}>
-                  <Card className="h-100 shadow-sm border-0 mb-4" style={{ borderRadius: 18, background: '#eaf3fb', boxShadow: '0 2px 12px rgba(30,34,90,0.04)' }}>
+              <Row className="mb-6 mx-2">
+                {/* Active Applications Section */}
+                <Col md={6} className="mb-4 mb-md-0">
+                  <Card className="h-100 shadow-sm border-0" style={{ borderRadius: 18, boxShadow: '0 2px 12px rgba(30,34,90,0.04)' }}>
                     <Card.Body>
                       <div className="d-flex align-items-center mb-3">
                         <FaHome className="me-2" size={24} style={{ color: '#4f8cff', opacity: 0.8 }} />
@@ -618,20 +642,18 @@ const TenantDashboard = () => {
                           <p className="text-muted mb-3">No active applications</p>
                         </div>
                       )}
-                      <Link to="/applications">
-                        <Button variant="outline-primary" className="w-100 mt-3">View All Applications</Button>
-                      </Link>
+                      {applications.length > 0 && (
+                        <Link to="/applications">
+                          <Button variant="outline-primary" className="w-100 mt-3">View All Applications</Button>
+                        </Link>
+                      )}
                     </Card.Body>
                   </Card>
                 </Col>
-              </Row>
-            )}
 
-            {/* Upcoming Viewings Section */}
-            {!hideApplicationsAndViewings && (
-              <Row className="mb-6">
-                <Col md={12}>
-                  <Card className="shadow-sm border-0 mb-4" style={{ borderRadius: 18, background: '#f3eafd', boxShadow: '0 2px 12px rgba(30,34,90,0.04)' }}>
+                {/* Upcoming Viewings Section */}
+                <Col md={6}>
+                  <Card className="h-100 shadow-sm border-0" style={{ borderRadius: 18, boxShadow: '0 2px 12px rgba(30,34,90,0.04)' }}>
                     <Card.Body>
                       <div className="d-flex align-items-center mb-3">
                         <FaCalendarAlt className="me-2" size={24} style={{ color: '#a259ff', opacity: 0.8 }} />

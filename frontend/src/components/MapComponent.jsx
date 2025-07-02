@@ -283,7 +283,7 @@ function MapControls({ onLocateMe, onFullscreen, darkModeToggle }) {
         className="map-control-button bg-white p-2 rounded-lg shadow-md hover:bg-gray-50 transition-colors border border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
         title="Find my location"
       >
-        <svg className="w-5 h-5 text-gray-700 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-7 h-5 text-gray-700 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
@@ -294,7 +294,7 @@ function MapControls({ onLocateMe, onFullscreen, darkModeToggle }) {
         className="map-control-button bg-white p-2 rounded-lg shadow-md hover:bg-gray-50 transition-colors border border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
         title="Toggle fullscreen"
       >
-        <svg className="w-5 h-5 text-gray-700 dark:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-7 h-5 text-gray-700 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
         </svg>
       </button>
@@ -317,11 +317,6 @@ function MapLegend({ propertyCount, selectedCount }) {
   return (
     <div className="absolute bottom-4 left-4 z-[1000] bg-white rounded-lg shadow-md border border-gray-200 p-4 max-w-xs map-legend">
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-900">Properties</h3>
-          <span className="text-xs text-gray-600">{propertyCount} total</span>
-        </div>
-        
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-white shadow-sm"></div>
@@ -332,14 +327,6 @@ function MapLegend({ propertyCount, selectedCount }) {
             <span className="text-xs text-gray-700">Selected</span>
           </div>
         </div>
-        
-        {selectedCount > 0 && (
-          <div className="pt-2 border-t border-gray-200">
-            <p className="text-xs text-gray-600">
-              {selectedCount} property{selectedCount !== 1 ? 'ies' : 'y'} selected
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );
