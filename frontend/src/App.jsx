@@ -18,6 +18,7 @@ import EditProperty from './pages/EditProperty';
 import MyProperties from './pages/MyProperties';
 import Applications from './pages/Applications';
 import MyTickets from './pages/MyTickets';
+import TicketDetails from './pages/TicketDetails';
 import AdminDashboard from './pages/admin/Dashboard';
 import AdminProperties from './pages/admin/Properties';
 import AdminPropertyDetails from './pages/admin/PropertyDetails';
@@ -104,6 +105,7 @@ function AppRoutes() {
             <Route path="my-properties" element={<MyProperties />} />
             <Route path="applications" element={<Applications />} />
             <Route path="my-tickets" element={<MyTickets />} />
+            <Route path="tickets/:ticketId" element={<TicketDetails />} />
             <Route path="create-ticket" element={<CreateTicket />} />
             <Route path="profile" element={<Profile />} />
             

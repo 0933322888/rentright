@@ -146,12 +146,10 @@ export const getLandlordStatistics = async (req, res) => {
     const [
       totalTickets,
       openTickets,
-      inProgressTickets,
       resolvedTickets
     ] = await Promise.all([
       Ticket.countDocuments({ property: { $in: propertyIds } }),
-      Ticket.countDocuments({ property: { $in: propertyIds }, status: 'open' }),
-      Ticket.countDocuments({ property: { $in: propertyIds }, status: 'in_progress' }),
+      Ticket.countDocuments({ property: { $in: propertyIds }, status: { $nin: ['closed', 'resolved'] } }),
       Ticket.countDocuments({ property: { $in: propertyIds }, status: 'resolved' })
     ]);
 
@@ -202,7 +200,6 @@ export const getLandlordStatistics = async (req, res) => {
       // Ticket stats
       totalTickets,
       openTickets,
-      inProgressTickets,
       resolvedTickets,
       
       // Payment stats
@@ -286,6 +283,72 @@ export const getLandlordTickets = async (req, res) => {
     res.json(tickets);
   } catch (error) {
     console.error('Error getting landlord tickets:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Update ticket status (landlord only)
+export const updateLandlordTicketStatus = async (req, res) => {
+  try {
+    const { ticketId } = req.params;
+    const { status, comment } = req.body;
+    const landlordId = req.user._id;
+
+    // Validate status
+    if (!['review', 'declined'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status. Landlords can only change status to review or declined' });
+    }
+
+    // Find the ticket and populate property to check ownership
+    const ticket = await Ticket.findById(ticketId)
+      .populate('property', 'landlord title')
+      .populate('tenant', 'name email');
+
+    if (!ticket) {
+      return res.status(404).json({ message: 'Ticket not found' });
+    }
+
+    // Check if the landlord owns the property
+    if (ticket.property.landlord.toString() !== landlordId.toString()) {
+      return res.status(403).json({ message: 'Not authorized to update this ticket' });
+    }
+
+    // Check if ticket is in 'new' status (only allow updates from 'new' status)
+    if (ticket.status !== 'new') {
+      return res.status(400).json({ message: 'Can only update tickets with "new" status' });
+    }
+
+    // If status is 'declined', require a comment
+    if (status === 'declined' && (!comment || comment.trim().length === 0)) {
+      return res.status(400).json({ message: 'Comment is required when declining a ticket' });
+    }
+
+    // Update ticket status
+    ticket.status = status;
+    
+    // Add comment if provided (for declined tickets)
+    if (comment && comment.trim().length > 0) {
+      ticket.comments.push({
+        user: landlordId,
+        text: comment.trim(),
+        createdAt: new Date()
+      });
+    }
+
+    await ticket.save();
+
+    // Populate the updated ticket
+    const updatedTicket = await Ticket.findById(ticketId)
+      .populate('property', 'title')
+      .populate('tenant', 'name email')
+      .populate('comments.user', 'name email role');
+
+    res.json({
+      message: `Ticket ${status} successfully`,
+      ticket: updatedTicket
+    });
+  } catch (error) {
+    console.error('Error updating ticket status:', error);
     res.status(500).json({ message: error.message });
   }
 }; 

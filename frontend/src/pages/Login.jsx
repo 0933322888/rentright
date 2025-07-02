@@ -70,19 +70,6 @@ export default function Login() {
       </div>
 
       <div className="relative z-10 sm:mx-auto sm:w-full sm:max-w-md">
-        {/* Logo and branding */}
-        <div className="text-center mb-8">
-          <div className="mx-auto w-32 h-32 rounded-2xl flex items-center justify-center mb-4 shadow-lg p-1">
-            <img src={logo} alt="RentRight Logo" className="w-full h-full object-contain" />
-          </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent mb-2">
-            Welcome Back
-          </h1>
-          <p className="text-gray-600 text-lg">
-            Sign in to your RentRight account
-          </p>
-        </div>
-
         <div className="bg-white/80 backdrop-blur-sm py-8 px-6 shadow-2xl rounded-2xl border border-white/20">
           {message && (
             <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-xl text-sm flex items-center mb-6">

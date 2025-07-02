@@ -229,10 +229,14 @@ const TenantDashboard = () => {
   const getTicketStatusBadge = (status) => {
     const baseClasses = "badge rounded-pill px-3 py-2";
     switch (status) {
-      case 'open':
-        return <span className={`${baseClasses} bg-warning text-dark`}>Open</span>;
-      case 'in_progress':
-        return <span className={`${baseClasses} bg-info text-white`}>In Progress</span>;
+      case 'new':
+        return <span className={`${baseClasses} bg-danger text-white`}>New</span>;
+      case 'review':
+        return <span className={`${baseClasses} bg-warning text-dark`}>Review</span>;
+      case 'approved':
+        return <span className={`${baseClasses} bg-info text-white`}>Approved</span>;
+      case 'declined':
+        return <span className={`${baseClasses} bg-secondary text-white`}>Declined</span>;
       case 'resolved':
         return <span className={`${baseClasses} bg-success text-white`}>Resolved</span>;
       case 'closed':

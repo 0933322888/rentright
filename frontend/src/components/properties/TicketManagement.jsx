@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -172,6 +173,15 @@ export default function TicketManagement({
                 size="small"
               />
               <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  component={Link}
+                  to={`/tickets/${ticket._id}`}
+                  size="small"
+                  variant="contained"
+                  color="primary"
+                >
+                  View Details
+                </Button>
                 <Button
                   size="small"
                   onClick={() => setCommentingTicketId(ticket._id)}

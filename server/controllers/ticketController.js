@@ -141,15 +141,20 @@ export const updateTicketPriority = async (req, res) => {
 export const getTicketById = async (req, res) => {
   try {
     const ticket = await Ticket.findById(req.params.ticketId)
-      .populate('property', 'title location')
-      .populate('tenant', 'name email');
+      .populate('property', 'title location landlord')
+      .populate('tenant', 'name email')
+      .populate('comments.user', 'name email role');
 
     if (!ticket) {
       return res.status(404).json({ message: 'Ticket not found' });
     }
 
     // Check if user has permission to view this ticket
-    if (req.user.role !== 'admin' && ticket.tenant.toString() !== req.user._id.toString()) {
+    const isAdmin = req.user.role === 'admin';
+    const isTenant = ticket.tenant._id.toString() === req.user._id.toString();
+    const isLandlord = req.user.role === 'landlord' && ticket.property.landlord.toString() === req.user._id.toString();
+
+    if (!isAdmin && !isTenant && !isLandlord) {
       return res.status(403).json({ message: 'Not authorized to view this ticket' });
     }
 

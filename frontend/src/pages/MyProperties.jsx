@@ -118,8 +118,8 @@ export default function MyProperties() {
 
   return (
     <ThemeProvider theme={theme}>
-      <div className="bg-white" style={{ minHeight: '100vh' }}>
-        <Box>
+      <div className="bg-white">
+        <Box className="p-4">
           <TabContext value={selectedPropertyIndex}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
               <TabList 

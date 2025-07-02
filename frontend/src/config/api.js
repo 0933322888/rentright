@@ -103,4 +103,5 @@ export const API_ENDPOINTS = {
   LANDLORD_APPLICATIONS: `${BASE_URL}/api/landlord/applications`,
   LANDLORD_PAYMENTS: `${BASE_URL}/api/landlord/payments`,
   LANDLORD_TICKETS: `${BASE_URL}/api/landlord/tickets`,
+  LANDLORD_TICKET_STATUS: (ticketId) => `${BASE_URL}/api/landlord/tickets/${ticketId}/status`,
 }; 

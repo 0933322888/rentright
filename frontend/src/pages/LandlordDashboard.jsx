@@ -103,8 +103,10 @@ const LandlordDashboard = () => {
 
   const getTicketStatusBadge = (status) => {
     const variants = {
-      open: 'danger',
-      in_progress: 'warning',
+      new: 'danger',
+      review: 'warning',
+      approved: 'info',
+      declined: 'secondary',
       resolved: 'success',
       closed: 'secondary'
     };
@@ -125,7 +127,7 @@ const LandlordDashboard = () => {
 
   const getRecentTickets = () => {
     return tickets
-      .filter(ticket => ['open', 'in_progress'].includes(ticket.status))
+      .filter(ticket => !['closed', 'resolved'].includes(ticket.status))
       .slice(0, 5);
   };
 
@@ -152,7 +154,7 @@ const LandlordDashboard = () => {
   };
 
   const getOpenTicketsCount = () => {
-    return tickets.filter(ticket => ['open', 'in_progress'].includes(ticket.status)).length;
+    return tickets.filter(ticket => !['closed', 'resolved'].includes(ticket.status)).length;
   };
 
   const getTotalAnnualRent = () => {
@@ -263,7 +265,7 @@ const LandlordDashboard = () => {
               <p className="text-muted mb-0">Open Tickets</p>
               <div className="mt-2">
                 <small className="text-muted">
-                  {tickets.filter(t => t.status === 'in_progress').length} in progress
+                  {tickets.filter(t => t.status === 'review').length} in review
                 </small>
               </div>
             </Card.Body>
@@ -336,6 +338,14 @@ const LandlordDashboard = () => {
                             </small>
                           </div>
                         </div>
+                        <Button
+                          as={Link}
+                          to={`/tickets/${ticket._id}`}
+                          variant="outline-primary"
+                          size="sm"
+                        >
+                          View Ticket
+                        </Button>
                       </div>
                     </div>
                   ))}

@@ -4,7 +4,8 @@ import {
   getLandlordStatistics,
   getLandlordApplications,
   getLandlordPayments,
-  getLandlordTickets
+  getLandlordTickets,
+  updateLandlordTicketStatus
 } from '../controllers/landlordController.js';
 
 const router = express.Router();
@@ -24,5 +25,8 @@ router.get('/payments', getLandlordPayments);
 
 // Landlord tickets
 router.get('/tickets', getLandlordTickets);
+
+// Update ticket status (landlord only)
+router.patch('/tickets/:ticketId/status', restrictTo('landlord'), updateLandlordTicketStatus);
 
 export default router; 
