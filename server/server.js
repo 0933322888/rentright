@@ -41,7 +41,8 @@ initializeDefaultSettings().catch(console.error);
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  
+  origin: process.env.NODE_ENV === 'prod' ? process.env.PROD_FRONTEND_URL : process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true
 }));
 app.use(express.json());

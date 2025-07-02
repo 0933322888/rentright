@@ -28,7 +28,7 @@ if (!MONGODB_URI) {
 const sampleLandlords = [
   {
     name: 'John Smith',
-    email: 'l1@l1',
+    email: 'landlord@landlord',
     password: '123',
     role: 'landlord',
     isVerified: true,
@@ -37,7 +37,7 @@ const sampleLandlords = [
   },
   {
     name: 'Sarah Johnson',
-    email: 'l2@l2',
+    email: 'landlord1@landlord1',
     password: '123',
     role: 'landlord',
     isVerified: true,
@@ -46,7 +46,7 @@ const sampleLandlords = [
   },
   {
     name: 'Michael Brown',
-    email: 'l@l',
+    email: 'landlord2@landlord2',
     password: '123',
     role: 'landlord',
     isVerified: false,
@@ -58,7 +58,7 @@ const sampleLandlords = [
 const sampleTenants = [
   {
     name: 'Emily Davis',
-    email: 't2@t2',
+    email: 'tenant@tenant',
     password: '123',
     role: 'tenant',
     hasProfile: true,
@@ -67,7 +67,7 @@ const sampleTenants = [
   },
   {
     name: 'David Wilson',
-    email: 'david@example.com',
+    email: 'tenant1@tenant1',
     password: '123',
     role: 'tenant',
     hasProfile: true,
@@ -76,7 +76,7 @@ const sampleTenants = [
   },
   {
     name: 'Lisa Anderson',
-    email: 't@t',
+    email: 'tenant2@tenant2',
     password: '123',
     role: 'tenant',
     hasProfile: false,
@@ -85,7 +85,7 @@ const sampleTenants = [
   },
   {
     name: 'Lisa Anderson',
-    email: 'a@a',
+    email: 'admin@admin',
     password: '123',
     role: 'admin',
     hasProfile: true,
