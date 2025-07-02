@@ -603,28 +603,40 @@ const TenantDashboard = () => {
                           <div key={application._id} className="mb-4 p-3 border rounded">
                             <div className="d-flex justify-content-between align-items-center mb-2">
                               <h5 className="mb-0">{application.property?.title}</h5>
-                              {getStatusBadge(application.status)}
+                              <div className="d-flex flex-column align-items-end">
+                                {getStatusBadge(application.status)}
+                                {application.status === 'pending' && (
+                                  <div style={{ color: '#6c757d', fontSize: '0.97rem', marginTop: 2 }}>
+                                    <em>Application is awaiting landlord review</em>
+                                  </div>
+                                )}
+                                {application.status === 'viewing' && (
+                                  <div style={{ color: '#6c757d', fontSize: '0.97rem', marginTop: 2 }}>
+                                    <em>Please arrive 10 minutes before the viewing time</em>
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                            <p className="mb-1">
-                              <FaMapMarkerAlt className="text-muted me-2" />
-                              {application.property?.location?.street}, {application.property?.location?.city}
-                            </p>
+                            <div className="d-flex align-items-center mb-1" style={{ fontSize: '1rem' }}>
+                              <FaMapMarkerAlt className="text-muted me-2" style={{ fontSize: 20 }} />
+                              <span>{application.property?.location?.street}, {application.property?.location?.city}</span>
+                            </div>
                             {application.viewingDate && (
                               <>
-                                <p className="mb-1">
-                                  <FaCalendarAlt className="text-muted me-2" />
-                                  Viewing Date: {new Date(application.viewingDate).toLocaleDateString()}
-                                </p>
-                                <p className="mb-1">
-                                  <FaClock className="text-muted me-2" />
-                                  Viewing Time: {application.viewingTime}
-                                </p>
+                                <div className="d-flex align-items-center mb-1" style={{ fontSize: '1rem' }}>
+                                  <FaCalendarAlt className="text-muted me-2" style={{ fontSize: 20 }} />
+                                  <span>Viewing Date: {new Date(application.viewingDate).toLocaleDateString()}</span>
+                                </div>
+                                <div className="d-flex align-items-center mb-1" style={{ fontSize: '1rem' }}>
+                                  <FaClock className="text-muted me-2" style={{ fontSize: 20 }} />
+                                  <span>Viewing Time: {application.viewingTime}</span>
+                                </div>
                               </>
                             )}
-                            <p className="mb-1">
-                              <FaBuilding className="text-muted me-2" />
-                              Submitted: {new Date(application.createdAt).toLocaleDateString()}
-                            </p>
+                            <div className="d-flex align-items-center mb-1" style={{ fontSize: '1rem' }}>
+                              <FaBuilding className="text-muted me-2" style={{ fontSize: 20 }} />
+                              <span>Submitted: {new Date(application.createdAt).toLocaleDateString()}</span>
+                            </div>
                             {application.status === 'viewing' && (
                               <Button
                                 variant="primary"

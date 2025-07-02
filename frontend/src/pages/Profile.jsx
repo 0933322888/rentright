@@ -35,10 +35,6 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   LinearProgress,
-  Stepper,
-  Step,
-  StepLabel,
-  StepContent,
   Collapse,
   Fade,
   Zoom,
@@ -74,153 +70,54 @@ import Tooltip from '@mui/material/Tooltip';
 // Custom Enhanced Radio Button Component
 const EnhancedRadioButton = ({ value, label, checked, onChange, name, disabled = false, size = 'medium' }) => {
   return (
-    <Card
+    <Box
       sx={{
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        border: 2,
-        borderColor: checked ? 'primary.main' : 'grey.200',
-        bgcolor: checked ? 'primary.50' : 'white',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        '&:hover': {
-          borderColor: disabled ? 'grey.200' : 'primary.main',
-          bgcolor: disabled ? 'white' : checked ? 'primary.50' : 'grey.50',
-          transform: disabled ? 'none' : 'translateY(-4px)',
-          boxShadow: disabled ? 'none' : '0 8px 25px rgba(0,0,0,0.15)'
-        },
-        opacity: disabled ? 0.6 : 1,
-        minHeight: size === 'small' ? 60 : 80,
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        overflow: 'hidden',
-        borderRadius: 2
+        height: 40,
+        minHeight: 40,
+        px: 2,
+        border: '1px solid',
+        borderColor: checked ? '#4a64ad' : '#e0e0e0',
+        borderRadius: '4px',
+        bgcolor: disabled ? '#f5f5f5' : 'white',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        transition: 'border-color 0.2s, box-shadow 0.2s',
+        boxSizing: 'border-box',
+        fontFamily: 'inherit',
+        fontSize: '1rem',
+        '&:hover': {
+          borderColor: disabled ? '#e0e0e0' : '#4a64ad',
+        },
+        ...(checked && {
+          boxShadow: '0 0 0 2px rgba(74,100,173,0.08)'
+        })
       }}
       onClick={() => !disabled && onChange({ target: { name, value } })}
+      tabIndex={0}
+      role="radio"
+      aria-checked={checked}
     >
-      <Box sx={{
-        position: 'absolute',
-        top: 8,
-        right: 8,
-        color: checked ? 'primary.main' : 'grey.400',
-        transition: 'all 0.2s ease'
-      }}>
-        {checked ? <CheckCircleIcon /> : <RadioButtonUncheckedIcon />}
-      </Box>
+      {checked ? (
+        <CheckCircleIcon sx={{ fontSize: 20, color: '#4a64ad' }} />
+      ) : (
+        <RadioButtonUncheckedIcon sx={{ fontSize: 20, color: '#bdbdbd' }} />
+      )}
       <Typography
         variant={size === 'small' ? 'body2' : 'body1'}
         sx={{
-          fontWeight: checked ? 600 : 400,
-          color: checked ? 'primary.main' : 'text.primary',
-          textAlign: 'center',
-          px: 2,
-          transition: 'all 0.2s ease'
+          ml: 1.2,
+          fontWeight: 400,
+          color: checked ? '#4a64ad' : '#222',
+          fontSize: '1rem',
+          fontFamily: 'Roboto, Helvetica, Arial, sans-serif',
+          lineHeight: '1.4375em',
+          userSelect: 'none',
         }}
       >
         {label}
       </Typography>
-    </Card>
-  );
-};
-
-// Progress Indicator Component
-const ProfileProgress = ({ answers, documents }) => {
-  const calculateProgress = () => {
-    const requiredFields = [
-      'adultOccupants', 'childOccupants', 'hasPets', 'smokingStatus', 'maritalStatus',
-      'employmentStatus', 'monthlyNetIncome', 'monthlyDebtRepayment', 'currentlyPaysRent',
-      'currentRentAmount', 'canPayAdvance', 'hasGuarantor'
-    ];
-    
-    const optionalFields = [
-      'employerName', 'jobTitle', 'additionalIncomeAmount', 'additionalIncomeSource',
-      'childSupportAmount', 'creditScore', 'bankruptcyHistory', 'evictionHistory',
-      'monthsAheadCanPay'
-    ];
-
-    const guarantorFields = [
-      'guarantorName', 'guarantorRelationship', 'guarantorPhone', 'guarantorEmail',
-      'guarantorAddress', 'guarantorMonthlyIncome', 'guarantorEmployer', 'guarantorJobTitle'
-    ];
-
-    let completed = 0;
-    let total = requiredFields.length + optionalFields.length;
-
-    // Check required fields
-    requiredFields.forEach(field => {
-      if (answers[field] !== undefined && answers[field] !== '' && answers[field] !== null) {
-        completed++;
-      }
-    });
-
-    // Check optional fields
-    optionalFields.forEach(field => {
-      if (answers[field] !== undefined && answers[field] !== '' && answers[field] !== null) {
-        completed++;
-      }
-    });
-
-    // Check guarantor fields if hasGuarantor is true
-    if (answers.hasGuarantor) {
-      total += guarantorFields.length;
-      guarantorFields.forEach(field => {
-        if (answers[field] !== undefined && answers[field] !== '' && answers[field] !== null) {
-          completed++;
-        }
-      });
-    }
-
-    // Check documents
-    const documentFields = ['proofOfIdentity', 'proofOfIncome', 'creditHistory', 'rentalHistory', 'additionalDocuments'];
-    documentFields.forEach(field => {
-      if (documents[field] && documents[field].length > 0) {
-        completed++;
-      }
-    });
-
-    return Math.round((completed / total) * 100);
-  };
-
-  const progress = calculateProgress();
-
-  return (
-    <Paper 
-      elevation={0}
-      sx={{ 
-        p: 3, 
-        mb: 4, 
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        color: 'white',
-        borderRadius: 3
-      }}
-    >
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-        <Typography variant="h6" sx={{ fontWeight: 600 }}>
-          Profile Completion
-        </Typography>
-        <Typography variant="h4" sx={{ fontWeight: 700 }}>
-          {progress}%
-        </Typography>
-      </Box>
-      <LinearProgress 
-        variant="determinate" 
-        value={progress} 
-        sx={{
-          height: 8,
-          borderRadius: 4,
-          backgroundColor: 'rgba(255,255,255,0.3)',
-          '& .MuiLinearProgress-bar': {
-            borderRadius: 4,
-            background: 'linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%)'
-          }
-        }}
-      />
-      <Typography variant="body2" sx={{ mt: 1, opacity: 0.9 }}>
-        {progress < 50 ? 'Keep going! Complete more sections to improve your profile.' :
-         progress < 80 ? 'Great progress! Almost there.' :
-         'Excellent! Your profile is nearly complete.'}
-      </Typography>
-    </Paper>
+    </Box>
   );
 };
 
@@ -232,44 +129,48 @@ const SectionHeader = ({ number, title, icon: Icon, description, completed = fal
     mb: 3,
     p: 2,
     borderRadius: 2,
-    bgcolor: completed ? 'success.50' : 'primary.50',
+    bgcolor: completed ? '#f0f9ff' : '#f8f9ff',
     border: '1px solid',
-    borderColor: completed ? 'success.200' : 'primary.200'
+    borderColor: completed ? '#bae6fd' : '#e3e8ff'
   }}>
     <Box sx={{
-      width: 48,
-      height: 48,
+      width: 40,
+      height: 40,
       borderRadius: '50%',
-      bgcolor: completed ? 'success.main' : 'primary.main',
+      bgcolor: completed ? '#0ea5e9' : '#4a64ad',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      mr: 3,
-      boxShadow: 2
+      mr: 2,
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
     }}>
       {completed ? (
-        <CheckCircleIcon sx={{ color: 'white', fontSize: 24 }} />
+        <CheckCircleIcon sx={{ color: 'white', fontSize: 20 }} />
       ) : (
-        <Icon sx={{ color: 'white', fontSize: 24 }} />
+        <Icon sx={{ color: 'white', fontSize: 20 }} />
       )}
     </Box>
     <Box sx={{ flex: 1 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
+        <Typography variant="h6" sx={{ fontWeight: 600, color: '#4a64ad' }}>
           {title}
         </Typography>
         {completed && (
           <Chip 
             label="Complete" 
             size="small" 
-            color="success" 
-            icon={<CheckCircleIcon />}
-            sx={{ fontSize: '0.75rem' }}
+            sx={{ 
+              fontSize: '0.75rem',
+              backgroundColor: '#0ea5e9',
+              color: 'white',
+              fontWeight: 500
+            }}
+            icon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
           />
         )}
       </Box>
       {description && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.9rem' }}>
           {description}
         </Typography>
       )}
@@ -305,23 +206,30 @@ const EnhancedTextField = ({
             transition: 'all 0.2s ease',
             '&:hover': {
               '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'primary.main',
-                borderWidth: 2
+                borderColor: '#4a64ad',
+                borderWidth: 1
               }
             },
             '&.Mui-focused': {
               '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'primary.main',
-                borderWidth: 2
+                borderColor: '#4a64ad',
+                borderWidth: 1
               }
             }
+          },
+          '& .MuiInputLabel-root': {
+            color: '#6b7280',
+            fontSize: '0.9rem'
+          },
+          '& .MuiOutlinedInput-input': {
+            fontSize: '0.9rem'
           }
         }}
         {...props}
       />
       {tooltip && (
         <Tooltip title={tooltip} arrow placement="top">
-          <InfoOutlinedIcon sx={{ color: 'action.active', cursor: 'help', mb: 1 }} />
+          <InfoOutlinedIcon sx={{ color: '#9ca3af', cursor: 'help', mb: 1, fontSize: 20 }} />
         </Tooltip>
       )}
     </Box>
@@ -365,83 +273,6 @@ const EnhancedRadioGroup = ({
     )}
   </FormControl>
 );
-
-// Was ToggleRadioGroup, now StyledToggleButtonGroup
-const StyledToggleButtonGroup = ({ name, value, onChange, options, error = false }) => {
-  return (
-    <ToggleButtonGroup
-      value={value}
-      exclusive
-      onChange={(e, newValue) => {
-        if (newValue !== null) {
-          onChange({ target: { name, value: newValue } });
-        }
-      }}
-      aria-label={name}
-      sx={{
-        width: '100%',
-        '& .MuiToggleButton-root': {
-          height: '40px',
-          flex: 1,
-          px: 2,
-          border: '1px solid',
-          borderColor: error ? 'error.main' : 'grey.300',
-          borderRadius: 1,
-          textTransform: 'none',
-          fontWeight: 500,
-          fontSize: '0.875rem',
-          '&.Mui-selected': {
-            bgcolor: 'primary.main',
-            color: 'white',
-            borderColor: 'primary.main',
-            '&:hover': {
-              bgcolor: 'primary.dark',
-            }
-          },
-          '&:hover': {
-            bgcolor: 'grey.50',
-          }
-        }
-      }}
-    >
-      {options.map((option) => (
-        <ToggleButton key={option.value} value={option.value} aria-label={option.label}>
-          {option.label}
-        </ToggleButton>
-      ))}
-    </ToggleButtonGroup>
-  );
-};
-
-// Card-based Radio Group for complex choices
-const CardRadioGroup = ({ name, value, onChange, options, label, required = false, error = false, helperText = '', columns = 2 }) => {
-  return (
-    <FormControl required={required} error={error} fullWidth>
-      <Typography component="legend" variant="subtitle2" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
-        {label}
-      </Typography>
-      <Grid container spacing={2}>
-        {options.map((option) => (
-          <Grid item xs={12} sm={6} md={12 / columns} key={option.value}>
-            <EnhancedRadioButton
-              value={option.value}
-              label={option.label}
-              checked={value === option.value}
-              onChange={onChange}
-              name={name}
-              size="medium"
-            />
-          </Grid>
-        ))}
-      </Grid>
-      {helperText && (
-        <FormHelperText sx={{ mt: 1, fontSize: '0.875rem' }}>
-          {helperText}
-        </FormHelperText>
-      )}
-    </FormControl>
-  );
-};
 
 // Document preview component similar to AddProperty
 const DocumentPreview = ({ file, onDelete }) => {
@@ -498,6 +329,52 @@ const DocumentPreview = ({ file, onDelete }) => {
       </CardActions>
     </Card>
   );
+};
+
+// Section completion helpers
+const isPersonalSectionComplete = (answers) => {
+  if (
+    !answers.adultOccupants ||
+    !answers.childOccupants ||
+    answers.hasPets === undefined ||
+    !answers.smokingStatus
+  ) return false;
+  if (answers.hasPets === true || answers.hasPets === 'true') {
+    if (!answers.petCount || !answers.petTypes) return false;
+  }
+  return true;
+};
+
+const isEmploymentSectionComplete = (answers) => {
+  return (
+    !!answers.employmentStatus &&
+    !!answers.monthlyNetIncome &&
+    !!answers.monthlyDebtRepayment
+  );
+};
+
+const isFinancialSectionComplete = (answers) => {
+  // No required fields, always complete
+  return true;
+};
+
+const isRentalSectionComplete = (answers) => {
+  if (answers.currentlyPaysRent === undefined || !answers.currentRentAmount) return false;
+  return true;
+};
+
+const isStrengthenSectionComplete = (answers) => {
+  if (answers.canPayAdvance === undefined || answers.hasGuarantor === undefined) return false;
+  if ((answers.canPayAdvance === true || answers.canPayAdvance === 'true') && !answers.monthsAheadCanPay) return false;
+  if (answers.hasGuarantor === true || answers.hasGuarantor === 'true') {
+    if (!answers.guarantorName || !answers.guarantorRelationship || !answers.guarantorPhone || !answers.guarantorEmail || !answers.guarantorAddress || !answers.guarantorMonthlyIncome || !answers.guarantorEmployer || !answers.guarantorJobTitle) return false;
+  }
+  return true;
+};
+
+const isDocumentsSectionComplete = (documents) => {
+  // Example: require proofOfIdentity and proofOfIncome
+  return documents.proofOfIdentity?.length > 0 && documents.proofOfIncome?.length > 0;
 };
 
 export default function Profile() {
@@ -1432,40 +1309,6 @@ export default function Profile() {
                     }}
                   />
                 </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Twitter"
-                    name="socialMedia.twitter"
-                    value={formData.socialMedia.twitter}
-                    onChange={handleChange}
-                    placeholder="https://twitter.com/yourprofile"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <TwitterIcon />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Website"
-                    name="socialMedia.website"
-                    value={formData.socialMedia.website}
-                    onChange={handleChange}
-                    placeholder="https://yourwebsite.com"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <LanguageIcon />
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                </Grid>
               </Grid>
             </Box>
 
@@ -1550,27 +1393,31 @@ export default function Profile() {
 
         {/* Tenant Profile Section */}
         {user?.role === 'tenant' && (
-          <Paper sx={{ p: 4, mb: 3, borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
+          <Paper sx={{ 
+            p: 4, 
+            mb: 3, 
+            borderRadius: 3, 
+            border: '1px solid',
+            borderColor: 'grey.200'
+          }}>
             <Box sx={{ mb: 4 }}>
               <Typography variant="h4" gutterBottom sx={{ 
-                fontWeight: 700, 
-                color: 'primary.main',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent'
+                fontWeight: 600, 
+                color: '#4a64ad',
+                mb: 2
               }}>
                 Tenant Application Profile
               </Typography>
-              <Typography variant="body1" color="text.secondary" sx={{ mb: 3, fontSize: '1.1rem' }}>
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 3, fontSize: '1rem', lineHeight: 1.6 }}>
                 Complete your profile to streamline your property applications. This information helps landlords make informed decisions.
               </Typography>
               <Alert severity="info" sx={{
-                '& .MuiAlert-message': { fontSize: '0.95rem' },
-                backgroundColor: 'primary.50',
+                '& .MuiAlert-message': { fontSize: '0.9rem' },
+                backgroundColor: '#f8f9ff',
                 border: '1px solid',
-                borderColor: 'primary.200',
-                borderRadius: 2
+                borderColor: '#e3e8ff',
+                borderRadius: 2,
+                color: '#4a64ad'
               }}>
                 <Typography variant="body2">
                   <strong>Required Fields:</strong> All fields marked with an asterisk (*) must be completed to submit your profile.
@@ -1579,7 +1426,218 @@ export default function Profile() {
             </Box>
 
             {/* Progress Indicator */}
-            <ProfileProgress answers={answers} documents={documents} />
+            <Box sx={{ mb: 4 }}>
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: 3, 
+                  background: 'linear-gradient(180deg, #4a64ad42 0%, #ffffff 100%)',
+                  border: '1px solid',
+                  borderColor: 'grey.200',
+                  borderRadius: 2,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, color: '#4a64ad' }}>
+                    Profile Completion
+                  </Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 600, color: '#4a64ad' }}>
+                    {(() => {
+                      const calculateProgress = () => {
+                        const requiredFields = [
+                          'adultOccupants', 'childOccupants', 'hasPets', 'smokingStatus', 'maritalStatus',
+                          'employmentStatus', 'monthlyNetIncome', 'monthlyDebtRepayment', 'currentlyPaysRent',
+                          'currentRentAmount', 'canPayAdvance', 'hasGuarantor'
+                        ];
+                        
+                        const optionalFields = [
+                          'employerName', 'jobTitle', 'additionalIncomeAmount', 'additionalIncomeSource',
+                          'childSupportAmount', 'creditScore', 'bankruptcyHistory', 'evictionHistory',
+                          'monthsAheadCanPay'
+                        ];
+
+                        const guarantorFields = [
+                          'guarantorName', 'guarantorRelationship', 'guarantorPhone', 'guarantorEmail',
+                          'guarantorAddress', 'guarantorMonthlyIncome', 'guarantorEmployer', 'guarantorJobTitle'
+                        ];
+
+                        let completed = 0;
+                        let total = requiredFields.length + optionalFields.length;
+
+                        // Check required fields
+                        requiredFields.forEach(field => {
+                          if (answers[field] !== undefined && answers[field] !== '' && answers[field] !== null) {
+                            completed++;
+                          }
+                        });
+
+                        // Check optional fields
+                        optionalFields.forEach(field => {
+                          if (answers[field] !== undefined && answers[field] !== '' && answers[field] !== null) {
+                            completed++;
+                          }
+                        });
+
+                        // Check guarantor fields if hasGuarantor is true
+                        if (answers.hasGuarantor) {
+                          total += guarantorFields.length;
+                          guarantorFields.forEach(field => {
+                            if (answers[field] !== undefined && answers[field] !== '' && answers[field] !== null) {
+                              completed++;
+                            }
+                          });
+                        }
+
+                        // Check documents
+                        const documentFields = ['proofOfIdentity', 'proofOfIncome', 'creditHistory', 'rentalHistory', 'additionalDocuments'];
+                        documentFields.forEach(field => {
+                          if (documents[field] && documents[field].length > 0) {
+                            completed++;
+                          }
+                        });
+
+                        return Math.round((completed / total) * 100);
+                      };
+                      return calculateProgress();
+                    })()}%
+                  </Typography>
+                </Box>
+                <LinearProgress 
+                  variant="determinate" 
+                  value={(() => {
+                    const calculateProgress = () => {
+                      const requiredFields = [
+                        'adultOccupants', 'childOccupants', 'hasPets', 'smokingStatus', 'maritalStatus',
+                        'employmentStatus', 'monthlyNetIncome', 'monthlyDebtRepayment', 'currentlyPaysRent',
+                        'currentRentAmount', 'canPayAdvance', 'hasGuarantor'
+                      ];
+                      
+                      const optionalFields = [
+                        'employerName', 'jobTitle', 'additionalIncomeAmount', 'additionalIncomeSource',
+                        'childSupportAmount', 'creditScore', 'bankruptcyHistory', 'evictionHistory',
+                        'monthsAheadCanPay'
+                      ];
+
+                      const guarantorFields = [
+                        'guarantorName', 'guarantorRelationship', 'guarantorPhone', 'guarantorEmail',
+                        'guarantorAddress', 'guarantorMonthlyIncome', 'guarantorEmployer', 'guarantorJobTitle'
+                      ];
+
+                      let completed = 0;
+                      let total = requiredFields.length + optionalFields.length;
+
+                      // Check required fields
+                      requiredFields.forEach(field => {
+                        if (answers[field] !== undefined && answers[field] !== '' && answers[field] !== null) {
+                          completed++;
+                        }
+                      });
+
+                      // Check optional fields
+                      optionalFields.forEach(field => {
+                        if (answers[field] !== undefined && answers[field] !== '' && answers[field] !== null) {
+                          completed++;
+                        }
+                      });
+
+                      // Check guarantor fields if hasGuarantor is true
+                      if (answers.hasGuarantor) {
+                        total += guarantorFields.length;
+                        guarantorFields.forEach(field => {
+                          if (answers[field] !== undefined && answers[field] !== '' && answers[field] !== null) {
+                            completed++;
+                          }
+                        });
+                      }
+
+                      // Check documents
+                      const documentFields = ['proofOfIdentity', 'proofOfIncome', 'creditHistory', 'rentalHistory', 'additionalDocuments'];
+                      documentFields.forEach(field => {
+                        if (documents[field] && documents[field].length > 0) {
+                          completed++;
+                        }
+                      });
+
+                      return Math.round((completed / total) * 100);
+                    };
+                    return calculateProgress();
+                  })()} 
+                  sx={{
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: 'rgba(74, 100, 173, 0.2)',
+                    '& .MuiLinearProgress-bar': {
+                      borderRadius: 4,
+                      background: 'linear-gradient(90deg, #4a64ad 0%, #6b7fd8 100%)'
+                    }
+                  }}
+                />
+                <Typography variant="body2" sx={{ mt: 1, color: '#4a64ad', opacity: 0.8 }}>
+                  {(() => {
+                    const calculateProgress = () => {
+                      const requiredFields = [
+                        'adultOccupants', 'childOccupants', 'hasPets', 'smokingStatus', 'maritalStatus',
+                        'employmentStatus', 'monthlyNetIncome', 'monthlyDebtRepayment', 'currentlyPaysRent',
+                        'currentRentAmount', 'canPayAdvance', 'hasGuarantor'
+                      ];
+                      
+                      const optionalFields = [
+                        'employerName', 'jobTitle', 'additionalIncomeAmount', 'additionalIncomeSource',
+                        'childSupportAmount', 'creditScore', 'bankruptcyHistory', 'evictionHistory',
+                        'monthsAheadCanPay'
+                      ];
+
+                      const guarantorFields = [
+                        'guarantorName', 'guarantorRelationship', 'guarantorPhone', 'guarantorEmail',
+                        'guarantorAddress', 'guarantorMonthlyIncome', 'guarantorEmployer', 'guarantorJobTitle'
+                      ];
+
+                      let completed = 0;
+                      let total = requiredFields.length + optionalFields.length;
+
+                      // Check required fields
+                      requiredFields.forEach(field => {
+                        if (answers[field] !== undefined && answers[field] !== '' && answers[field] !== null) {
+                          completed++;
+                        }
+                      });
+
+                      // Check optional fields
+                      optionalFields.forEach(field => {
+                        if (answers[field] !== undefined && answers[field] !== '' && answers[field] !== null) {
+                          completed++;
+                        }
+                      });
+
+                      // Check guarantor fields if hasGuarantor is true
+                      if (answers.hasGuarantor) {
+                        total += guarantorFields.length;
+                        guarantorFields.forEach(field => {
+                          if (answers[field] !== undefined && answers[field] !== '' && answers[field] !== null) {
+                            completed++;
+                          }
+                        });
+                      }
+
+                      // Check documents
+                      const documentFields = ['proofOfIdentity', 'proofOfIncome', 'creditHistory', 'rentalHistory', 'additionalDocuments'];
+                      documentFields.forEach(field => {
+                        if (documents[field] && documents[field].length > 0) {
+                          completed++;
+                        }
+                      });
+
+                      return Math.round((completed / total) * 100);
+                    };
+                    const progress = calculateProgress();
+                    return progress < 50 ? 'Keep going! Complete more sections to improve your profile.' :
+                           progress < 80 ? 'Great progress! Almost there.' :
+                           'Excellent! Your profile is nearly complete.';
+                  })()}
+                </Typography>
+              </Paper>
+            </Box>
 
             <Box component="form" onSubmit={handleTenantSubmit}>
               {/* Personal & Household Information */}
@@ -1588,14 +1646,13 @@ export default function Profile() {
                 sx={{ 
                   p: 4, 
                   mb: 4, 
-                  border: '2px solid',
-                  borderColor: 'primary.200',
-                  borderRadius: 3,
-                  background: 'linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%)',
-                  transition: 'all 0.3s ease',
+                  border: '1px solid',
+                  borderColor: 'grey.200',
+                  borderRadius: 2,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                  transition: 'all 0.2s ease',
                   '&:hover': {
-                    boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
-                    transform: 'translateY(-2px)'
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.12)'
                   }
                 }}
               >
@@ -1603,7 +1660,8 @@ export default function Profile() {
                   title="Personal & Household Information"
                   icon={PersonIcon}
                   description="Tell us about yourself and your household"
-                  completed={answers.adultOccupants && answers.childOccupants && answers.hasPets !== undefined && answers.smokingStatus}
+                  completed={isPersonalSectionComplete(answers)}
+                  style={{ background: 'linear-gradient(180deg, #4a64ad42 0%, #ffffff 100%)' }}
                 />
 
                 <Grid container spacing={3} alignItems="flex-end">
@@ -1705,13 +1763,13 @@ export default function Profile() {
                     <Grid item xs={12}>
                       <Box sx={{ 
                         p: 3, 
-                        bgcolor: 'primary.50', 
+                        bgcolor: '#f8f9ff', 
                         borderRadius: 2, 
                         border: '1px solid',
-                        borderColor: 'primary.200',
+                        borderColor: '#e3e8ff',
                         mt: 2
                       }}>
-                        <Typography variant="h6" gutterBottom sx={{ color: 'primary.main', fontWeight: 600 }}>
+                        <Typography variant="h6" gutterBottom sx={{ color: '#4a64ad', fontWeight: 600 }}>
                           Pet Information
                         </Typography>
                         <Grid container spacing={3}>
@@ -1755,14 +1813,13 @@ export default function Profile() {
                 sx={{ 
                   p: 4, 
                   mb: 4, 
-                  border: '2px solid',
-                  borderColor: 'primary.200',
-                  borderRadius: 3,
-                  background: 'linear-gradient(135deg, #fff8f0 0%, #fff4e6 100%)',
-                  transition: 'all 0.3s ease',
+                  border: '1px solid',
+                  borderColor: 'grey.200',
+                  borderRadius: 2,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                  transition: 'all 0.2s ease',
                   '&:hover': {
-                    boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
-                    transform: 'translateY(-2px)'
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.12)'
                   }
                 }}
               >
@@ -1770,7 +1827,8 @@ export default function Profile() {
                   title="Employment & Income"
                   icon={WorkIcon}
                   description="Your employment status and income information"
-                  completed={answers.employmentStatus && answers.monthlyNetIncome}
+                  completed={isEmploymentSectionComplete(answers)}
+                  style={{ background: 'linear-gradient(180deg, #4a64ad42 0%, #ffffff 100%)' }}
                 />
 
                 <Grid container spacing={3} alignItems="flex-end">
@@ -1909,14 +1967,13 @@ export default function Profile() {
                 sx={{ 
                   p: 4, 
                   mb: 4, 
-                  border: '2px solid',
-                  borderColor: 'primary.200',
-                  borderRadius: 3,
-                  background: 'linear-gradient(135deg, #f0fff4 0%, #e6ffe6 100%)',
-                  transition: 'all 0.3s ease',
+                  border: '1px solid',
+                  borderColor: 'grey.200',
+                  borderRadius: 2,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                  transition: 'all 0.2s ease',
                   '&:hover': {
-                    boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
-                    transform: 'translateY(-2px)'
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.12)'
                   }
                 }}
               >
@@ -1924,7 +1981,8 @@ export default function Profile() {
                   title="Financial & Credit Information"
                   icon={AccountBalanceIcon}
                   description="Your credit history and financial background"
-                  completed={answers.bankruptcyHistory !== undefined && answers.evictionHistory !== undefined}
+                  completed={isFinancialSectionComplete(answers)}
+                  style={{ background: 'linear-gradient(180deg, #4a64ad42 0%, #ffffff 100%)' }}
                 />
 
                 <Grid container spacing={3} alignItems="center">
@@ -2000,14 +2058,13 @@ export default function Profile() {
                 sx={{ 
                   p: 4, 
                   mb: 4, 
-                  border: '2px solid',
-                  borderColor: 'primary.200',
-                  borderRadius: 3,
-                  background: 'linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%)',
-                  transition: 'all 0.3s ease',
+                  border: '1px solid',
+                  borderColor: 'grey.200',
+                  borderRadius: 2,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                  transition: 'all 0.2s ease',
                   '&:hover': {
-                    boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
-                    transform: 'translateY(-2px)'
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.12)'
                   }
                 }}
               >
@@ -2015,7 +2072,8 @@ export default function Profile() {
                   title="Rental History"
                   icon={HomeIcon}
                   description="Your current and previous rental information"
-                  completed={answers.currentlyPaysRent !== undefined && answers.currentRentAmount}
+                  completed={isRentalSectionComplete(answers)}
+                  style={{ background: 'linear-gradient(180deg, #4a64ad42 0%, #ffffff 100%)' }}
                 />
 
                 <Grid container spacing={3} alignItems="flex-end">
@@ -2061,22 +2119,22 @@ export default function Profile() {
                 sx={{ 
                   p: 4, 
                   mb: 4, 
-                  border: '2px solid',
-                  borderColor: 'primary.200',
-                  borderRadius: 3,
-                  background: 'linear-gradient(135deg, #fff0f8 0%, #ffe6f3 100%)',
-                  transition: 'all 0.3s ease',
+                  border: '1px solid',
+                  borderColor: 'grey.200',
+                  borderRadius: 2,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                  transition: 'all 0.2s ease',
                   '&:hover': {
-                    boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
-                    transform: 'translateY(-2px)'
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.12)'
                   }
                 }}
               >
                 <SectionHeader
-                  title="Application Strengthening"
+                  title="Boost Your Application"
                   icon={SchoolIcon}
                   description="Additional information to strengthen your application"
-                  completed={answers.canPayAdvance !== undefined && answers.hasGuarantor !== undefined}
+                  completed={isStrengthenSectionComplete(answers)}
+                  style={{ background: 'linear-gradient(180deg, #4a64ad42 0%, #ffffff 100%)' }}
                 />
 
                 <Grid container spacing={3} alignItems="flex-end">
@@ -2089,7 +2147,7 @@ export default function Profile() {
                         { value: true, label: 'Yes' },
                         { value: false, label: 'No' }
                       ]}
-                      label="Can you pay rent for several months in advance?"
+                      label="Can pay multiple months upfront"
                       columns={2}
                     />
                   </Grid>
@@ -2129,12 +2187,12 @@ export default function Profile() {
                   <Box sx={{ 
                     mt: 4, 
                     p: 3, 
-                    bgcolor: 'primary.50', 
+                    bgcolor: '#f8f9ff', 
                     borderRadius: 2, 
                     border: '1px solid',
-                    borderColor: 'primary.200'
+                    borderColor: '#e3e8ff'
                   }}>
-                    <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: 'primary.main', mb: 3 }}>
+                    <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, color: '#4a64ad', mb: 3 }}>
                       Guarantor Information
                     </Typography>
                     <Grid container spacing={3}>
@@ -2191,7 +2249,6 @@ export default function Profile() {
                           value={answers.guarantorAddress}
                           onChange={handleAnswerChange}
                           multiline
-                          rows={2}
                           required
                           size="small"
                           tooltip="Guarantor's complete address"
@@ -2246,14 +2303,13 @@ export default function Profile() {
                 sx={{ 
                   p: 4, 
                   mb: 4, 
-                  border: '2px solid',
-                  borderColor: 'primary.200',
-                  borderRadius: 3,
-                  background: 'linear-gradient(135deg, #f8f0ff 0%, #f0e6ff 100%)',
-                  transition: 'all 0.3s ease',
+                  border: '1px solid',
+                  borderColor: 'grey.200',
+                  borderRadius: 2,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                  transition: 'all 0.2s ease',
                   '&:hover': {
-                    boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
-                    transform: 'translateY(-2px)'
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.12)'
                   }
                 }}
               >
@@ -2261,7 +2317,8 @@ export default function Profile() {
                   title="Supporting Documents"
                   icon={DescriptionIcon}
                   description="Upload documents to support your application"
-                  completed={documents.proofOfIdentity?.length > 0 && documents.proofOfIncome?.length > 0}
+                  completed={isDocumentsSectionComplete(documents)}
+                  style={{ background: 'linear-gradient(180deg, #4a64ad42 0%, #ffffff 100%)' }}
                 />
 
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
@@ -2349,20 +2406,18 @@ export default function Profile() {
                     minWidth: 300,
                     py: 2,
                     px: 6,
-                    fontSize: '1.2rem',
-                    fontWeight: 700,
-                    borderRadius: 3,
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    fontSize: '1.1rem',
+                    fontWeight: 600,
+                    borderRadius: 2,
+                    backgroundColor: '#4a64ad',
+                    boxShadow: '0 2px 8px rgba(74, 100, 173, 0.3)',
+                    transition: 'all 0.2s ease',
                     '&:hover': {
-                      boxShadow: '0 12px 35px rgba(102, 126, 234, 0.6)',
-                      transform: 'translateY(-3px)',
-                      background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)'
+                      backgroundColor: '#3d5a9e',
+                      boxShadow: '0 4px 12px rgba(74, 100, 173, 0.4)'
                     },
                     '&:disabled': {
-                      background: 'grey.400',
-                      transform: 'none',
+                      backgroundColor: '#9ca3af',
                       boxShadow: 'none'
                     }
                   }}
