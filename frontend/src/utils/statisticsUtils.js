@@ -6,7 +6,7 @@ export const trackPropertyView = async (propertyId) => {
     try {
         await axios.post(`${API_ENDPOINTS.PROPERTIES}/${propertyId}/view`);
     } catch (error) {
-        console.error('Error tracking property view:', error);
+        // Error tracking property view
         // Don't throw error to avoid breaking the user experience
     }
 };
@@ -16,7 +16,7 @@ export const trackPropertyClick = async (propertyId) => {
     try {
         await axios.post(`${API_ENDPOINTS.PROPERTIES}/${propertyId}/click`);
     } catch (error) {
-        console.error('Error tracking property click:', error);
+        // Error tracking property click
         // Don't throw error to avoid breaking the user experience
     }
 };

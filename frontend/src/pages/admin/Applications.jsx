@@ -29,10 +29,10 @@ export default function AdminApplications() {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setApplications(response.data);
-      console.log(response.data);
+      // Applications data
     } catch (err) {
       setError('Failed to fetch applications');
-      console.error('Error fetching applications:', err);
+      // Error fetching applications
     } finally {
       setLoading(false);
     }
@@ -82,7 +82,7 @@ export default function AdminApplications() {
       fetchApplications();
     } catch (err) {
       toast.error('Failed to delete application');
-      console.error('Error deleting application:', err);
+      // Error deleting application
     }
   };
 
@@ -99,7 +99,7 @@ export default function AdminApplications() {
       fetchApplications();
     } catch (err) {
       toast.error(`Failed to ${newStatus} application`);
-      console.error(`Error ${newStatus} application:`, err);
+      // Error updating application status
     }
   };
 

@@ -30,7 +30,7 @@ export default function Contact() {
       setFormData({ name: '', email: '', subject: '', message: '' });
     } catch (error) {
       setError('Error sending message. Please try again.');
-      console.error('Error:', error);
+      // Error submitting contact form
     }
   };
 

@@ -9,9 +9,7 @@ dotenv.config();
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log('MongoDB connected successfully');
   } catch (error) {
-    console.error('MongoDB connection error:', error);
     process.exit(1);
   }
 };
@@ -23,13 +21,11 @@ const seedCommissions = async () => {
     const properties = await Property.find().limit(10);
 
     if (landlords.length === 0 || properties.length === 0) {
-      console.log('No landlords or properties found. Please seed users and properties first.');
       return;
     }
 
     // Clear existing commissions
     await Commission.deleteMany({});
-    console.log('Cleared existing commissions');
 
     const commissionTypes = ['commission', 'listing_fee', 'service_fee', 'processing_fee', 'monthly_fee'];
     const statuses = ['pending', 'paid', 'overdue'];
@@ -103,7 +99,6 @@ const seedCommissions = async () => {
 
     // Insert all commissions
     await Commission.insertMany(sampleCommissions);
-    console.log(`Created ${sampleCommissions.length} sample commissions`);
 
     // Log some statistics
     const stats = await Commission.aggregate([

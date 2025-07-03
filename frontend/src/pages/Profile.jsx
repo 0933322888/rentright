@@ -490,7 +490,7 @@ export default function Profile() {
                 headers: { Authorization: `Bearer ${token}` }
               });
               const { data } = response;
-              console.log('Fetched tenant data:', data);
+              // Fetched tenant data
 
               if (data) {
                 const newAnswers = {
@@ -538,7 +538,7 @@ export default function Profile() {
                   guarantorJobTitle: data.guarantorJobTitle || '',
                   currentlyPaysRent: data.currentlyPaysRent || false
                 };
-                console.log('Setting initial answers:', newAnswers);
+                // Setting initial answers
                 setAnswers(newAnswers);
 
                 // Initialize documents state
@@ -558,7 +558,7 @@ export default function Profile() {
             } catch (error) {
               // Don't show error for 404 (no tenant profile yet) - this is normal for new users
               if (error.response?.status === 404) {
-                console.log('No tenant profile found yet - this is normal for new users');
+                // No tenant profile found yet - this is normal for new users
                 // Initialize empty answers for new tenant
                 setAnswers({
                   // Employment & Income
@@ -613,13 +613,13 @@ export default function Profile() {
                   additionalDocuments: []
                 });
               } else {
-                console.error('Error fetching tenant profile:', error);
+                // Error fetching tenant profile
                 setError('Failed to load tenant profile');
               }
             }
           }
         } catch (error) {
-          console.error('Error fetching profile data:', error);
+          // Error fetching profile data
           setError('Failed to load profile data');
         } finally {
           setIsLoading(false);
@@ -731,7 +731,7 @@ export default function Profile() {
         setProfilePreview(null);
       }
     } catch (error) {
-      console.error('Error updating profile:', error);
+              // Error updating profile
       setError(error.response?.data?.message || 'Failed to update profile');
     } finally {
       setLoading(false);
@@ -763,7 +763,7 @@ export default function Profile() {
       toast.success(`${file.name} uploaded successfully!`);
 
     } catch (error) {
-      console.error('Error uploading document:', error);
+              // Error uploading document
       toast.error(`Failed to upload ${file.name}.`);
     } finally {
       // Clear loading state for this field
@@ -826,8 +826,7 @@ export default function Profile() {
       });
 
       if (missingFields.length > 0) {
-        console.log('Missing fields:', missingFields);
-        console.log('Current answers:', answers);
+        // Missing fields and current answers
         setError(`Please fill in all required fields and upload required documents. Missing: ${missingFields.join(', ')}`);
         setValidationErrors(missingFields);
         setLoading(false);
@@ -906,7 +905,7 @@ export default function Profile() {
 
       const payload = { ...transformedAnswers, ...documentsToSubmit };
 
-      console.log('Submitting payload:', payload);
+              // Submitting payload
 
       const response = await axios.post(
         API_ENDPOINTS.UPDATE_TENANT_PROFILE,
@@ -921,7 +920,7 @@ export default function Profile() {
 
       if (response.status === 200) {
         const { data } = response;
-        console.log('Server response data:', data);
+        // Server response data
 
         // Update the answers state with the new values from the server
         const updatedAnswers = {
@@ -969,7 +968,7 @@ export default function Profile() {
           guarantorJobTitle: data.guarantorJobTitle || '',
           currentlyPaysRent: data.currentlyPaysRent || false
         };
-        console.log('Updated answers:', updatedAnswers);
+        // Updated answers
         setAnswers(updatedAnswers);
 
         // Update documents
@@ -982,13 +981,13 @@ export default function Profile() {
           }
         });
 
-        console.log('Updated documents:', updatedDocuments);
+        // Updated documents
 
         setDocuments(updatedDocuments);
         setSuccess('Tenant profile updated successfully');
       }
     } catch (error) {
-      console.error('Error updating tenant profile:', error);
+              // Error updating tenant profile
       setError(error.response?.data?.message || 'Failed to update tenant profile');
     } finally {
       setLoading(false);
@@ -1035,7 +1034,7 @@ export default function Profile() {
       toast.success('Document deleted successfully.');
 
     } catch (error) {
-      console.error('Error deleting document:', error);
+              // Error deleting document
       toast.error('Failed to delete document.');
     }
   };

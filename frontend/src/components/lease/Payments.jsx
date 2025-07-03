@@ -51,7 +51,7 @@ const formatDate = (dateString) => {
     if (isNaN(date.getTime())) return 'Invalid Date';
     return format(date, 'PPp');
   } catch (err) {
-    console.error('Error formatting date:', err);
+          // Error formatting date
     return 'Invalid Date';
   }
 };
@@ -436,7 +436,7 @@ const EscalationDetailsModal = ({ open, onClose, escalation, onStatusUpdate }) =
                 onClose();
                 onStatusUpdate();
               } catch (err) {
-                console.error('Error closing escalation:', err);
+                // Error closing escalation
                 toast.error('Failed to close escalation');
               }
             }}
@@ -541,13 +541,13 @@ const Payments = ({ leaseDetails, onPaymentUpdate }) => {
   const [showPaymentForm, setShowPaymentForm] = useState(false);
 
   useEffect(() => {
-    console.log('Payments component received leaseDetails:', leaseDetails);
+    // Payments component received leaseDetails
     if (leaseDetails?.property?._id) {
-      console.log('Property ID found:', leaseDetails.property._id);
+              // Property ID found
       fetchPayments();
       fetchEscalations();
     } else {
-      console.log('No valid property ID found in leaseDetails:', leaseDetails);
+              // No valid property ID found in leaseDetails
       setLoading(false);
       setError('No active lease found');
     }
@@ -563,30 +563,30 @@ const Payments = ({ leaseDetails, onPaymentUpdate }) => {
   const fetchPayments = async () => {
     try {
       if (!leaseDetails?.property?._id) {
-        console.log('No property ID available for fetching payments');
+        // No property ID available for fetching payments
         setError('No active lease found');
         setLoading(false);
         return;
       }
 
-      console.log('Fetching payments for property:', leaseDetails.property._id);
+      // Fetching payments for property
       // For landlords, fetch all payments for the property
       // For tenants, fetch only their payments
       const endpoint = user.role === 'landlord' 
         ? `${API_ENDPOINTS.PAYMENTS}/property/${leaseDetails.property._id}`
         : `${API_ENDPOINTS.PAYMENTS}/tenant/${user._id}`;
       
-      console.log('Using endpoint:', endpoint);
+      // Using endpoint
       const response = await axios.get(endpoint, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
       });
-      console.log('Payments response:', response.data);
+      // Payments response
       setPayments(Array.isArray(response.data) ? response.data : []);
       setLoading(false);
     } catch (err) {
-      console.error('Error fetching payments:', err);
+      // Error fetching payments
       setError('Failed to fetch payment history');
       setPayments([]);
       setLoading(false);
@@ -596,23 +596,23 @@ const Payments = ({ leaseDetails, onPaymentUpdate }) => {
   const fetchEscalations = async () => {
     try {
       if (!leaseDetails?.property?._id) {
-        console.log('No property ID available for fetching escalations');
+        // No property ID available for fetching escalations
         return;
       }
 
-      console.log('Fetching escalations for property:', leaseDetails.property._id);
+      // Fetching escalations for property
       const response = await axios.get(`${API_ENDPOINTS.ESCALATIONS}/property/${leaseDetails.property._id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
       });
-      console.log('Escalations response:', response.data);
+      // Escalations response
       setEscalations(response.data || []);
       // Set active escalation if there is one
       const active = response.data?.find(esc => ['pending', 'in_review'].includes(esc.status));
       setActiveEscalation(active || null);
     } catch (err) {
-      console.error('Error fetching escalations:', err);
+      // Error fetching escalations
       setEscalations([]);
       setActiveEscalation(null);
     }
@@ -641,7 +641,7 @@ const Payments = ({ leaseDetails, onPaymentUpdate }) => {
         onPaymentUpdate();
       }
     } catch (err) {
-      console.error('Error processing payment:', err);
+      // Error processing payment
       toast.error(err.response?.data?.message || 'Failed to process payment');
     }
   };
@@ -658,7 +658,7 @@ const Payments = ({ leaseDetails, onPaymentUpdate }) => {
       toast.success('Escalation process initiated. Our team will contact you within 24 hours.');
       setShowEscalationModal(false);
     } catch (err) {
-      console.error('Error initiating escalation:', err);
+      // Error initiating escalation
       toast.error('Failed to initiate escalation process');
     }
   };
@@ -689,11 +689,11 @@ const Payments = ({ leaseDetails, onPaymentUpdate }) => {
             }
           );
         } catch (err) {
-          console.error('Error updating commission status:', err);
+          // Error updating commission status
         }
       }
     } catch (err) {
-      console.error('Error recording payment:', err);
+      // Error recording payment
       toast.error('Failed to record payment');
     }
   };
@@ -901,7 +901,7 @@ const Payments = ({ leaseDetails, onPaymentUpdate }) => {
               ) : (
                 <Alert severity="info" sx={{ mt: 2 }}>
                   Please complete the commission payment to finalize the property listing process.
-                  The standard commission rate is $500.
+                  The standard commission rate is 1 month's rent.
                 </Alert>
               )}
             </Paper>

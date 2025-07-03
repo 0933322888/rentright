@@ -47,7 +47,7 @@ const TicketDetails = () => {
       });
       setTicket(response.data);
     } catch (error) {
-      console.error('Error fetching ticket details:', error);
+      // Error fetching ticket details
       setError('Failed to load ticket details');
       toast.error('Failed to load ticket details');
     } finally {
@@ -93,7 +93,7 @@ const TicketDetails = () => {
       setComment('');
       toast.success(`Ticket ${selectedStatus} successfully`);
     } catch (error) {
-      console.error('Error updating ticket status:', error);
+      // Error updating ticket status
       toast.error(error.response?.data?.message || 'Failed to update ticket status');
     } finally {
       setUpdating(false);
@@ -121,7 +121,7 @@ const TicketDetails = () => {
       setNewComment('');
       toast.success('Comment added successfully');
     } catch (error) {
-      console.error('Error adding comment:', error);
+      // Error adding comment
       toast.error(error.response?.data?.message || 'Failed to add comment');
     } finally {
       setAddingComment(false);

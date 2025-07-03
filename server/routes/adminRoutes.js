@@ -108,7 +108,6 @@ router.delete('/lease-agreements/:countryCode/:region', deleteLeaseAgreementFile
 router.get('/lease-agreements/:countryCode/:region/file', getLeaseAgreementFile);
 
 router.get('/something', (req, res) => {
-  console.log(req.user); // This is fine
   res.send('ok');
 });
 

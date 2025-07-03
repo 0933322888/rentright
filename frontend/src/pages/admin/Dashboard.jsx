@@ -87,7 +87,7 @@ export default function Dashboard() {
                 setStats(response.data);
                 setError(null);
     } catch (err) {
-                console.error('Error fetching dashboard stats:', err);
+                // Error fetching dashboard stats
                 setError(err.response?.data?.message || 'Error fetching dashboard statistics');
     } finally {
       setLoading(false);

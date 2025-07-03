@@ -21,6 +21,16 @@ const handleOAuthSuccess = (req, res) => {
     // Check if user needs to complete registration (new OAuth user)
     const isNewUser = !user.registrationComplete;
     
+    console.log('🔐 OAuth login successful:', { 
+      email: user.email, 
+      userId: user._id, 
+      role: user.role, 
+      name: user.name,
+      provider: req.params.provider || 'unknown',
+      isNewUser,
+      timestamp: new Date().toISOString() 
+    });
+    
     // Redirect to frontend with token and user info
     const redirectUrl = `${process.env.FRONTEND_URL || 'http://localhost:5137'}/oauth-success?token=${token}&user=${encodeURIComponent(JSON.stringify({
       _id: user._id,
@@ -35,14 +45,18 @@ const handleOAuthSuccess = (req, res) => {
     
     res.redirect(redirectUrl);
   } catch (error) {
-    console.error('OAuth success handler error:', error);
+    console.log('❌ OAuth success handler error:', { error: error.message, timestamp: new Date().toISOString() });
     res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5137'}/oauth-error`);
   }
 };
 
 // OAuth Failure Handler
 const handleOAuthFailure = (req, res) => {
-  console.error('OAuth failure:', req.query.error);
+  console.log('❌ OAuth failure:', { 
+    error: req.query.error, 
+    provider: req.params.provider || 'unknown',
+    timestamp: new Date().toISOString() 
+  });
   res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5137'}/oauth-error?error=${encodeURIComponent(req.query.error || 'Authentication failed')}`);
 };
 
@@ -95,13 +109,17 @@ export const register = async (req, res) => {
   try {
     const { name, email, password, role, phone, termsAccepted } = req.body;
 
+    console.log('📝 Registration attempt:', { email, name, role, timestamp: new Date().toISOString() });
+
     // Validate that terms and conditions are accepted
     if (!termsAccepted) {
+      console.log('❌ Registration failed - Terms not accepted:', { email, timestamp: new Date().toISOString() });
       return res.status(400).json({ message: 'You must accept the terms and conditions to register' });
     }
 
     const userExists = await User.findOne({ email });
     if (userExists) {
+      console.log('❌ Registration failed - User already exists:', { email, timestamp: new Date().toISOString() });
       return res.status(400).json({ message: 'User already exists' });
     }
 
@@ -115,6 +133,14 @@ export const register = async (req, res) => {
     });
 
     if (user) {
+      console.log('✅ Registration successful:', { 
+        email, 
+        userId: user._id, 
+        role: user.role, 
+        name: user.name,
+        timestamp: new Date().toISOString() 
+      });
+      
       res.status(201).json({
         _id: user._id,
         name: user.name,
@@ -126,6 +152,7 @@ export const register = async (req, res) => {
       });
     }
   } catch (error) {
+    console.log('❌ Registration error:', { email: req.body.email, error: error.message, timestamp: new Date().toISOString() });
     res.status(400).json({ message: error.message });
   }
 };
@@ -133,11 +160,22 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    
+    console.log('🔐 Login attempt:', { email, timestamp: new Date().toISOString() });
 
     const user = await User.findOne({ email });
     if (!user || !(await user.comparePassword(password))) {
+      console.log('❌ Login failed - Invalid credentials:', { email, timestamp: new Date().toISOString() });
       return res.status(401).json({ message: 'Invalid email or password' });
     }
+
+    console.log('✅ Login successful:', { 
+      email, 
+      userId: user._id, 
+      role: user.role, 
+      name: user.name,
+      timestamp: new Date().toISOString() 
+    });
 
     res.json({
       _id: user._id,
@@ -149,6 +187,7 @@ export const login = async (req, res) => {
       token: generateToken(user._id, user.role),
     });
   } catch (error) {
+    console.log('❌ Login error:', { email: req.body.email, error: error.message, timestamp: new Date().toISOString() });
     res.status(400).json({ message: error.message });
   }
 };

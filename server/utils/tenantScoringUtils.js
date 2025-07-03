@@ -6,7 +6,7 @@
 export function calculateTenantScore(tenantDoc) {
   let totalPoints = 0;
   let maxPoints = 0;
-  console.log('[tenantScore] --- Calculation Start ---');
+  // Calculation Start
   
   // Employment (manual or AI-verified)
   if (tenantDoc.employmentStatus === 'employed' || tenantDoc.employmentStatus === 'self-employed') {
@@ -115,15 +115,15 @@ export function calculateTenantScore(tenantDoc) {
   
   // Document completeness and quality
   let documentScore = 0;
-  if (tenantDoc.proofOfIdentity?.length > 0) { documentScore += 10; console.log('[tenantScore] +10: Proof of identity uploaded'); }
-  if (tenantDoc.proofOfIncome?.length > 0) { documentScore += 10; console.log('[tenantScore] +10: Proof of income uploaded'); }
-  if (tenantDoc.creditHistory?.length > 0) { documentScore += 10; console.log('[tenantScore] +10: Credit history uploaded'); }
-  if (tenantDoc.rentalHistory?.length > 0) { documentScore += 10; console.log('[tenantScore] +10: Rental history uploaded'); }
-  if (tenantDoc.additionalDocuments?.length > 0) { documentScore += 5; console.log('[tenantScore] +5: Additional documents uploaded'); }
+      if (tenantDoc.proofOfIdentity?.length > 0) { documentScore += 10; }
+    if (tenantDoc.proofOfIncome?.length > 0) { documentScore += 10; }
+    if (tenantDoc.creditHistory?.length > 0) { documentScore += 10; }
+    if (tenantDoc.rentalHistory?.length > 0) { documentScore += 10; }
+    if (tenantDoc.additionalDocuments?.length > 0) { documentScore += 5; }
   
   // Bonus for multiple documents of same type (shows thoroughness)
-  if (tenantDoc.proofOfIncome?.length > 1) { documentScore += 5; console.log('[tenantScore] +5: Multiple proof of income docs'); }
-  if (tenantDoc.creditHistory?.length > 1) { documentScore += 5; console.log('[tenantScore] +5: Multiple credit history docs'); }
+      if (tenantDoc.proofOfIncome?.length > 1) { documentScore += 5; }
+    if (tenantDoc.creditHistory?.length > 1) { documentScore += 5; }
   
   totalPoints += documentScore;
   maxPoints += 50;
@@ -147,21 +147,21 @@ export function calculateTenantScore(tenantDoc) {
   maxPoints += 10;
   
   // Additional factors
-  if (tenantDoc.monthsAheadCanPay >= 2) { totalPoints += 5; console.log('[tenantScore] +5: Can pay 2+ months ahead'); }
-  if (tenantDoc.monthsAheadCanPay >= 1) { totalPoints += 5; console.log('[tenantScore] +5: Can pay multiple months ahead'); }
+      if (tenantDoc.monthsAheadCanPay >= 2) { totalPoints += 5; }
+    if (tenantDoc.monthsAheadCanPay >= 1) { totalPoints += 5; }
   
   // Pet and smoking factors (risk assessment)
-  if (tenantDoc.hasPets === false) { totalPoints += 3; console.log('[tenantScore] +3: No pets'); }
-  if (tenantDoc.smokingStatus === 'non-smoker') { totalPoints += 3; console.log('[tenantScore] +3: Non-smoker'); }
+      if (tenantDoc.hasPets === false) { totalPoints += 3; }
+    if (tenantDoc.smokingStatus === 'non-smoker') { totalPoints += 3; }
   
   // Occupancy factors
-  if (tenantDoc.adultOccupants <= 2) { totalPoints += 2; console.log('[tenantScore] +2: ≤2 adult occupants'); }
-  if (tenantDoc.childOccupants === 0) { totalPoints += 2; console.log('[tenantScore] +2: No children'); }
+      if (tenantDoc.adultOccupants <= 2) { totalPoints += 2; }
+    if (tenantDoc.childOccupants === 0) { totalPoints += 2; }
   
   maxPoints += 20;
   
   const percent = maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100) : 0;
-  console.log('[tenantScore] --- Calculation End. Points:', totalPoints, '/', maxPoints, 'Percent:', percent, '---');
+  // Calculation End
   return percent;
 }
 

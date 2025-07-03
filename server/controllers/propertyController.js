@@ -490,8 +490,6 @@ const updateApplicationStatus = async (req, res) => {
         }
       );
 
-      console.log(`Cancelled other applications for tenant ${application.tenant._id} after approval of application ${application._id}`);
-
       // Also reject all other applications for this specific property
       await Application.updateMany(
         {
@@ -513,13 +511,8 @@ const updateApplicationStatus = async (req, res) => {
     await property.save();
 
     // Verify the property was saved correctly
-    const updatedProperty = await Property.findById(property._id).populate('tenant');
-    console.log('Property after save:', {
-      id: updatedProperty._id,
-      tenant: updatedProperty.tenant,
-      available: updatedProperty.available
-    });
-
+    await Property.findById(property._id).populate('tenant');
+    
     res.json({ message: 'Application status updated successfully' });
   } catch (error) {
     console.error('Error in updateApplicationStatus:', error);
@@ -841,8 +834,6 @@ const generatePropertyPrice = async (req, res) => {
 
 export const uploadPropertyImages = async (req, res) => {
   try {
-    console.log('uploadPropertyImages called');
-    console.log('Files received:', req.files);
     
     const property = await Property.findById(req.params.id);
     if (!property) return res.status(404).json({ message: 'Property not found' });
@@ -852,25 +843,19 @@ export const uploadPropertyImages = async (req, res) => {
     }
 
     const files = Array.isArray(req.files) ? req.files : [req.files];
-    console.log('Processing files:', files.length);
     
     const newImages = await Promise.all(files.map(async (file, index) => {
-      console.log(`Processing file ${index + 1}:`, file.originalname);
       
       try {
         // Read file data from disk since we're using disk storage
         const fileBuffer = fs.readFileSync(file.path);
-        console.log(`File ${index + 1} buffer size:`, fileBuffer.length);
         
         const key = `property-images/${property._id}/${file.originalname}`;
-        console.log(`File ${index + 1} S3 key:`, key);
         
         const url = await uploadFileToS3(fileBuffer, key, file.mimetype);
-        console.log(`File ${index + 1} uploaded successfully:`, url);
 
         // Clean up the temporary file
         fs.unlinkSync(file.path);
-        console.log(`File ${index + 1} temporary file cleaned up`);
 
         return url;
       } catch (fileError) {
@@ -879,10 +864,8 @@ export const uploadPropertyImages = async (req, res) => {
       }
     }));
 
-    console.log('All files processed, updating property');
     property.images = property.images.concat(newImages);
     await property.save();
-    console.log('Property updated successfully');
 
     res.json(property);
   } catch (error) {

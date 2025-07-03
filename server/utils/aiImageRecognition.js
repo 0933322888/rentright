@@ -20,7 +20,7 @@ async function generateListingContent(propertyInfo, imageBuffers = []) {
     throw new Error("OPENAI_API_KEY is not set");
   }
 
-  console.log(propertyInfo);
+  // Property info
   
   const messages = [
     {
@@ -70,7 +70,7 @@ async function generateListingContent(propertyInfo, imageBuffers = []) {
     "content": content
   });
 
-  console.log(messages);
+  // Messages
 
   try {
     const response = await openai.chat.completions.create({
@@ -101,7 +101,7 @@ async function generateListingContent(propertyInfo, imageBuffers = []) {
       return { error: "Could not parse GPT response", raw: result };
     }
   } catch (error) {
-    console.error("OpenAI API error:", error);
+    // OpenAI API error
     return { error: "OpenAI API request failed", message: error.message };
   }
 }
@@ -113,7 +113,7 @@ async function generateListingContent(propertyInfo, imageBuffers = []) {
  * @returns {Promise<Object>} - Extracted fields
  */
 export async function parseDocumentWithOpenAI(imageUrl, docType = 'identity or income document') {
-  console.log('parseDocumentWithOpenAI called with:', { imageUrl, docType });
+  // parseDocumentWithOpenAI called
   const OPENAI_API_KEY = process.env.OPEN_AI_KEY;
   if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY is not set');
 
@@ -209,7 +209,7 @@ Return as JSON: {"name": "", "dob": "", "documentType": "", "income": "", "docum
     });
 
     const text = response.choices[0].message.content;
-    console.log("AI parsed text: ", text);
+    // AI parsed text
 
     // Try to extract JSON from the response
     let parsed;
@@ -222,7 +222,7 @@ Return as JSON: {"name": "", "dob": "", "documentType": "", "income": "", "docum
         throw new Error('No JSON found in response');
       }
     } catch (e) {
-      console.log("AI parsing failed: ", e);
+      // AI parsing failed
       // If JSON parsing fails, return structured error
       parsed = { 
         error: 'Could not parse AI response', 
@@ -237,7 +237,7 @@ Return as JSON: {"name": "", "dob": "", "documentType": "", "income": "", "docum
     
     return parsed;
   } catch (error) {
-    console.log("AI parsing failed 2: ", error);
+    // AI parsing failed
     return { 
       error: 'AI parsing failed', 
       message: error.message,

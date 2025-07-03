@@ -21,7 +21,7 @@ export const createStripeCustomer = async (email, name) => {
     });
     return customer;
   } catch (error) {
-    console.error('Error creating Stripe customer:', error);
+    // Error creating Stripe customer
     throw error;
   }
 };
@@ -43,7 +43,7 @@ export const createPaymentIntent = async (amount, customerId, metadata = {}) => 
     });
     return paymentIntent;
   } catch (error) {
-    console.error('Error creating payment intent:', error);
+    // Error creating payment intent
     throw error;
   }
 };
@@ -56,7 +56,7 @@ export const confirmPaymentIntent = async (paymentIntentId, paymentMethodId) => 
     });
     return paymentIntent;
   } catch (error) {
-    console.error('Error confirming payment intent:', error);
+    // Error confirming payment intent
     throw error;
   }
 };
@@ -69,7 +69,7 @@ export const attachPaymentMethod = async (paymentMethodId, customerId) => {
     });
     return paymentMethod;
   } catch (error) {
-    console.error('Error attaching payment method:', error);
+    // Error attaching payment method
     throw error;
   }
 };
@@ -84,7 +84,7 @@ export const setDefaultPaymentMethod = async (customerId, paymentMethodId) => {
     });
     return customer;
   } catch (error) {
-    console.error('Error setting default payment method:', error);
+    // Error setting default payment method
     throw error;
   }
 };
@@ -95,7 +95,7 @@ export const getPaymentMethod = async (paymentMethodId) => {
     const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);
     return paymentMethod;
   } catch (error) {
-    console.error('Error retrieving payment method:', error);
+    // Error retrieving payment method
     throw error;
   }
 };
@@ -110,7 +110,7 @@ export const createRefund = async (chargeId, amount, reason = 'requested_by_cust
     });
     return refund;
   } catch (error) {
-    console.error('Error creating refund:', error);
+    // Error creating refund
     throw error;
   }
 };
@@ -121,7 +121,7 @@ export const getPaymentIntent = async (paymentIntentId) => {
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
     return paymentIntent;
   } catch (error) {
-    console.error('Error retrieving payment intent:', error);
+    // Error retrieving payment intent
     throw error;
   }
 }; 

@@ -16,7 +16,7 @@ export const geocodeAddress = async (location) => {
     ].filter(Boolean); // Remove empty/undefined values
 
     if (addressParts.length === 0) {
-      console.log('No address parts provided for geocoding');
+      // No address parts provided for geocoding
       return null;
     }
 
@@ -39,14 +39,14 @@ export const geocodeAddress = async (location) => {
       const result = response.data[0];
       const coordinates = [parseFloat(result.lon), parseFloat(result.lat)];
       
-      console.log(`Geocoded address: ${address} -> [${coordinates[0]}, ${coordinates[1]}]`);
+      // Geocoded address successfully
       return coordinates;
     } else {
-      console.log(`No coordinates found for address: ${address}`);
+              // No coordinates found for address
       return null;
     }
   } catch (error) {
-    console.error('Geocoding error:', error.message);
+    // Geocoding error
     return null;
   }
 };
@@ -68,11 +68,11 @@ export const geocodeAddressWithRetry = async (location, maxRetries = 3) => {
       if (attempt < maxRetries) {
         // Wait before retrying (exponential backoff)
         const delay = Math.pow(2, attempt) * 1000;
-        console.log(`Geocoding attempt ${attempt} failed, retrying in ${delay}ms...`);
+        // Geocoding attempt failed, retrying
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     } catch (error) {
-      console.error(`Geocoding attempt ${attempt} failed:`, error.message);
+              // Geocoding attempt failed
       if (attempt === maxRetries) {
         throw error;
       }
@@ -98,7 +98,7 @@ export const geocodeExistingProperties = async (Property) => {
       ]
     });
 
-    console.log(`Found ${propertiesWithoutCoordinates.length} properties without coordinates`);
+    // Found properties without coordinates
 
     let successCount = 0;
     let failureCount = 0;
@@ -107,7 +107,7 @@ export const geocodeExistingProperties = async (Property) => {
     for (const property of propertiesWithoutCoordinates) {
       try {
         if (property.location && (property.location.street || property.location.city)) {
-          console.log(`Geocoding property: ${property.title} (${property._id})`);
+          // Geocoding property
           
           const coordinates = await geocodeAddressWithRetry(property.location);
           
@@ -116,7 +116,7 @@ export const geocodeExistingProperties = async (Property) => {
               'location.coordinates': coordinates
             });
             successCount++;
-            console.log(`Successfully geocoded property: ${property.title}`);
+            // Successfully geocoded property
           } else {
             failureCount++;
             errors.push(`Could not geocode: ${property.title} (${property._id})`);
@@ -141,7 +141,7 @@ export const geocodeExistingProperties = async (Property) => {
       errors
     };
   } catch (error) {
-    console.error('Error in geocodeExistingProperties:', error);
+    // Error in geocodeExistingProperties
     throw error;
   }
 }; 

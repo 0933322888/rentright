@@ -144,7 +144,7 @@ export default function PropertyList() {
       );
       setAppliedProperties(appliedPropertyIds);
     } catch (error) {
-      console.error('Error fetching applications:', error);
+      // Error fetching applications
     }
   };
 
@@ -168,7 +168,7 @@ export default function PropertyList() {
         setMapCenter([lat, lng]);
       }
     } catch (error) {
-      console.error('Error fetching properties:', error);
+      // Error fetching properties
     } finally {
       setLoading(false);
     }

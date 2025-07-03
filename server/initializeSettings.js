@@ -33,13 +33,11 @@ const defaultSettings = [
 
 export const initializeDefaultSettings = async () => {
   try {
-    console.log('Checking for existing commission settings...');
     
     for (const setting of defaultSettings) {
       const existingSetting = await Settings.findOne({ key: setting.key });
       
       if (!existingSetting) {
-        console.log(`Creating new setting: ${setting.key} = ${setting.value}`);
         
         // Create the setting directly without using setValue to avoid null user ID
         const newSetting = new Settings({
@@ -56,13 +54,10 @@ export const initializeDefaultSettings = async () => {
           }]
         });
         await newSetting.save();
-        console.log(`✓ Created setting: ${setting.key}`);
       } else {
-        console.log(`✓ Setting already exists: ${setting.key} = ${existingSetting.value} (not overwriting)`);
       }
     }
     
-    console.log('Commission settings check completed.');
   } catch (error) {
     console.error('Error checking commission settings:', error);
   }

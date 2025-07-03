@@ -16,7 +16,7 @@ export function useProperties() {
 
   const fetchProperties = async () => {
     try {
-      console.log('Fetching properties for user:', user._id);
+      // Fetching properties for user
       const response = await axios.get(API_ENDPOINTS.PROPERTIES, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -25,11 +25,11 @@ export function useProperties() {
           landlord: user._id
         }
       });
-      console.log('Fetched properties:', response.data);
+              // Fetched properties
       setProperties(response.data);
     } catch (error) {
       setError('Error fetching properties');
-      console.error('Error:', error);
+              // Error fetching properties
       toast.error('Failed to fetch properties');
     } finally {
       setIsLoading(false);
@@ -77,7 +77,7 @@ export function useProperties() {
       await fetchProperties();
       toast.success('Property submitted successfully');
     } catch (error) {
-      console.error('Error submitting property:', error);
+      // Error submitting property
       toast.error('Failed to submit property');
     }
   };
@@ -93,7 +93,7 @@ export function useProperties() {
         setProperties(properties.filter(property => property._id !== propertyId));
         toast.success('Property deleted successfully');
       } catch (error) {
-        console.error('Error deleting property:', error);
+        // Error deleting property
         toast.error('Failed to delete property');
       }
     }

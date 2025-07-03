@@ -200,8 +200,6 @@ export const updateApplicationStatus = async (req, res) => {
         }
       );
 
-      console.log(`Cancelled other applications for tenant ${application.tenant._id} after approval of application ${application._id}`);
-
       // Add a notification about payment setup
       const response = {
         application,

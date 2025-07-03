@@ -76,11 +76,7 @@ export default function CreateTicket() {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      console.log('Applications response:', applicationsResponse.data);
-      
       const approvedApplication = applicationsResponse.data.find(app => app.status === 'approved');
-      
-      console.log('Approved application:', approvedApplication);
       
       if (!approvedApplication) {
         setError('No approved application found. You must have an approved application to create a ticket.');
@@ -91,9 +87,6 @@ export default function CreateTicket() {
       const propertyResponse = await axios.get(`${API_ENDPOINTS.PROPERTIES}/${approvedApplication.property._id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-
-      console.log('Property response:', propertyResponse.data);
-      console.log('Current user:', user);
 
       const propertyData = propertyResponse.data;
       
@@ -108,7 +101,6 @@ export default function CreateTicket() {
             (typeof approvedApplication.tenant === 'string' && approvedApplication.tenant === user._id)
           )
         ) {
-          console.log('Allowing ticket creation based on approved application fallback');
           setProperty(propertyData);
           return;
         }

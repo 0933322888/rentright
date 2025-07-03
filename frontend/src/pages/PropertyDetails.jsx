@@ -62,12 +62,12 @@ const PropertyDetails = () => {
             const profileResponse = await axios.get(API_ENDPOINTS.GET_TENANT_PROFILE, {
               headers: { 'Authorization': `Bearer ${token}` }
             });
-            console.log('Tenant profile:', profileResponse.data);
+            // Tenant profile
             setTenantProfile(profileResponse.data);
           } catch (profileError) {
             if (profileError.response && profileError.response.status === 404) {
               // No tenant profile yet - set empty profile
-              console.log('No tenant profile found, setting empty profile');
+              // No tenant profile found, setting empty profile
               setTenantProfile({});
             } else {
               // Re-throw other errors
@@ -79,7 +79,7 @@ const PropertyDetails = () => {
         setError(null);
       } catch (err) {
         setError('Failed to load property details');
-        console.error('Error fetching property:', err);
+        // Error fetching property
       } finally {
         setLoading(false);
       }
@@ -90,7 +90,7 @@ const PropertyDetails = () => {
 
   const isProfileComplete = () => {
     if (!tenantProfile) {
-      console.log('Profile completion check: No tenant profile found');
+              // Profile completion check: No tenant profile found
       return false;
     }
     
@@ -105,15 +105,14 @@ const PropertyDetails = () => {
       childOccupants: tenantProfile.childOccupants !== undefined
     };
 
-    console.log('Profile completion requirements:', requirements);
-    console.log('Current tenant profile:', tenantProfile);
+          // Profile completion requirements and current tenant profile
 
     const isComplete = Object.values(requirements).every(Boolean);
     if (!isComplete) {
       const missingFields = Object.entries(requirements)
         .filter(([_, value]) => !value)
         .map(([key]) => key);
-      console.log('Missing required fields:', missingFields);
+      // Missing required fields
     }
 
     return isComplete;
@@ -178,7 +177,7 @@ const PropertyDetails = () => {
         setShowConfirmation(true);
       }
     } catch (error) {
-      console.error('Application submission error:', error);
+              // Application submission error
       const errorMessage = error.response?.data?.message || 'Failed to submit application. Please try again.';
       toast.error(errorMessage);
       

@@ -88,10 +88,10 @@ export const sendPasswordResetEmail = async (email, resetToken, userName) => {
     };
     
     const info = await transporter.sendMail(mailOptions);
-    console.log('Password reset email sent:', info.messageId);
+          // Password reset email sent
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('Error sending password reset email:', error);
+          // Error sending password reset email
     throw new Error('Failed to send password reset email');
   }
 };
@@ -146,10 +146,10 @@ export const sendPasswordResetSuccessEmail = async (email, userName) => {
     };
     
     const info = await transporter.sendMail(mailOptions);
-    console.log('Password reset success email sent:', info.messageId);
+          // Password reset success email sent
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('Error sending password reset success email:', error);
+          // Error sending password reset success email
     throw new Error('Failed to send password reset success email');
   }
 }; 

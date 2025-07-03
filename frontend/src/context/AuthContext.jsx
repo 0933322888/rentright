@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }) => {
       const { data } = await axios.get(API_ENDPOINTS.USER_PROFILE);
       setUser(data);
     } catch (error) {
-      console.error('Error fetching user profile:', error);
+              // Error fetching user profile
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
         delete axios.defaults.headers.common['Authorization'];

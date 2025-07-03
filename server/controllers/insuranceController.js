@@ -11,8 +11,6 @@ export const getInsuranceDocuments = async (req, res) => {
     const userId = req.user._id;
     const userRole = req.user.role;
 
-    console.log('Getting insurance documents for:', { applicationId, userId, userRole });
-
     let application = await Application.findById(applicationId)
       .populate('tenant', 'firstName lastName email')
       .populate({
@@ -27,23 +25,16 @@ export const getInsuranceDocuments = async (req, res) => {
       return res.status(404).json({ message: 'Application not found' });
     }
 
-    console.log('Application found:', {
-      applicationId: application._id,
-      tenant: application.tenant,
-      property: application.property,
-      propertyLandlord: application.property?.landlord
-    });
+
 
     // If property.landlord is not populated, try to fetch it separately
     if (userRole === 'landlord' && (!application.property?.landlord || typeof application.property.landlord === 'string')) {
-      console.log('Property landlord not populated, fetching separately...');
       const Property = mongoose.model('Property');
       const property = await Property.findById(application.property._id || application.property)
         .populate('landlord', 'firstName lastName email');
       
       if (property) {
         application.property = property;
-        console.log('Property fetched separately:', { property, landlord: property.landlord });
       }
     }
 
@@ -51,7 +42,6 @@ export const getInsuranceDocuments = async (req, res) => {
     if (userRole === 'tenant') {
       // Check if tenant is populated or if it's just an ObjectId
       const tenantId = application.tenant._id || application.tenant;
-      console.log('Tenant check:', { tenantId: tenantId?.toString(), userId: userId.toString() });
       if (tenantId.toString() !== userId.toString()) {
         return res.status(403).json({ message: 'Not authorized to view this application' });
       }
@@ -60,14 +50,7 @@ export const getInsuranceDocuments = async (req, res) => {
     if (userRole === 'landlord') {
       // Check if landlord is populated or if it's just an ObjectId
       const landlordId = application.property?.landlord?._id || application.property?.landlord;
-      console.log('Landlord check:', { 
-        landlordId: landlordId?.toString(), 
-        userId: userId.toString(),
-        propertyExists: !!application.property,
-        landlordExists: !!application.property?.landlord,
-        propertyId: application.property?._id,
-        landlordType: typeof application.property?.landlord
-      });
+      
       if (!landlordId || landlordId.toString() !== userId.toString()) {
         return res.status(403).json({ message: 'Not authorized to view this application' });
       }
@@ -277,14 +260,7 @@ export const generateInsuranceSummary = async (req, res) => {
     }
 
     const landlordId = application.property?.landlord?._id || application.property?.landlord;
-    console.log('[generateInsuranceSummary] Landlord check:', {
-      landlordId: landlordId?.toString(),
-      userId: userId.toString(),
-      propertyExists: !!application.property,
-      landlordExists: !!application.property?.landlord,
-      propertyId: application.property?._id,
-      landlordType: typeof application.property?.landlord
-    });
+    
     if (!landlordId || landlordId.toString() !== userId.toString()) {
       return res.status(403).json({ message: 'Not authorized to generate summaries for this application' });
     }

@@ -56,13 +56,7 @@ const TenantDashboard = () => {
         profile.proofOfIncome && 
         profile.monthsAheadCanPay;
 
-      console.log('Profile completion check:', {
-        profile,
-        isProfileComplete,
-        hasIdentity: !!profile?.proofOfIdentity,
-        hasIncome: !!profile?.proofOfIncome,
-        paymentStatus: profile?.monthsAheadCanPay
-      });
+      // Profile completion check
 
       // Only show profile modal if profile is actually incomplete
       if (!isProfileComplete) {
@@ -83,7 +77,7 @@ const TenantDashboard = () => {
           });
           setTickets(ticketsRes.data);
         } catch (error) {
-          console.error('Error fetching tickets:', error);
+          // Error fetching tickets
           setTicketsError('Failed to load tickets');
           setTickets([]); // Reset tickets to empty array
         }
@@ -92,10 +86,10 @@ const TenantDashboard = () => {
           const paymentsRes = await axios.get(`${API_ENDPOINTS.PAYMENTS}/tenant/${approvedApplication._id}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          console.log('Payments response:', paymentsRes.data);
+          // Payments response
           setPayments(paymentsRes.data);
         } catch (error) {
-          console.error('Error fetching payments:', error);
+          // Error fetching payments
           setPaymentsError('Failed to load payments');
           setPayments([]); // Reset payments to empty array
         }
@@ -110,12 +104,12 @@ const TenantDashboard = () => {
           );
           setPaymentSetupStatus(paymentSetupRes.data);
         } catch (error) {
-          console.error('Error fetching payment setup status:', error);
+          // Error fetching payment setup status
           setPaymentSetupStatus({ setupExists: false, setupCompleted: false });
         }
       }
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+      // Error fetching dashboard data
       // Only show profile modal on actual errors, not just for incomplete profile
       if (error.response?.status === 404) {
         setShowProfileModal(true);
@@ -133,7 +127,7 @@ const TenantDashboard = () => {
 
   // Add useEffect to log payments state changes
   useEffect(() => {
-    console.log('Payments state updated:', payments);
+    // Payments state updated
   }, [payments]);
 
   const handlePaymentSetupSuccess = () => {
@@ -180,7 +174,7 @@ const TenantDashboard = () => {
       toast.success('Application promoted to pending status');
       fetchDashboardData();
     } catch (error) {
-      console.error('Error promoting application:', error);
+      // Error promoting application
       toast.error(error.response?.data?.message || 'Failed to promote application');
     }
   };
@@ -787,7 +781,7 @@ const TenantDashboard = () => {
                 setShowCancelModal(false);
                 fetchDashboardData();
               } catch (error) {
-                console.error('Error cancelling viewing:', error);
+                // Error cancelling viewing
                 toast.error(error.response?.data?.message || 'Failed to cancel viewing');
               }
             }}

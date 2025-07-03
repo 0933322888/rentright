@@ -26,7 +26,7 @@ export function useTickets(propertyId) {
       setTickets(response.data);
       setHasNewTickets(response.data.some(ticket => ticket.status === 'new'));
     } catch (error) {
-      console.error('Error fetching tickets:', error);
+      // Error fetching tickets
       setError('Failed to load tickets');
       toast.error('Failed to load tickets');
     } finally {

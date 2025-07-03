@@ -51,7 +51,7 @@ export async function parseInsuranceDocument(documents) {
       { role: 'user', content: userPrompt }
     ];
 
-    console.log('Sending extracted insurance PDF text to OpenAI for summarization...');
+    // Sending extracted insurance PDF text to OpenAI for summarization
 
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
@@ -61,11 +61,11 @@ export async function parseInsuranceDocument(documents) {
     });
 
     const summary = response.choices[0].message.content;
-    console.log('Insurance document analysis completed successfully');
+    // Insurance document analysis completed successfully
 
     return summary;
   } catch (error) {
-    console.error('Error parsing insurance documents:', error);
+    // Error parsing insurance documents
     return `Error analyzing insurance documents: ${error.message}\n\nPlease review the insurance documents manually to ensure all coverage requirements are met. If you continue to experience issues, please contact support.`;
   }
 }
@@ -168,7 +168,7 @@ Return as JSON with all available fields.`;
         throw new Error('No JSON found in response');
       }
     } catch (e) {
-      console.error('Error parsing AI response:', e);
+      // Error parsing AI response
       return {
         error: 'Could not parse AI response',
         raw: text,
@@ -176,7 +176,7 @@ Return as JSON with all available fields.`;
       };
     }
   } catch (error) {
-    console.error('Error extracting insurance fields:', error);
+    // Error extracting insurance fields
     return {
       error: 'Field extraction failed',
       message: error.message,

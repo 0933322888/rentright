@@ -102,8 +102,7 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         }
       );
-      console.log('Lease agreement details:', response.data);
-      console.log('User role:', user?.role);
+              // Lease agreement details and user role
       setAgreementStatus(response.data);
       setComments(response.data.comments || []);
       
@@ -114,14 +113,14 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
         approved: ['tenant_approved', 'landlord_approved', 'signed'].includes(response.data.status)
       });
     } catch (error) {
-      console.error('Error fetching lease agreement details:', error);
+              // Error fetching lease agreement details
       toast.error('Failed to load lease agreement details');
     }
   };
 
   const getLocationInfo = (location) => {
     if (!location) {
-      console.error('Location data is missing');
+              // Location data is missing
       return null;
     }
 
@@ -162,7 +161,7 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
       }
     }
 
-    console.error('Invalid location format:', location);
+            // Invalid location format
     return null;
   };
 
@@ -170,7 +169,7 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
     try {
       // Get the property location from lease details
       if (!leaseDetails?.property?.location) {
-        console.error('Property location data is missing:', leaseDetails?.property?.location);
+        // Property location data is missing
         toast.error('Property location information is missing');
         return;
       }
@@ -212,7 +211,7 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
       };
       onLeaseUpdate(updatedLeaseDetails);
     } catch (error) {
-      console.error('Error fetching lease agreement document:', error);
+      // Error fetching lease agreement document
       if (error.response?.status === 404) {
         toast.error('No lease agreement template available for this location');
       } else if (error.response?.status === 403) {
@@ -226,7 +225,7 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
   const handlePreview = async () => {
     try {
       if (!leaseDetails?.property?.location) {
-        console.error('Property location data is missing:', leaseDetails?.property?.location);
+        // Property location data is missing
         toast.error('Property location information is missing');
         return;
       }
@@ -259,7 +258,7 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
       setPreviewUrl(url);
       setShowPreviewDialog(true);
     } catch (error) {
-      console.error('Error accessing lease agreement:', error);
+      // Error accessing lease agreement
       if (error.response?.status === 401) {
         toast.error('Your session has expired. Please log in again.');
       } else if (error.response?.status === 403) {
@@ -275,7 +274,7 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
   const handleDownload = async () => {
     try {
       if (!leaseDetails?.property?.location) {
-        console.error('Property location data is missing:', leaseDetails?.property?.location);
+        // Property location data is missing
         toast.error('Property location information is missing');
         return;
       }
@@ -309,7 +308,7 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
 
       setStepStatus(prev => ({ ...prev, downloaded: true }));
     } catch (error) {
-      console.error('Error downloading lease agreement:', error);
+      // Error downloading lease agreement
       if (error.response?.status === 404) {
         toast.error('No lease agreement template available for this location');
       } else if (error.response?.status === 403) {
@@ -348,7 +347,7 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
       setShowSigningDialog(true);
       toast.success('Lease agreement sent for signing');
     } catch (error) {
-      console.error('Error initiating signing:', error);
+      // Error initiating signing
       toast.error('Failed to initiate signing process');
     } finally {
       setLoading(false);
@@ -399,7 +398,7 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
       toast.success('Lease terminated successfully');
       navigate('/dashboard');
     } catch (err) {
-      console.error('Error terminating lease:', err);
+      // Error terminating lease
       toast.error('Failed to terminate lease');
     }
   };
@@ -452,7 +451,7 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
       setShowUploadDialog(false);
       setSelectedFile(null);
     } catch (error) {
-      console.error('Error uploading document:', error);
+      // Error uploading document
       toast.error(error.response?.data?.message || 'Failed to upload document');
     } finally {
       setUploading(false);
@@ -481,7 +480,7 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
 
       toast.success('Document deleted successfully');
     } catch (error) {
-      console.error('Error deleting document:', error);
+      // Error deleting document
       toast.error('Failed to delete document');
     }
   };
@@ -508,7 +507,7 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
       setReplyingTo(null);
       toast.success('Comment added successfully');
     } catch (error) {
-      console.error('Error adding comment:', error);
+      // Error adding comment
       toast.error('Failed to add comment');
     }
   };
@@ -527,7 +526,7 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
       setStepStatus(prev => ({ ...prev, approved: true }));
       toast.success('Lease agreement approved successfully');
     } catch (error) {
-      console.error('Error approving lease agreement:', error);
+      // Error approving lease agreement
       toast.error(error.response?.data?.message || 'Failed to approve lease agreement');
     }
   };
@@ -551,7 +550,7 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
       setShowDatePicker(false);
       toast.success('Lease start date updated successfully');
     } catch (error) {
-      console.error('Error updating lease start date:', error);
+      // Error updating lease start date
       toast.error(error.response?.data?.message || 'Failed to update lease start date');
     }
   };
@@ -569,7 +568,7 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
       setAgreementStatus(response.data);
       toast.success('Lease start date approved successfully');
     } catch (error) {
-      console.error('Error approving lease start date:', error);
+      // Error approving lease start date
       toast.error(error.response?.data?.message || 'Failed to approve lease start date');
     }
   };
@@ -593,15 +592,6 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
     // Check if lease start date needs to be set or approved
     const leaseStartDate = agreementStatus.leaseStartDate;
     
-    // Debug logging to understand the current state
-    console.log('Lease start date state:', {
-      leaseStartDate,
-      userRole: user?.role,
-      isTenant,
-      isLandlord,
-      applicationStatus: leaseDetails?.status
-    });
-
     // --- PRIORITIZE landlord set date blocks ---
     // Case: Landlord changed lease start date and tenant needs to approve
     if (leaseStartDate?.date && leaseStartDate?.setBy === 'landlord' && !leaseStartDate?.approvedBy && isTenant) {
@@ -1032,14 +1022,7 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
       status: stepStatus.approved,
       actions: (
         <Box>
-          {console.log('Rendering approve step:', {
-            userRole: user?.role,
-            agreementStatus: agreementStatus?.status,
-            isTenant: user?.role === 'tenant',
-            isLandlord: user?.role === 'landlord',
-            tenantButtonDisabled: agreementStatus?.status === 'tenant_approved' || agreementStatus?.status === 'signed',
-            landlordButtonDisabled: agreementStatus?.status !== 'tenant_approved' || agreementStatus?.status === 'landlord_approved' || agreementStatus?.status === 'signed'
-          })}
+          {/* Rendering approve step */}
           {user?.role === 'tenant' && (
             <Button
               variant="contained"
@@ -1088,7 +1071,7 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
                     setAgreementStatus(response.data);
                     toast.success('Changes requested successfully');
                   } catch (error) {
-                    console.error('Error requesting changes:', error);
+                    // Error requesting changes
                     toast.error(error.response?.data?.message || 'Failed to request changes');
                   }
                 }}
@@ -1137,21 +1120,23 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
         return (
           <Alert 
             severity={alertColor} 
+            variant='filled'
             sx={{ 
               mb: 3,
+              background: 'linear-gradient(90deg,rgba(74, 100, 173, 1) 0%,rgb(172, 194, 235) 100%)',
               '& .MuiAlert-message': {
                 width: '100%'
               }
             }}
           >
             <Box sx={{ width: '100%' }}>
-              <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
+              <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: 'white' }}>
                 {nextStepInfo.title}
               </Typography>
               <Typography variant="body1" sx={{ mb: 1 }}>
                 {nextStepInfo.message}
               </Typography>
-              <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
+              <Typography variant="body2" sx={{ fontStyle: 'italic', color: 'white' }}>
                 <strong>Next Step:</strong> {nextStepInfo.action}
               </Typography>
             </Box>
@@ -1264,125 +1249,7 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
           </div>
         </div>
         
-        <div className="space-y-6">
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Property Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-600">Property Name</p>
-                <p className="font-medium">{leaseDetails.property.title}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Location</p>
-                <p className="font-medium">{formatLocation(leaseDetails.property.location)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Monthly Rent</p>
-                <p className="font-medium">${leaseDetails.property.price}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Lease Start Date</p>
-                <p className="font-medium">{new Date(leaseDetails.startDate).toLocaleDateString()}</p>
-              </div>
-            </div>
-          </div>
 
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Terms and Conditions</h3>
-            <div className="prose max-w-none">
-              <ul className="list-disc pl-5 space-y-2">
-                <li>Monthly rent payment is due on the 1st of each month</li>
-                <li>A late fee of $50 will be charged for payments received after the 5th of the month</li>
-                <li>Tenant is responsible for utilities unless otherwise specified</li>
-                <li>Security deposit is equal to one month's rent</li>
-                <li>Tenant must provide 30 days notice before moving out</li>
-                <li>No smoking allowed on the premises</li>
-                <li>Pets are subject to landlord approval and may require additional deposit</li>
-              </ul>
-            </div>
-          </div>
-
-          <div>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">Important Documents</Typography>
-              <Button
-                variant="contained"
-                startIcon={<UploadIcon />}
-                onClick={() => setShowUploadDialog(true)}
-              >
-                Upload Document
-              </Button>
-            </Box>
-
-            <Paper sx={{ p: 2 }}>
-              <List>
-                {/* Lease Agreement */}
-                <ListItem>
-                  <ListItemText
-                    primary="Lease Agreement PDF"
-                    secondary={leaseDetails.envelopeId 
-                      ? 'View the signed lease agreement'
-                      : 'Download the complete lease agreement'}
-                  />
-                  <ListItemSecondaryAction>
-                    {leaseDetails.envelopeId ? (
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => window.open(signingUrl, '_blank')}
-                      >
-                        View Document
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handleInitiateSigning}
-                        disabled={loading}
-                      >
-                        {loading ? 'Preparing...' : 'Send for Signing'}
-                      </Button>
-                    )}
-                  </ListItemSecondaryAction>
-                </ListItem>
-
-                <Divider />
-
-                {/* Tenant Uploaded Documents */}
-                {leaseDetails.tenantDocuments && leaseDetails.tenantDocuments.length > 0 && (
-                  <>
-                    {leaseDetails.tenantDocuments.map((doc) => (
-                      <ListItem key={doc._id}>
-                        <ListItemText
-                          primary={doc.originalName}
-                          secondary={`Uploaded on ${new Date(doc.uploadedAt).toLocaleDateString()}`}
-                        />
-                        <ListItemSecondaryAction>
-                          <Tooltip title="Preview">
-                            <IconButton
-                              onClick={() => window.open(doc.url, '_blank')}
-                              color="primary"
-                            >
-                              <PreviewIcon />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Delete">
-                            <IconButton
-                              onClick={() => handleDeleteDocument(doc._id)}
-                              color="error"
-                            >
-                              <DeleteIcon />
-                            </IconButton>
-                          </Tooltip>
-                        </ListItemSecondaryAction>
-                      </ListItem>
-                    ))}
-                  </>
-                )}
-              </List>
-            </Paper>
-          </div>
-        </div>
       </div>
 
       <Dialog

@@ -41,9 +41,8 @@ initializeDefaultSettings().catch(console.error);
 
 // Middleware
 app.use(cors({
-  
   origin: process.env.NODE_ENV === 'prod' ? process.env.PROD_FRONTEND_URL : process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
+  credentials: true,
 }));
 app.use(express.json());
 
@@ -108,7 +107,7 @@ app.use((error, req, res, next) => {
 
 // General error handling middleware
 app.use((error, req, res, next) => {
-  console.error('Error:', error);
+      // Error handling
   res.status(500).json({ message: 'Internal server error' });
 });
 
@@ -125,5 +124,5 @@ if (process.env.NODE_ENV === 'production') {
 const PORT = process.env.NODE_ENV === 'prod' ? process.env.AWS_BACKEND_PORT || 8080 : process.env.DEV_BACKEND_PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  // Server started
 }); 

@@ -41,7 +41,7 @@ export default function AdminTickets() {
       setError('');
     } catch (error) {
       setError('Failed to load tickets');
-      console.error('Error fetching tickets:', error);
+      // Error fetching tickets
     } finally {
       setLoading(false);
     }

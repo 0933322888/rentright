@@ -69,7 +69,7 @@ const LandlordDashboard = () => {
         setPayments(paymentsRes.data);
         setStatistics(statsRes.data);
       } catch (error) {
-        console.error('Error fetching landlord data:', error);
+        // Error fetching landlord data
         toast.error('Failed to load landlord data');
       } finally {
         setLoading(false);
@@ -195,9 +195,9 @@ const LandlordDashboard = () => {
   const OverviewTab = () => (
     <>
       {/* Statistics Cards */}
-      <Row className="mb-6">
+      <Row className="mb-6 mx-2">
         <Col md={3} className="mb-3">
-          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: 18, background: '#eaf3fb' }}>
+          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: 12, background: '' }}>
             <Card.Body className="text-center">
               <div className="d-flex align-items-center justify-content-center mb-3">
                 <div className="bg-primary bg-opacity-10 rounded-circle p-3">
@@ -216,7 +216,7 @@ const LandlordDashboard = () => {
         </Col>
 
         <Col md={3} className="mb-3">
-          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: 18, background: '#f0f7f4' }}>
+          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: 12, background: '' }}>
             <Card.Body className="text-center">
               <div className="d-flex align-items-center justify-content-center mb-3">
                 <div className="bg-success bg-opacity-10 rounded-circle p-3">
@@ -235,7 +235,7 @@ const LandlordDashboard = () => {
         </Col>
 
         <Col md={3} className="mb-3">
-          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: 18, background: '#eaf3fb' }}>
+          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: 12, background: '' }}>
             <Card.Body className="text-center">
               <div className="d-flex align-items-center justify-content-center mb-3">
                 <div className="bg-warning bg-opacity-10 rounded-circle p-3">
@@ -254,7 +254,7 @@ const LandlordDashboard = () => {
         </Col>
 
         <Col md={3} className="mb-3">
-          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: 18, background: '#f0f7f4' }}>
+          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: 12, background: '' }}>
             <Card.Body className="text-center">
               <div className="d-flex align-items-center justify-content-center mb-3">
                 <div className="bg-danger bg-opacity-10 rounded-circle p-3">
@@ -274,44 +274,12 @@ const LandlordDashboard = () => {
       </Row>
 
       {/* New row for Quick Actions, Recent Tickets, Occupancy Rate */}
-      <Row className="mb-6">
-        <Col md={4} className="mb-3">
-          {/* Quick Actions card */}
-          <Card className="h-100 border-1 shadow-sm" style={{ borderRadius: 18, background: '#f0f7f4' }}>
-            <Card.Header className="bg-white border-bottom" style={{ borderRadius: 18 }}>
-              <div className="d-flex align-items-center">
-                <FaBell className="me-2 text-primary" />
-                <span className="fw-bold" style={{ fontSize: '1.1rem' }}>Quick Actions</span>
-              </div>
-            </Card.Header>
-            <Card.Body>
-              <div className="d-grid gap-2">
-                <Button variant="success" size="sm">
-                  <div className="d-flex align-items-center gap-1 justify-content-center py-2">
-                    <FaPlus className="me-2" />
-                    <span>Add New Property</span>
-                  </div>
-                </Button>
-                <Button variant="primary" size="sm">
-                  <div className="d-flex align-items-center gap-1 justify-content-center py-2">
-                    <FaHome className="me-2" />
-                    <span>Manage Properties</span>
-                  </div>
-                </Button>
-                <Button variant="warning" size="sm">
-                  <div className="d-flex align-items-center gap-1 justify-content-center py-2">
-                    <FaTicketAlt className="me-2" />
-                    <span>View Tickets</span>
-                  </div>
-                </Button>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
+      <Row className="mb-6 mx-2">
+ 
         <Col md={4} className="mb-3">
           {/* Recent Tickets card */}
-          <Card className="h-100 border-1 shadow-sm" style={{ borderRadius: 18, background: '#eaf3fb' }}>
-            <Card.Header className="bg-white border-bottom" style={{ borderRadius: 18 }}>
+          <Card className="h-100 shadow-sm hover:shadow-md transition-shadow duration-300" style={{ borderRadius: 12, background: '' }}>
+            <Card.Header className="bg-white border-bottom" style={{ borderRadius: 12 }}>
               <div className="d-flex align-items-center">
                 <FaExclamationTriangle className="me-2 text-danger" />
                 <span className="fw-bold" style={{ fontSize: '1.1rem' }}>Recent Tickets</span>
@@ -355,9 +323,42 @@ const LandlordDashboard = () => {
           </Card>
         </Col>
         <Col md={4} className="mb-3">
+          {/* Quick Actions card */}
+          <Card className="h-100 shadow-sm hover:shadow-md transition-shadow duration-300" style={{ borderRadius: 12, background: '' }}>
+            <Card.Header className="bg-white border-bottom" style={{ borderRadius: 12 }}>
+              <div className="d-flex align-items-center">
+                <FaBell className="me-2 text-primary" />
+                <span className="fw-bold" style={{ fontSize: '1.1rem' }}>Quick Actions</span>
+              </div>
+            </Card.Header>
+            <Card.Body>
+              <div className="d-grid gap-2">
+                <Button variant="success" size="sm">
+                  <div className="d-flex align-items-center gap-1 justify-content-center py-2">
+                    <FaPlus className="me-2" />
+                    <span>Add New Property</span>
+                  </div>
+                </Button>
+                <Button variant="primary" size="sm">
+                  <div className="d-flex align-items-center gap-1 justify-content-center py-2">
+                    <FaHome className="me-2" />
+                    <span>Manage Properties</span>
+                  </div>
+                </Button>
+                <Button variant="warning" size="sm">
+                  <div className="d-flex align-items-center gap-1 justify-content-center py-2">
+                    <FaTicketAlt className="me-2" />
+                    <span>View Tickets</span>
+                  </div>
+                </Button>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={4} className="mb-3">
           {/* Occupancy Rate card */}
-          <Card className="h-100 border-1 shadow-sm" style={{ borderRadius: 18, background: '#f0f7f4' }}>
-            <Card.Header className="bg-white border-bottom" style={{ borderRadius: 18 }}>
+          <Card className="h-100 shadow-sm hover:shadow-md transition-shadow duration-300" style={{ borderRadius: 12, background: '' }}>
+            <Card.Header className="bg-white border-bottom" style={{ borderRadius: 12 }}>
               <div className="d-flex align-items-center">
                 <FaChartLine className="me-2 text-success" />
                 <span className="fw-bold" style={{ fontSize: '1.1rem' }}>Occupancy Rate</span>
@@ -381,13 +382,13 @@ const LandlordDashboard = () => {
       </Row>
 
       {/* Main Content */}
-      <Row>
+      <Row className="mx-2">
         <Col lg={12}>
           {/* Recent Applications */}
           {applications.filter(
             app => app.status !== 'cancelled' && app.status !== 'rejected' && app.status !== 'approved'
           ).length > 0 && (
-              <Card className="mb-4 border-0 shadow-sm">
+              <Card className="mb-4 border-0 shadow-sm hover:shadow-md transition-shadow duration-300">
                 <Card.Header className="bg-white border-bottom">
                   <div className="d-flex justify-content-between align-items-center">
                     <h5 className="mb-0">
@@ -445,9 +446,9 @@ const LandlordDashboard = () => {
   const FinancesTab = () => (
     <>
       {/* Financial Statistics Cards */}
-      <Row className="mb-6">
+      <Row className="mb-6 mx-2">
         <Col md={3} className="mb-3">
-          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: 18, background: '#eaf3fb' }}>
+          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: 12, background: '' }}>
             <Card.Body className="text-center">
               <div className="d-flex align-items-center justify-content-center mb-3">
                 <div className="bg-success bg-opacity-10 rounded-circle p-3">
@@ -466,7 +467,7 @@ const LandlordDashboard = () => {
         </Col>
 
         <Col md={3} className="mb-3">
-          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: 18, background: '#f0f7f4' }}>
+          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: 12, background: '' }}>
             <Card.Body className="text-center">
               <div className="d-flex align-items-center justify-content-center mb-3">
                 <div className="bg-warning bg-opacity-10 rounded-circle p-3">
@@ -485,7 +486,7 @@ const LandlordDashboard = () => {
         </Col>
 
         <Col md={3} className="mb-3">
-          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: 18, background: '#eaf3fb' }}>
+          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: 12, background: '' }}>
             <Card.Body className="text-center">
               <div className="d-flex align-items-center justify-content-center mb-3">
                 <div className="bg-danger bg-opacity-10 rounded-circle p-3">
@@ -504,7 +505,7 @@ const LandlordDashboard = () => {
         </Col>
 
         <Col md={3} className="mb-3">
-          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: 18, background: '#f0f7f4' }}>
+          <Card className="h-100 border-0 shadow-sm" style={{ borderRadius: 12, background: '' }}>
             <Card.Body className="text-center">
               <div className="d-flex align-items-center justify-content-center mb-3">
                 <div className="bg-info bg-opacity-10 rounded-circle p-3">
@@ -524,11 +525,11 @@ const LandlordDashboard = () => {
       </Row>
 
       {/* New row for Financial Summary, Quick Actions, Monthly Revenue Trend */}
-      <Row className="mb-6">
+      <Row className="mb-6 mx-2">
         <Col md={4} className="mb-3">
           {/* Financial Summary card */}
-          <Card className="mb-4 border-1 shadow-sm" style={{ borderRadius: 18 }}>
-            <Card.Header className="bg-white border-bottom" style={{ borderRadius: 18 }}>
+          <Card className="mb-4 shadow-sm hover:shadow-md transition-shadow duration-300" style={{ borderRadius: 12 }}>
+            <Card.Header className="bg-white border-bottom" style={{ borderRadius: 12 }}>
               <div className="d-flex align-items-center" >
                 <FaChartBar className="me-2 text-primary" />
                 <span className="fw-bold" style={{ fontSize: '1.1rem' }}>Financial Summary</span>
@@ -562,8 +563,8 @@ const LandlordDashboard = () => {
         </Col>
         <Col md={4} className="mb-3">
           {/* Quick Actions card */}
-          <Card className="mb-4 border-1 shadow-sm" style={{ borderRadius: 18, background: '#f0f7f4' }}>
-            <Card.Header className="bg-white border-bottom" style={{ borderRadius: 18 }}>
+          <Card className="mb-4 shadow-sm hover:shadow-md transition-shadow duration-300" style={{ borderRadius: 12, background: '' }}>
+            <Card.Header className="bg-white border-bottom" style={{ borderRadius: 12 }}>
               <div className="d-flex align-items-center">
                 <FaDollarSign className="me-2 text-success" />
                 <span className="fw-bold" style={{ fontSize: '1.1rem' }}>Quick Actions</span>
@@ -595,8 +596,8 @@ const LandlordDashboard = () => {
         </Col>
         <Col md={4} className="mb-3">
           {/* Monthly Revenue Trend card */}
-          <Card className="border-1 shadow-sm" style={{ borderRadius: 18 }}>
-            <Card.Header className="bg-white border-bottom" style={{ borderRadius: 18 }}>
+          <Card className="shadow-sm hover:shadow-md transition-shadow duration-300" style={{ borderRadius: 12 }}>
+            <Card.Header className="bg-white border-bottom" style={{ borderRadius: 12 }}>
               <div className="d-flex align-items-center">
                 <FaChartLine className="me-2 text-success" />
                 <span className="fw-bold" style={{ fontSize: '1.1rem' }}>Monthly Revenue Trend</span>
@@ -614,13 +615,13 @@ const LandlordDashboard = () => {
       </Row>
 
       {/* Financial Content */}
-      <Row>
+      <Row className="mx-2">
         {/* Left Column */}
         <Col lg={12}>
           {/* Upcoming Payments */}
-          <Card className="mb-4 border-1 shadow-sm">
-            <Card.Header className="bg-white border-bottom" style={{ borderRadius: 18 }}>
-              <div className="d-flex align-items-center" style={{ borderRadius: 18 }}>
+          <Card className="mb-4 shadow-sm hover:shadow-md transition-shadow duration-300">
+            <Card.Header className="bg-white border-bottom" style={{ borderRadius: 12 }}>
+              <div className="d-flex align-items-center" style={{ borderRadius: 12 }}>
                 <FaCalendarAlt className="me-2 text-warning" />
                 <span className="fw-bold" style={{ fontSize: '1.1rem' }}>Upcoming Payments</span>
               </div>
@@ -663,8 +664,8 @@ const LandlordDashboard = () => {
           </Card>
 
           {/* Payment History */}
-          <Card className="mb-4 border-1 shadow-sm">
-            <Card.Header className="bg-white border-bottom" style={{ borderRadius: 18 }}>
+          <Card className="mb-4 shadow-sm hover:shadow-md transition-shadow duration-300">
+            <Card.Header className="bg-white border-bottom" style={{ borderRadius: 12 }}>
               <div className="d-flex align-items-center">
                 <FaReceipt className="me-2 text-info" />
                 <span className="fw-bold" style={{ fontSize: '1.1rem' }}>Recent Payment History</span>
@@ -708,21 +709,21 @@ const LandlordDashboard = () => {
   );
 
   return (
-    <div className="bg-white min-h-screen">
+    <div style={{ background: '#f7f7f9', minHeight: '100vh', fontFamily: 'Inter, Roboto, Arial, sans-serif' }}>
       <div className="px-6 py-8">
 
         {/* Tabs */}
         <Tab.Container activeKey={activeTab} onSelect={(k) => setActiveTab(k)}>
-          <Row className="mb-4">
+          <Row className="mb-4 mx-2">
             <Col>
-              <div className="bg-light rounded p-3">
-                <Nav variant="tabs" className="border-0">
+              <div className="bg-light rounded p-0" style={{ background: 'linear-gradient(to right, rgb(74 100 173), rgb(240, 247, 244))' }}>
+                <Nav variant="tabs" className="border-0" >
                   <Nav.Item className="me-3">
                     <Nav.Link
                       eventKey="overview"
                       className={`border-0 px-3 py-2 fw-medium ${activeTab === 'overview'
                           ? 'text-primary border-bottom border-2 border-primary'
-                          : 'text-muted'
+                          : 'text-white'
                         }`}
                     >
                       <FaHome className="me-2" size={14} />
@@ -734,7 +735,7 @@ const LandlordDashboard = () => {
                       eventKey="finances"
                       className={`border-0 px-3 py-2 fw-medium ${activeTab === 'finances'
                           ? 'text-primary border-bottom border-2 border-primary'
-                          : 'text-muted'
+                          : 'text-white'
                         }`}
                     >
                       <FaMoneyBillWave className="me-2" size={14} />

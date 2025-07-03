@@ -251,7 +251,6 @@ export const updateTenant = async (req, res) => {
 export const addViewingDates = async (req, res) => {
   try {
     const { dates } = req.body;
-    console.log('Received dates:', JSON.stringify(dates, null, 2));
 
     // Validate dates array
     if (!Array.isArray(dates) || dates.length === 0) {
@@ -304,7 +303,6 @@ export const addViewingDates = async (req, res) => {
       return res.status(404).json({ message: 'Property not found' });
     }
 
-    console.log('Updated property:', updatedProperty);
     res.json({ 
       message: 'Viewing dates added successfully',
       property: updatedProperty 
@@ -434,7 +432,6 @@ export const updateViewingDate = async (req, res) => {
   try {
     const { date, startTime, endTime } = req.body;
     const { dateId } = req.params;
-    console.log('Update request:', { dateId, date, startTime, endTime });
 
     // Validate date
     if (!date) {
@@ -462,25 +459,19 @@ export const updateViewingDate = async (req, res) => {
       });
     }
 
-    console.log('Found viewing date at index:', viewingDateIndex);
-    console.log('Current viewing date:', req.property.viewingDates[viewingDateIndex]);
-
     const existingDate = req.property.viewingDates[viewingDateIndex];
     const hasBookedSlots = existingDate.timeSlots.some(slot => slot.isBooked);
 
     // If startTime and endTime are provided, update the time slots
     if (startTime && endTime) {
       try {
-        console.log('Generating time slots for:', { startTime, endTime });
         // Generate new time slots
         const timeSlots = generateViewingTimeSlots(startTime, endTime);
-        console.log('Generated time slots:', timeSlots);
 
         let updatedTimeSlots;
         if (hasBookedSlots) {
           // If there are booked slots, we need to preserve them
           const bookedSlots = existingDate.timeSlots.filter(slot => slot.isBooked);
-          console.log('Preserving booked slots:', bookedSlots);
           
           // Combine booked slots with new unbooked slots
           updatedTimeSlots = [
@@ -495,8 +486,6 @@ export const updateViewingDate = async (req, res) => {
         } else {
           updatedTimeSlots = timeSlots;
         }
-
-        console.log('Final time slots to update:', updatedTimeSlots);
 
         // Update the property with new time slots
         const updatedProperty = await Property.findByIdAndUpdate(
@@ -514,7 +503,6 @@ export const updateViewingDate = async (req, res) => {
           return res.status(404).json({ message: 'Property not found' });
         }
 
-        console.log('Updated property viewing dates:', updatedProperty.viewingDates[viewingDateIndex]);
         res.json({ 
           message: 'Viewing date and time slots updated successfully',
           property: updatedProperty 
@@ -542,7 +530,6 @@ export const updateViewingDate = async (req, res) => {
         return res.status(404).json({ message: 'Property not found' });
       }
 
-      console.log('Updated property (date only):', updatedProperty.viewingDates[viewingDateIndex]);
       res.json({ 
         message: 'Viewing date updated successfully',
         property: updatedProperty 
@@ -640,8 +627,6 @@ export const getLeaseAgreementFile = async (req, res) => {
       token = req.headers.authorization.split(' ')[1];
     }
 
-    console.log('Token received:', token ? 'Present' : 'Missing'); // Debug log
-
     if (!token) {
       return res.status(401).json({ message: 'Not authorized, no token' });
     }
@@ -649,18 +634,15 @@ export const getLeaseAgreementFile = async (req, res) => {
     try {
       // Verify the token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      console.log('Token decoded:', decoded); // Debug log
       
       // Get user from database to verify role
       const user = await User.findById(decoded.id);
-      console.log('User found:', user ? `Role: ${user.role}` : 'Not found'); // Debug log
 
       if (!user || user.role !== 'admin') {
         return res.status(403).json({ message: 'Not authorized, admin access required' });
       }
 
       const filePath = getLeaseAgreementPath(countryCode, region);
-      console.log('File path:', filePath); // Debug log
       
       if (!fs.existsSync(filePath)) {
         return res.status(404).json({ message: 'Lease agreement not found' });
@@ -693,11 +675,8 @@ export const getLeaseAgreementFile = async (req, res) => {
 
 export const geocodeProperties = async (req, res) => {
   try {
-    console.log('Admin triggered geocoding process for existing properties...');
     
     const result = await geocodeExistingProperties(Property);
-    
-    console.log('Geocoding process completed:', result);
     
     res.json({
       message: 'Geocoding process completed successfully',

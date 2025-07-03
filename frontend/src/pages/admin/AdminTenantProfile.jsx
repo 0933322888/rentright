@@ -80,7 +80,6 @@ export default function AdminTenantProfile() {
       const response = await axios.get(`${API_ENDPOINTS.ADMIN_TENANTS}/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
-      console.log('Tenant data:', response.data);
       setTenant(response.data);
     } catch (err) {
       setError('Failed to fetch tenant details');

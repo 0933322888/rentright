@@ -49,7 +49,7 @@ export function useApplications(propertyId) {
         setSelectedTenantIndex((populatedApplications.length - 1).toString());
       }
     } catch (err) {
-      console.error('Error fetching applications:', err);
+      // Error fetching applications
       toast.error('Failed to fetch applications');
     }
   };
@@ -70,7 +70,7 @@ export function useApplications(propertyId) {
       }
       setApplicationCounts(counts);
     } catch (error) {
-      console.error('Error fetching application counts:', error);
+      // Error fetching application counts
       toast.error('Failed to fetch application counts');
     }
   };
@@ -89,7 +89,7 @@ export function useApplications(propertyId) {
       await fetchApplications();
       toast.success(`Application ${action === 'approve' ? 'approved' : 'declined'} successfully`);
     } catch (error) {
-      console.error('Error updating application:', error);
+      // Error updating application
       toast.error('Failed to update application status');
     }
   };

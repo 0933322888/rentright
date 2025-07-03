@@ -30,7 +30,7 @@ export const getImageUrl = (imagePath) => {
  * @param {string} fallbackUrl - Optional fallback URL (defaults to data URL)
  */
 export const handleImageError = (event, fallbackUrl = FALLBACK_IMAGE_DATA_URL) => {
-  console.log('Image failed to load:', event.target.src);
+          // Image failed to load
   event.target.src = fallbackUrl;
 };
 

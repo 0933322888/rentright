@@ -37,7 +37,7 @@ export default function AdminProperties() {
       setProperties(response.data);
     } catch (err) {
       setError('Failed to fetch properties');
-      console.error('Error fetching properties:', err);
+      // Error fetching properties
     } finally {
       setLoading(false);
     }
@@ -96,7 +96,7 @@ export default function AdminProperties() {
       fetchProperties();
     } catch (err) {
       toast.error('Failed to approve property');
-      console.error('Error approving property:', err);
+      // Error approving property
     }
   };
 
@@ -114,7 +114,7 @@ export default function AdminProperties() {
       fetchProperties();
     } catch (err) {
       toast.error('Failed to reject property');
-      console.error('Error rejecting property:', err);
+      // Error rejecting property
     }
   };
 
@@ -134,7 +134,7 @@ export default function AdminProperties() {
       fetchProperties();
     } catch (err) {
       toast.error('Failed to delete property');
-      console.error('Error deleting property:', err);
+      // Error deleting property
     }
   };
 
@@ -151,7 +151,7 @@ export default function AdminProperties() {
       fetchProperties();
     } catch (err) {
       toast.error('Failed to update commission status');
-      console.error('Error updating commission status:', err);
+      // Error updating commission status
     }
   };
 

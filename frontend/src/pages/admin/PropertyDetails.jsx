@@ -38,7 +38,7 @@ export default function AdminPropertyDetails() {
       setAdminComments(response.data.property.adminComments || '');
     } catch (err) {
       setError('Failed to fetch property details');
-      console.error('Error fetching property details:', err);
+      // Error fetching property details
     } finally {
       setLoading(false);
     }
@@ -85,21 +85,21 @@ export default function AdminPropertyDetails() {
 
     try {
       const dates = viewingDates.map(date => {
-        console.log('Processing date:', date);
+        // Processing date
         const processedDate = {
           date: date.date.toISOString(),
           timeSlots: date.timeSlots.map(slot => {
-            console.log('Processing time slot:', slot);
+            // Processing time slot
             return {
               startTime: slot.startTime,
               endTime: slot.endTime
             };
           })
         };
-        console.log('Processed date:', processedDate);
+        // Processed date
         return processedDate;
       });
-      console.log('Sending viewing dates:', JSON.stringify(dates, null, 2));
+      // Sending viewing dates
 
       const response = await axios.post(
         `${API_ENDPOINTS.ADMIN_PROPERTIES}/${id}/viewing-dates`,
@@ -108,14 +108,14 @@ export default function AdminPropertyDetails() {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         }
       );
-      console.log('Server response:', response.data);
+              // Server response
 
       toast.success('Viewing dates added successfully');
       setShowAddDates(false);
       setViewingDates([]);
       fetchPropertyDetails();
     } catch (err) {
-      console.error('Error adding viewing dates:', err.response?.data || err);
+      // Error adding viewing dates
       toast.error(err.response?.data?.message || 'Failed to add viewing dates');
     }
   };
@@ -133,7 +133,7 @@ export default function AdminPropertyDetails() {
       navigate('/admin/properties');
     } catch (err) {
       toast.error('Failed to approve property');
-      console.error('Error approving property:', err);
+      // Error approving property
     }
   };
 
@@ -155,7 +155,7 @@ export default function AdminPropertyDetails() {
       navigate('/admin/properties');
     } catch (err) {
       toast.error('Failed to reject property');
-      console.error('Error rejecting property:', err);
+      // Error rejecting property
     }
   };
 
@@ -202,7 +202,7 @@ export default function AdminPropertyDetails() {
       setEditingEndTime('');
       fetchPropertyDetails();
     } catch (err) {
-      console.error('Error updating viewing date:', err.response?.data || err);
+      // Error updating viewing date
       toast.error(err.response?.data?.message || 'Failed to update viewing date');
     }
   };
@@ -223,7 +223,7 @@ export default function AdminPropertyDetails() {
       toast.success('Viewing date deleted successfully');
       fetchPropertyDetails();
     } catch (err) {
-      console.error('Error deleting viewing date:', err.response?.data || err);
+      // Error deleting viewing date
       toast.error(err.response?.data?.message || 'Failed to delete viewing date');
     }
   };

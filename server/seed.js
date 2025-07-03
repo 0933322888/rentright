@@ -6,6 +6,7 @@ import TenantProfile from './models/tenantProfileModel.js';
 import Application from './models/applicationModel.js';
 import Ticket from './models/ticketModel.js';
 import Payment from './models/paymentModel.js';
+import Escalation from './models/escalationModel.js';
 import bcrypt from 'bcryptjs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -21,7 +22,7 @@ dotenv.config({ path: path.resolve(__dirname, '.env') });
 const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
-  console.error('MONGODB_URI is not defined. Please check your .env file.');
+  // MONGODB_URI is not defined. Please check your .env file.
   process.exit(1);
 }
 
@@ -420,9 +421,9 @@ const samplePayments = [
 
 const seed = async () => {
   try {
-    console.log('Connecting to MongoDB...');
+    // Connecting to MongoDB...
     await mongoose.connect(MONGODB_URI);
-    console.log('Connected to MongoDB');
+    // Connected to MongoDB
 
     // Clear existing data
     await User.deleteMany({});
@@ -431,7 +432,8 @@ const seed = async () => {
     await Ticket.deleteMany({});
     await Application.deleteMany({});
     await Payment.deleteMany({});
-    console.log('Cleared existing data');
+    await Escalation.deleteMany({});
+    // Cleared existing data
 
     // Hash passwords
     const hashedLandlords = await Promise.all(
@@ -451,7 +453,7 @@ const seed = async () => {
     // Create users
     const createdLandlords = await User.insertMany(hashedLandlords);
     const createdTenants = await User.insertMany(hashedTenants);
-    console.log('Created users');
+    // Created users
 
     // Create tenant documents for specific tenants
     const tenantProfileData = {
@@ -514,7 +516,7 @@ const seed = async () => {
     ];
 
     await TenantProfile.insertMany(tenantProfiles);
-    console.log('Created tenant profiles');
+    // Created tenant profiles
 
     // Assign landlords to properties
     const propertiesWithLandlords = sampleProperties.map((property, index) => ({
@@ -524,7 +526,7 @@ const seed = async () => {
 
     // Create properties
     const createdProperties = await Property.insertMany(propertiesWithLandlords);
-    console.log('Created properties');
+    // Created properties
 
     // Create an approved application for the first property
     // const approvedApplication = new Application({
@@ -549,10 +551,10 @@ const seed = async () => {
     // await Payment.insertMany(paymentsWithReferences);
     // console.log('Created sample payments');
 
-    console.log('Database seeded successfully');
+    // Database seeded successfully
     process.exit(0);
   } catch (error) {
-    console.error('Error seeding database:', error);
+    // Error seeding database
     process.exit(1);
   }
 };
