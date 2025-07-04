@@ -13,7 +13,7 @@ const paymentSetupSchema = new mongoose.Schema({
   },
   paymentMethodId: {
     type: String,
-    required: true
+    required: false
   },
   paymentMethodType: {
     type: String,

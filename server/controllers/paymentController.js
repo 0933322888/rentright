@@ -2,11 +2,43 @@ import Payment from '../models/paymentModel.js';
 import PaymentSetup from '../models/paymentSetupModel.js';
 import Application from '../models/applicationModel.js';
 import Property from '../models/propertyModel.js';
-import {
-  createPaymentIntent,
-  confirmPaymentIntent,
-  getPaymentIntent
-} from '../utils/stripe.js';
+
+// Stubbed Stripe functions for development
+const createPaymentIntent = async (amount, customerId, metadata = {}) => {
+  // Simulate Stripe payment intent creation
+  const paymentIntentId = `pi_stub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return {
+    id: paymentIntentId,
+    amount: Math.round(amount * 100), // Convert to cents
+    currency: 'cad',
+    customer: customerId,
+    metadata,
+    client_secret: `pi_stub_${paymentIntentId}_secret_${Math.random().toString(36).substr(2, 9)}`,
+    status: 'requires_payment_method'
+  };
+};
+
+const confirmPaymentIntent = async (paymentIntentId, paymentMethodId) => {
+  // Simulate Stripe payment confirmation
+  const chargeId = `ch_stub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return {
+    id: paymentIntentId,
+    status: 'succeeded',
+    latest_charge: chargeId,
+    amount: 1000, // Stubbed amount
+    currency: 'cad'
+  };
+};
+
+const getPaymentIntent = async (paymentIntentId) => {
+  // Simulate getting payment intent details
+  return {
+    id: paymentIntentId,
+    status: 'succeeded',
+    amount: 1000,
+    currency: 'cad'
+  };
+};
 
 // Get tenant's payment history
 export const getTenantPayments = async (req, res) => {
@@ -45,7 +77,7 @@ export const createPayment = async (req, res) => {
       });
     }
 
-    // Create payment intent with Stripe
+    // Create stubbed payment intent with Stripe
     const paymentIntent = await createPaymentIntent(
       amount,
       paymentSetup.stripeCustomerId,
@@ -101,7 +133,7 @@ export const confirmPayment = async (req, res) => {
       return res.status(400).json({ message: 'Payment is not in pending status' });
     }
 
-    // Confirm payment intent with Stripe
+    // Stubbed: Confirm payment intent with Stripe
     const confirmedPaymentIntent = await confirmPaymentIntent(
       payment.stripePaymentIntentId,
       paymentMethodId
@@ -115,19 +147,19 @@ export const confirmPayment = async (req, res) => {
       await payment.save();
 
       res.json({
-        message: 'Payment confirmed successfully',
+        message: 'Payment confirmed successfully (STUBBED)',
         payment,
         paymentIntent: confirmedPaymentIntent
       });
     } else {
       // Payment failed
       payment.status = 'failed';
-      payment.failureReason = confirmedPaymentIntent.last_payment_error?.message || 'Payment failed';
+      payment.failureReason = 'Payment failed (STUBBED)';
       await payment.save();
 
       res.status(400).json({
-        message: 'Payment failed',
-        error: confirmedPaymentIntent.last_payment_error?.message || 'Payment failed'
+        message: 'Payment failed (STUBBED)',
+        error: 'Payment failed'
       });
     }
   } catch (error) {
@@ -252,13 +284,14 @@ export const getPaymentIntentStatus = async (req, res) => {
   try {
     const { paymentIntentId } = req.params;
 
+    // Stubbed: Get payment intent status from Stripe
     const paymentIntent = await getPaymentIntent(paymentIntentId);
-    
+
     res.json({
+      paymentIntentId,
       status: paymentIntent.status,
-      amount: paymentIntent.amount / 100, // Convert from cents
-      currency: paymentIntent.currency,
-      metadata: paymentIntent.metadata
+      amount: paymentIntent.amount,
+      currency: paymentIntent.currency
     });
   } catch (error) {
     console.error('Error getting payment intent status:', error);

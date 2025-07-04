@@ -451,28 +451,99 @@ const EscalationDetailsModal = ({ open, onClose, escalation, onStatusUpdate }) =
   );
 };
 
+// Stubbed Stripe implementation for development
+const createStubbedStripe = () => {
+  return {
+    createPaymentMethod: async ({ type, card }) => {
+      // Simulate Stripe payment method creation
+      return {
+        error: null,
+        paymentMethod: {
+          id: `pm_stub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          type: 'card',
+          card: {
+            brand: 'visa',
+            last4: '4242',
+            exp_month: 12,
+            exp_year: 2025,
+            country: 'CA'
+          }
+        }
+      };
+    }
+  };
+};
+
 const PaymentForm = ({ onSubmit, propertyPrice, onCancel }) => {
   const [amount, setAmount] = useState(propertyPrice?.toString() || '');
-  const [paymentMethod, setPaymentMethod] = useState('credit_card');
   const [description, setDescription] = useState('Monthly Rent');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [useSavedPaymentMethod, setUseSavedPaymentMethod] = useState(true);
+  const [cardNumber, setCardNumber] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
+  const [cvc, setCvc] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
     if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
       setError('Please enter a valid amount');
       return;
     }
-    onSubmit({
-      amount: parseFloat(amount),
-      paymentMethod,
-      description: description.trim() || 'Monthly Rent'
-    });
+
+    if (!useSavedPaymentMethod && (!cardNumber || !expiryDate || !cvc)) {
+      setError('Please fill in all card details');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      let paymentMethodId = null;
+
+      if (useSavedPaymentMethod) {
+        // Use saved payment method (stubbed)
+        paymentMethodId = 'pm_stub_saved_method';
+      } else {
+        // Create new payment method using stubbed Stripe
+        const stripe = createStubbedStripe();
+        const { error: stripeError, paymentMethod } = await stripe.createPaymentMethod({
+          type: 'card',
+          card: { number: cardNumber, exp_month: 12, exp_year: 2025, cvc }
+        });
+
+        if (stripeError) {
+          throw new Error(stripeError.message);
+        }
+
+        paymentMethodId = paymentMethod.id;
+      }
+
+      onSubmit({
+        amount: parseFloat(amount),
+        paymentMethod: 'stripe',
+        description: description.trim() || 'Monthly Rent',
+        paymentMethodId
+      });
+    } catch (err) {
+      setError(err.message || 'Failed to process payment');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <Paper sx={{ p: 3, mb: 4 }}>
       <Typography variant="h6" gutterBottom>Make a Payment</Typography>
+      
+      <Alert severity="warning" sx={{ mb: 3 }}>
+        <Typography variant="body2">
+          <strong>Development Mode:</strong> This is running with stubbed payment processing. 
+          No real payments will be charged.
+        </Typography>
+      </Alert>
+
       <form onSubmit={handleSubmit}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField
@@ -490,31 +561,77 @@ const PaymentForm = ({ onSubmit, propertyPrice, onCancel }) => {
               startAdornment: <InputAdornment position="start">$</InputAdornment>,
             }}
           />
+
           <FormControl fullWidth>
             <InputLabel>Payment Method</InputLabel>
             <Select
-              value={paymentMethod}
+              value={useSavedPaymentMethod ? 'saved' : 'new'}
               label="Payment Method"
-              onChange={(e) => setPaymentMethod(e.target.value)}
+              onChange={(e) => setUseSavedPaymentMethod(e.target.value === 'saved')}
             >
-              <MenuItem value="credit_card">Credit Card</MenuItem>
-              <MenuItem value="debit_card">Debit Card</MenuItem>
-              <MenuItem value="bank_transfer">Bank Transfer</MenuItem>
-              <MenuItem value="cash">Cash</MenuItem>
+              <MenuItem value="saved">Use Saved Payment Method</MenuItem>
+              <MenuItem value="new">Use New Card</MenuItem>
             </Select>
           </FormControl>
+
+          {!useSavedPaymentMethod && (
+            <>
+              <TextField
+                fullWidth
+                label="Card Number"
+                placeholder="4242 4242 4242 4242"
+                value={cardNumber}
+                onChange={(e) => setCardNumber(e.target.value)}
+                inputProps={{ maxLength: 19 }}
+              />
+              
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <TextField
+                  fullWidth
+                  label="Expiry Date"
+                  placeholder="MM/YY"
+                  value={expiryDate}
+                  onChange={(e) => setExpiryDate(e.target.value)}
+                  inputProps={{ maxLength: 5 }}
+                />
+                <TextField
+                  fullWidth
+                  label="CVC"
+                  placeholder="123"
+                  value={cvc}
+                  onChange={(e) => setCvc(e.target.value)}
+                  inputProps={{ maxLength: 4 }}
+                />
+              </Box>
+              
+              <Typography variant="caption" color="textSecondary">
+                <strong>Test Card:</strong> Use 4242 4242 4242 4242 with any future expiry date and any CVC.
+              </Typography>
+            </>
+          )}
+
           <TextField
             fullWidth
             label="Description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
+
+          <Typography variant="caption" color="textSecondary">
+            Your payment information is securely processed. We do not store your card details.
+          </Typography>
+
           <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-            <Button onClick={onCancel} color="inherit">
+            <Button onClick={onCancel} color="inherit" disabled={isLoading}>
               Cancel
             </Button>
-            <Button type="submit" variant="contained" color="primary">
-              Add Payment
+            <Button 
+              type="submit" 
+              variant="contained" 
+              color="primary"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Processing...' : 'Make Payment'}
             </Button>
           </Box>
         </Box>
@@ -625,23 +742,37 @@ const Payments = ({ leaseDetails, onPaymentUpdate }) => {
         return;
       }
 
+      // Create payment using stubbed backend
       const response = await axios.post(API_ENDPOINTS.PAYMENTS, {
         propertyId: leaseDetails.property._id,
-        ...paymentData
+        amount: paymentData.amount,
+        description: paymentData.description
       }, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
       });
 
-      toast.success('Payment successful!');
+      // Confirm payment with stubbed backend
+      if (response.data.payment) {
+        await axios.post(API_ENDPOINTS.CONFIRM_PAYMENT, {
+          paymentId: response.data.payment._id,
+          paymentMethodId: paymentData.paymentMethodId
+        }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+      }
+
+      toast.success('Payment processed successfully! (STUBBED MODE)');
       setShowPaymentForm(false);
       fetchPayments();
       if (onPaymentUpdate) {
         onPaymentUpdate();
       }
     } catch (err) {
-      // Error processing payment
+      console.error('Error processing payment:', err);
       toast.error(err.response?.data?.message || 'Failed to process payment');
     }
   };

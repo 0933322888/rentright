@@ -1,11 +1,49 @@
 import PaymentSetup from '../models/paymentSetupModel.js';
 import User from '../models/userModel.js';
-import {
-  createStripeCustomer,
-  attachPaymentMethod,
-  setDefaultPaymentMethod,
-  getPaymentMethod
-} from '../utils/stripe.js';
+
+// Stubbed Stripe functions for development
+const createStripeCustomer = async (email, name) => {
+  // Simulate Stripe customer creation
+  return {
+    id: `cus_stub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    email,
+    name
+  };
+};
+
+const attachPaymentMethod = async (paymentMethodId, customerId) => {
+  // Simulate attaching payment method
+  return {
+    id: paymentMethodId,
+    customer: customerId,
+    type: 'card'
+  };
+};
+
+const setDefaultPaymentMethod = async (customerId, paymentMethodId) => {
+  // Simulate setting default payment method
+  return {
+    id: customerId,
+    invoice_settings: {
+      default_payment_method: paymentMethodId
+    }
+  };
+};
+
+const getPaymentMethod = async (paymentMethodId) => {
+  // Simulate getting payment method details
+  return {
+    id: paymentMethodId,
+    type: 'card',
+    card: {
+      brand: 'visa',
+      last4: '4242',
+      exp_month: 12,
+      exp_year: 2025,
+      country: 'CA'
+    }
+  };
+};
 
 // Initialize payment setup for a tenant
 export const initializePaymentSetup = async (req, res) => {
@@ -29,7 +67,7 @@ export const initializePaymentSetup = async (req, res) => {
       return res.status(404).json({ message: 'Tenant not found' });
     }
 
-    // Create Stripe customer
+    // Create stubbed Stripe customer
     const customer = await createStripeCustomer(
       tenant.email,
       `${tenant.firstName} ${tenant.lastName}`
@@ -44,7 +82,7 @@ export const initializePaymentSetup = async (req, res) => {
     await paymentSetup.save();
 
     res.json({
-      message: 'Payment setup initialized',
+      message: 'Payment setup initialized (STUBBED)',
       customerId: customer.id,
       setupId: paymentSetup._id
     });
@@ -75,13 +113,13 @@ export const completePaymentSetup = async (req, res) => {
       return res.status(400).json({ message: 'Payment setup already completed' });
     }
 
-    // Attach payment method to customer
+    // Stubbed: Attach payment method to customer
     await attachPaymentMethod(paymentMethodId, paymentSetup.stripeCustomerId);
 
-    // Set as default payment method
+    // Stubbed: Set as default payment method
     await setDefaultPaymentMethod(paymentSetup.stripeCustomerId, paymentMethodId);
 
-    // Get payment method details
+    // Stubbed: Get payment method details
     const paymentMethod = await getPaymentMethod(paymentMethodId);
 
     // Update payment setup
@@ -100,7 +138,7 @@ export const completePaymentSetup = async (req, res) => {
     await paymentSetup.save();
 
     res.json({
-      message: 'Payment setup completed successfully',
+      message: 'Payment setup completed successfully (STUBBED)',
       paymentSetup: {
         id: paymentSetup._id,
         customerId: paymentSetup.stripeCustomerId,
@@ -138,6 +176,7 @@ export const getPaymentSetupStatus = async (req, res) => {
       setupExists: true,
       setupCompleted: paymentSetup.setupCompleted,
       customerId: paymentSetup.stripeCustomerId,
+      paymentMethodId: paymentSetup.paymentMethodId,
       paymentMethodDetails: paymentSetup.paymentMethodDetails,
       setupCompletedAt: paymentSetup.setupCompletedAt
     });
@@ -163,13 +202,13 @@ export const updatePaymentMethod = async (req, res) => {
       return res.status(404).json({ message: 'Payment setup not found or not completed' });
     }
 
-    // Attach new payment method
+    // Stubbed: Attach new payment method
     await attachPaymentMethod(paymentMethodId, paymentSetup.stripeCustomerId);
 
-    // Set as default payment method
+    // Stubbed: Set as default payment method
     await setDefaultPaymentMethod(paymentSetup.stripeCustomerId, paymentMethodId);
 
-    // Get payment method details
+    // Stubbed: Get payment method details
     const paymentMethod = await getPaymentMethod(paymentMethodId);
 
     // Update payment setup
@@ -185,7 +224,7 @@ export const updatePaymentMethod = async (req, res) => {
     await paymentSetup.save();
 
     res.json({
-      message: 'Payment method updated successfully',
+      message: 'Payment method updated successfully (STUBBED)',
       paymentMethodDetails: paymentSetup.paymentMethodDetails
     });
   } catch (error) {
@@ -211,7 +250,7 @@ export const deletePaymentSetup = async (req, res) => {
 
     await PaymentSetup.findByIdAndDelete(paymentSetup._id);
 
-    res.json({ message: 'Payment setup deleted successfully' });
+    res.json({ message: 'Payment setup deleted successfully (STUBBED)' });
   } catch (error) {
     console.error('Error deleting payment setup:', error);
     res.status(500).json({ message: 'Failed to delete payment setup' });

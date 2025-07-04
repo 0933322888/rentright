@@ -1,50 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Alert, Spinner, Badge } from 'react-bootstrap';
-import { loadStripe } from '@stripe/stripe-js';
-import {
-  Elements,
-  CardElement,
-  useStripe,
-  useElements
-} from '@stripe/react-stripe-js';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
-// Load Stripe with your publishable key
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
-
-const CARD_ELEMENT_OPTIONS = {
-  style: {
-    base: {
-      fontSize: '16px',
-      color: '#424770',
-      '::placeholder': {
-        color: '#aab7c4',
-      },
-    },
-    invalid: {
-      color: '#9e2146',
-    },
-  },
+// Stubbed Stripe implementation for development
+const createStubbedStripe = () => {
+  return {
+    createPaymentMethod: async ({ type, card }) => {
+      // Simulate Stripe payment method creation
+      return {
+        error: null,
+        paymentMethod: {
+          id: `pm_stub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          type: 'card',
+          card: {
+            brand: 'visa',
+            last4: '4242',
+            exp_month: 12,
+            exp_year: 2025,
+            country: 'CA'
+          }
+        }
+      };
+    }
+  };
 };
 
 const RentPaymentForm = ({ amount, property, onSuccess, onCancel }) => {
-  const stripe = useStripe();
-  const elements = useElements();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState('payment'); // 'payment', 'processing', 'complete'
-  const [paymentIntent, setPaymentIntent] = useState(null);
   const [useSavedPaymentMethod, setUseSavedPaymentMethod] = useState(true);
+  const [cardNumber, setCardNumber] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
+  const [cvc, setCvc] = useState('');
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
-    if (!stripe || !elements) {
-      return;
-    }
 
     setIsLoading(true);
     setStep('processing');
@@ -67,12 +61,19 @@ const RentPaymentForm = ({ amount, property, onSuccess, onCancel }) => {
           throw new Error('No saved payment method found. Please set up payment method first.');
         }
 
-        paymentMethodId = paymentSetupResponse.data.paymentMethodId;
+        // Use the saved payment method ID
+        paymentMethodId = paymentSetupResponse.data.paymentMethodId || 'pm_stub_saved_method';
       } else {
-        // Create new payment method
+        // Basic validation for new card
+        if (!cardNumber || !expiryDate || !cvc) {
+          throw new Error('Please fill in all card details');
+        }
+
+        // Create new payment method using stubbed Stripe
+        const stripe = createStubbedStripe();
         const { error, paymentMethod } = await stripe.createPaymentMethod({
           type: 'card',
-          card: elements.getElement(CardElement),
+          card: { number: cardNumber, exp_month: 12, exp_year: 2025, cvc }
         });
 
         if (error) {
@@ -97,22 +98,9 @@ const RentPaymentForm = ({ amount, property, onSuccess, onCancel }) => {
         }
       );
 
-      const { payment, clientSecret } = paymentResponse.data;
-      setPaymentIntent({ id: payment.stripePaymentIntentId, clientSecret });
+      const { payment } = paymentResponse.data;
 
       // Confirm payment
-      const { error: confirmError } = await stripe.confirmCardPayment(
-        clientSecret,
-        {
-          payment_method: paymentMethodId,
-        }
-      );
-
-      if (confirmError) {
-        throw new Error(confirmError.message);
-      }
-
-      // Update payment status
       await axios.post(
         API_ENDPOINTS.CONFIRM_PAYMENT,
         {
@@ -127,16 +115,16 @@ const RentPaymentForm = ({ amount, property, onSuccess, onCancel }) => {
       );
 
       setStep('complete');
-      toast.success('Your rent payment has been processed successfully!');
+      toast.success('Payment processed successfully! (STUBBED MODE)');
 
       setTimeout(() => {
         onSuccess();
-      }, 2000);
+      }, 3000);
 
     } catch (error) {
       console.error('Error processing payment:', error);
+      toast.error(error.response?.data?.message || error.message || 'Failed to process payment');
       setStep('payment');
-      toast.error(error.message || 'Failed to process payment');
     } finally {
       setIsLoading(false);
     }
@@ -146,10 +134,12 @@ const RentPaymentForm = ({ amount, property, onSuccess, onCancel }) => {
     return (
       <div className="text-center py-4">
         <Spinner animation="border" role="status" className="mb-3">
-          <span className="visually-hidden">Loading...</span>
+          <span className="visually-hidden">Processing...</span>
         </Spinner>
         <p>Processing your payment...</p>
-        <p className="text-muted small">Please do not close this window.</p>
+        <Alert variant="info" className="mt-3">
+          <small>This is running in stubbed mode. No real payment will be charged.</small>
+        </Alert>
       </div>
     );
   }
@@ -159,65 +149,99 @@ const RentPaymentForm = ({ amount, property, onSuccess, onCancel }) => {
       <div className="text-center py-4">
         <Alert variant="success" className="mb-3">
           <i className="fas fa-check-circle me-2"></i>
-          Payment completed successfully!
+          Payment processed successfully! (STUBBED MODE)
         </Alert>
-        <p>Your rent payment of ${amount} has been processed.</p>
-        <p className="text-muted small">You will receive a confirmation email shortly.</p>
+        <p>Your rent payment has been processed.</p>
+        <Alert variant="info" className="mt-3">
+          <small>
+            <strong>Note:</strong> This is running in stubbed mode. No real payment was charged.
+          </small>
+        </Alert>
       </div>
     );
   }
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="mb-4">
-        <h5 className="mb-3">Payment Summary</h5>
-        <div className="bg-light p-3 rounded">
-          <div className="d-flex justify-content-between mb-2">
-            <span>Property:</span>
-            <span className="fw-medium">{property.title}</span>
-          </div>
-          <div className="d-flex justify-content-between mb-2">
-            <span>Amount:</span>
-            <span className="fw-bold fs-5 text-primary">${amount}</span>
-          </div>
-          <div className="d-flex justify-content-between">
-            <span>Payment Method:</span>
-            <Badge bg="success">Stripe</Badge>
-          </div>
+      <div className="mb-3">
+        <Alert variant="info">
+          <i className="fas fa-info-circle me-2"></i>
+          Processing rent payment for <strong>{property.title}</strong>
+        </Alert>
+        <Alert variant="warning">
+          <i className="fas fa-exclamation-triangle me-2"></i>
+          <strong>Development Mode:</strong> This is running with stubbed payment processing. 
+          No real payments will be charged.
+        </Alert>
+      </div>
+
+      <div className="mb-3">
+        <div className="d-flex justify-content-between align-items-center mb-2">
+          <span className="fw-medium">Payment Amount:</span>
+          <Badge bg="primary" className="fs-6">${amount}</Badge>
         </div>
       </div>
 
-      <hr />
-
       <div className="mb-3">
-        <label className="form-label fw-medium">Payment Method</label>
-        
-        {useSavedPaymentMethod ? (
-          <Alert variant="info" className="mb-3">
-            <i className="fas fa-info-circle me-2"></i>
-            Using your saved payment method
-          </Alert>
-        ) : (
-          <div
-            className="border rounded p-3 mb-3"
-            style={{ backgroundColor: 'white' }}
-          >
-            <CardElement options={CARD_ELEMENT_OPTIONS} />
-          </div>
-        )}
-
-        <Button
-          variant="link"
-          size="sm"
-          className="p-0"
-          onClick={() => setUseSavedPaymentMethod(!useSavedPaymentMethod)}
-        >
-          {useSavedPaymentMethod ? 'Use different card' : 'Use saved payment method'}
-        </Button>
+        <div className="form-check">
+          <input
+            className="form-check-input"
+            type="checkbox"
+            id="useSavedPaymentMethod"
+            checked={useSavedPaymentMethod}
+            onChange={(e) => setUseSavedPaymentMethod(e.target.checked)}
+          />
+          <label className="form-check-label" htmlFor="useSavedPaymentMethod">
+            Use saved payment method
+          </label>
+        </div>
       </div>
 
+      {!useSavedPaymentMethod && (
+        <div className="mb-3">
+          <label className="form-label fw-medium">Card Number</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="4242 4242 4242 4242"
+            value={cardNumber}
+            onChange={(e) => setCardNumber(e.target.value)}
+            maxLength="19"
+          />
+          
+          <div className="row mt-2">
+            <div className="col-6">
+              <label className="form-label fw-medium">Expiry Date</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="MM/YY"
+                value={expiryDate}
+                onChange={(e) => setExpiryDate(e.target.value)}
+                maxLength="5"
+              />
+            </div>
+            <div className="col-6">
+              <label className="form-label fw-medium">CVC</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="123"
+                value={cvc}
+                onChange={(e) => setCvc(e.target.value)}
+                maxLength="4"
+              />
+            </div>
+          </div>
+          
+          <p className="text-muted small mt-2">
+            <strong>Test Card:</strong> Use 4242 4242 4242 4242 with any future expiry date and any CVC.
+          </p>
+        </div>
+      )}
+
       <p className="text-muted small">
-        Your payment is securely processed by Stripe. We do not store your card details.
+        Your payment information is securely processed. We do not store your card details.
       </p>
 
       <div className="d-flex justify-content-end gap-2">
@@ -227,7 +251,7 @@ const RentPaymentForm = ({ amount, property, onSuccess, onCancel }) => {
         <Button
           type="submit"
           variant="primary"
-          disabled={!stripe || isLoading}
+          disabled={isLoading}
         >
           {isLoading ? 'Processing...' : `Pay $${amount}`}
         </Button>
@@ -240,17 +264,15 @@ const RentPaymentModal = ({ show, onHide, onSuccess, amount, property }) => {
   return (
     <Modal show={show} onHide={onHide} size="md" centered>
       <Modal.Header closeButton>
-        <Modal.Title>Make Rent Payment</Modal.Title>
+        <Modal.Title>Pay Rent</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <Elements stripe={stripePromise}>
-          <RentPaymentForm 
-            amount={amount} 
-            property={property}
-            onSuccess={onSuccess} 
-            onCancel={onHide} 
-          />
-        </Elements>
+        <RentPaymentForm 
+          amount={amount} 
+          property={property} 
+          onSuccess={onSuccess} 
+          onCancel={onHide} 
+        />
       </Modal.Body>
     </Modal>
   );
