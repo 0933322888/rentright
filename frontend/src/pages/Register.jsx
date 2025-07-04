@@ -33,21 +33,7 @@ export default function Register() {
     );
   };
 
-  // Calculate form completion percentage
-  const getFormCompletion = () => {
-    const requiredFields = [
-      formData.name.trim() !== '',
-      formData.email.trim() !== '',
-      formData.phone.trim() !== '',
-      formData.password.trim() !== '',
-      formData.confirmPassword.trim() !== '',
-      formData.password === formData.confirmPassword,
-      formData.termsAccepted
-    ];
-    
-    const completedFields = requiredFields.filter(Boolean).length;
-    return Math.round((completedFields / requiredFields.length) * 100);
-  };
+
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -130,19 +116,7 @@ export default function Register() {
               <span className="text-red-500">*</span> Required fields
             </div>
 
-            {/* Form Completion Progress */}
-            <div className="mb-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-600">Form Completion</span>
-                <span className="text-sm font-medium text-gray-900">{getFormCompletion()}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-primary-600 h-2 rounded-full transition-all duration-300 ease-in-out"
-                  style={{ width: `${getFormCompletion()}%` }}
-                ></div>
-              </div>
-            </div>
+
 
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">

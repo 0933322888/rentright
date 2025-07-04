@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import ImageCarousel from '../components/ImageCarousel';
 import ProfileCompletionModal from '../components/ProfileCompletionModal';
 import { FaBed, FaBath, FaHome, FaMapMarkerAlt, FaDollarSign, FaTimes, FaChevronLeft, FaChevronRight, FaCar, FaPaw, FaDumbbell, FaSwimmer, FaWifi, FaSnowflake, FaUtensils, FaTv, FaLock, FaCheckCircle } from 'react-icons/fa';
-import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import ViewingScheduleModal from '../components/ViewingScheduleModal';
@@ -216,7 +216,7 @@ const PropertyDetails = () => {
   if (!property) return <div className="text-center py-8">Property not found</div>;
 
   return (
-    <div className="w-full relative">
+    <div className="w-full relative p-4">
       <ProfileCompletionModal 
         show={showProfileModal} 
         onHide={() => setShowProfileModal(false)} 
@@ -264,7 +264,6 @@ const PropertyDetails = () => {
           </div>
           {/* Apply Button/Action Card */}
           <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6 flex flex-col gap-4 items-center transition-shadow duration-300 hover:shadow-2xl hover:scale-[1.01]">
-            <div className="text-2xl font-bold text-primary-700 flex items-center gap-2"><FaDollarSign /> {property.price}/month</div>
             {user?.role === 'tenant' && (
               <button
                 onClick={handleApply}
@@ -285,7 +284,19 @@ const PropertyDetails = () => {
               >
                 View Applications
               </Link>
-            )}
+            )} {
+              user === null && (<>
+              <span className="text-gray-500">
+                You are not logged in. Please log in to apply for this property.
+              </span>
+              <Link
+                to="/login"
+                className="w-full text-center bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-colors font-semibold"
+              >
+                Log In
+              </Link>
+              </>)
+            }
           </div>
         </div>
         {/* Right: Property Info and Actions */}
@@ -306,15 +317,59 @@ const PropertyDetails = () => {
               </span>
             )}
           </div>
-          {/* Details, Location, Description, Amenities */}
+          {/* Description, Details, Amenities, Location */}
           <div className="flex-1 space-y-6">
-            {/* Details Card */}
+            {/* Description Card */}
             <div className="bg-white rounded-lg shadow p-6 transition-transform duration-200 hover:scale-[1.01] hover:shadow-2xl">
-              <h2 className="text-xl font-semibold mb-4">Details</h2>
-              <div className="flex flex-wrap gap-6 text-lg">
-                <div className="flex items-center gap-2"><FaBed /> {property.features?.bedrooms || 'N/A'} Bedrooms</div>
-                <div className="flex items-center gap-2"><FaBath /> {property.features?.bathrooms || 'N/A'} Bathrooms</div>
-                <div className="flex items-center gap-2"><FaHome /> {property.type}</div>
+              <h2 className="text-xl font-semibold mb-4">Description</h2>
+              <p className="text-gray-600">{property.description}</p>
+            </div>
+
+            {/* Details & Amenities Card */}
+            <div className="bg-white rounded-lg shadow p-6 transition-transform duration-200 hover:scale-[1.01] hover:shadow-2xl">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Details Section */}
+                <div>
+                  <h2 className="text-xl font-semibold mb-4">Details</h2>
+                  <div className="flex flex-col gap-3 text-lg">
+                    <div className="flex items-center gap-2"><FaBed /> {property.features?.bedrooms || 'N/A'} Bedrooms</div>
+                    <div className="flex items-center gap-2"><FaBath /> {property.features?.bathrooms || 'N/A'} Bathrooms</div>
+                    <div className="flex items-center gap-2"><FaHome /> {property.type}</div>
+                  </div>
+                </div>
+
+                {/* Amenities Section */}
+                <div>
+                  <h2 className="text-xl font-semibold mb-4">Amenities</h2>
+                  <div className="flex flex-wrap gap-2">
+                    {(property.amenities || []).map((amenity, index) => {
+                      const iconMap = {
+                        'Parking': <FaCar className="mr-1" />,
+                        'Pet Friendly': <FaPaw className="mr-1" />,
+                        'Gym': <FaDumbbell className="mr-1" />,
+                        'Pool': <FaSwimmer className="mr-1" />,
+                        'WiFi': <FaWifi className="mr-1" />,
+                        'Air Conditioning': <FaSnowflake className="mr-1" />,
+                        'Elevator': <FaCheckCircle className="mr-1" />,
+                        'Restaurant': <FaUtensils className="mr-1" />,
+                        'TV': <FaTv className="mr-1" />,
+                        'Security': <FaLock className="mr-1" />,
+                      };
+                      const icon = iconMap[amenity] || <FaCheckCircle className="mr-1" />;
+                      return (
+                        <span
+                          key={index}
+                          className="flex items-center bg-gray-100 px-3 py-1 rounded-full text-sm transition-all duration-200 hover:bg-primary-100 hover:text-primary-700 cursor-pointer"
+                        >
+                          {icon}{amenity}
+                        </span>
+                      );
+                    })}
+                    {(!property.amenities || property.amenities.length === 0) && (
+                      <span className="text-gray-500">No amenities listed</span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -327,70 +382,58 @@ const PropertyDetails = () => {
               </div>
               {/* Map Preview */}
               {property.location?.coordinates && property.location.coordinates.length === 2 && (
-                <div className="w-full h-48 rounded-lg overflow-hidden border border-gray-200 mt-2">
+                <div className="w-full h-64 rounded-lg overflow-hidden border border-gray-200 mt-2 relative">
                   <MapContainer
                     center={[property.location.coordinates[1], property.location.coordinates[0]]}
                     zoom={15}
                     scrollWheelZoom={false}
                     style={{ height: '100%', width: '100%' }}
+                    zoomControl={false}
                   >
                     <TileLayer
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                      attribution='&copy; <a href="https://carto.com/attributions">CARTO</a> contributors'
                     />
-                    <Marker position={[property.location.coordinates[1], property.location.coordinates[0]]}
-                      icon={L.icon({
-                        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-                        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-                        iconSize: [25, 41],
-                        iconAnchor: [12, 41],
-                        popupAnchor: [1, -34],
-                        shadowSize: [41, 41]
+                    <Marker 
+                      position={[property.location.coordinates[1], property.location.coordinates[0]]}
+                      icon={L.divIcon({
+                        html: `
+                          <div style="
+                            background: #3B82F6;
+                            color: white;
+                            border: 3px solid white;
+                            border-radius: 50%;
+                            width: 30px;
+                            height: 30px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-weight: bold;
+                            font-size: 12px;
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                          ">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                            </svg>
+                          </div>
+                        `,
+                        className: 'custom-marker-container',
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 15],
+                        popupAnchor: [0, -15]
                       })}
-                    />
+                    >
+                      <Popup>
+                        <div className="text-center">
+                          <h3 className="font-semibold text-gray-900 text-sm">{property.title}</h3>
+                          <p className="text-xs text-gray-600">{property.location?.street || 'N/A'}</p>
+                          <p className="text-lg font-bold text-primary-600">${property.price}/month</p>
+                        </div>
+                      </Popup>
+                    </Marker>
                   </MapContainer>
                 </div>
               )}
-            </div>
-
-            {/* Description Card */}
-            <div className="bg-white rounded-lg shadow p-6 transition-transform duration-200 hover:scale-[1.01] hover:shadow-2xl">
-              <h2 className="text-xl font-semibold mb-4">Description</h2>
-              <p className="text-gray-600">{property.description}</p>
-            </div>
-
-            {/* Amenities Card */}
-            <div className="bg-white rounded-lg shadow p-6 transition-transform duration-200 hover:scale-[1.01] hover:shadow-2xl">
-              <h2 className="text-xl font-semibold mb-4">Amenities</h2>
-              <div className="flex flex-wrap gap-2">
-                {(property.amenities || []).map((amenity, index) => {
-                  const iconMap = {
-                    'Parking': <FaCar className="mr-1" />,
-                    'Pet Friendly': <FaPaw className="mr-1" />,
-                    'Gym': <FaDumbbell className="mr-1" />,
-                    'Pool': <FaSwimmer className="mr-1" />,
-                    'WiFi': <FaWifi className="mr-1" />,
-                    'Air Conditioning': <FaSnowflake className="mr-1" />,
-                    'Elevator': <FaCheckCircle className="mr-1" />,
-                    'Restaurant': <FaUtensils className="mr-1" />,
-                    'TV': <FaTv className="mr-1" />,
-                    'Security': <FaLock className="mr-1" />,
-                  };
-                  const icon = iconMap[amenity] || <FaCheckCircle className="mr-1" />;
-                  return (
-                    <span
-                      key={index}
-                      className="flex items-center bg-gray-100 px-3 py-1 rounded-full text-sm transition-all duration-200 hover:bg-primary-100 hover:text-primary-700 cursor-pointer"
-                    >
-                      {icon}{amenity}
-                    </span>
-                  );
-                })}
-                {(!property.amenities || property.amenities.length === 0) && (
-                  <span className="text-gray-500">No amenities listed</span>
-                )}
-              </div>
             </div>
           </div>
         </div>
