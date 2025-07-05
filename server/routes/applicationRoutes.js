@@ -15,7 +15,8 @@ import {
     getLeaseAgreementDocument,
     serveLeaseAgreementFile,
     getMyLease,
-    updateLeaseStartDate
+    updateLeaseStartDate,
+    updateEnvelopeId
 } from '../controllers/applicationController.js';
 import { protect, restrictTo } from '../middleware/authMiddleware.js';
 import multer from 'multer';
@@ -87,6 +88,9 @@ router.post('/:applicationId/lease-agreement/comments', protect, addLeaseAgreeme
 router.patch('/:applicationId/lease-agreement/status', protect, updateLeaseAgreementStatus);
 router.post('/:applicationId/lease-agreement/document', protect, restrictTo('landlord'), upload.single('document'), uploadStandardLeaseDocument);
 router.patch('/:applicationId/lease-agreement/start-date', protect, updateLeaseStartDate);
+
+// DocuSign envelope routes
+router.put('/:id/envelope', protect, updateEnvelopeId);
 
 // Get tenant's active lease
 router.get('/my-lease', protect, getMyLease);

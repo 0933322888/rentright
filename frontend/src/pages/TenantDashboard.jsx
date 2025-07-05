@@ -271,7 +271,13 @@ const TenantDashboard = () => {
 
     // Check for pending lease agreement
     const approvedApplication = applications.find(app => 
-      app.status === 'approved' && !app.leaseSigned
+      app.status === 'approved' && !(
+        app.leaseSigned ||
+        (app.leaseAgreement && (
+          app.leaseAgreement.status === 'signed' ||
+          (app.leaseAgreement.envelopeId && app.leaseAgreement.envelopeStatus === 'completed')
+        ))
+      )
     );
     if (approvedApplication) {
       return {

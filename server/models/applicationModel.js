@@ -47,6 +47,10 @@ const applicationSchema = new mongoose.Schema({
       enum: ['pending', 'tenant_approved', 'landlord_approved', 'signed'],
       default: 'pending'
     },
+    envelopeId: {
+      type: String,
+      default: null
+    },
     leaseStartDate: {
       date: {
         type: Date

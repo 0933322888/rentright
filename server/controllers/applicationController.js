@@ -1020,4 +1020,44 @@ export const updateLeaseStartDate = async (req, res) => {
     console.error('Error updating lease start date:', error);
     res.status(500).json({ message: 'Error updating lease start date' });
   }
+};
+
+// Update envelope ID for DocuSign integration
+export const updateEnvelopeId = async (req, res) => {
+  try {
+    const { envelopeId } = req.body;
+    const applicationId = req.params.id;
+
+    const application = await Application.findById(applicationId)
+      .populate('property', 'landlord')
+      .populate('tenant', 'name email');
+
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    // Check if user has permission to update this application
+    const isLandlord = req.user.role === 'landlord' && 
+      application.property.landlord.toString() === req.user._id.toString();
+    const isTenant = req.user.role === 'tenant' && 
+      application.tenant._id.toString() === req.user._id.toString();
+
+    if (!isLandlord && !isTenant) {
+      return res.status(403).json({ message: 'Not authorized to update this application' });
+    }
+
+    // Update envelope ID
+    application.leaseAgreement.envelopeId = envelopeId;
+    await application.save();
+
+    console.log('🔧 [STUBBED] Envelope ID updated for application:', applicationId, 'envelopeId:', envelopeId);
+
+    res.json({ 
+      message: 'Envelope ID updated successfully',
+      envelopeId: application.leaseAgreement.envelopeId
+    });
+  } catch (error) {
+    console.error('Error updating envelope ID:', error);
+    res.status(500).json({ message: 'Failed to update envelope ID' });
+  }
 }; 

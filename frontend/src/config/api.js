@@ -40,6 +40,7 @@ export const API_ENDPOINTS = {
 
   // Application endpoints
   APPLICATIONS: `${BASE_URL}/api/applications`,
+  APPLICATION_ENVELOPE: (applicationId) => `${BASE_URL}/api/applications/${applicationId}/envelope`,
   PROPERTY_APPLICATIONS: (propertyId) => `${BASE_URL}/api/applications/property/${propertyId}`,
   PROPERTY_DOCUMENTS: (propertyId) => `${BASE_URL}/api/properties/${propertyId}/documents`,
 
@@ -104,4 +105,13 @@ export const API_ENDPOINTS = {
   LANDLORD_PAYMENTS: `${BASE_URL}/api/landlord/payments`,
   LANDLORD_TICKETS: `${BASE_URL}/api/landlord/tickets`,
   LANDLORD_TICKET_STATUS: (ticketId) => `${BASE_URL}/api/landlord/tickets/${ticketId}/status`,
+
+  // DocuSign endpoints
+  DOCUSIGN: `${BASE_URL}/api/docusign`,
+  DOCUSIGN_AUTH: `${BASE_URL}/api/docusign/auth`,
+  DOCUSIGN_GENERATE_LEASE: `${BASE_URL}/api/docusign/generate-lease`,
+  DOCUSIGN_WEBHOOK: `${BASE_URL}/api/docusign/webhook`,
+  DOCUSIGN_ENVELOPE_CREATE: `${BASE_URL}/api/docusign/envelope/create`,
+  DOCUSIGN_ENVELOPE_STATUS: (envelopeId) => `${BASE_URL}/api/docusign/envelope/${envelopeId}/status`,
+  DOCUSIGN_SIGNING_URL: (envelopeId) => `${BASE_URL}/api/docusign/envelope/${envelopeId}/signing-url`,
 }; 

@@ -5,6 +5,13 @@ import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { 
+  createStubbedEnvelope, 
+  getStubbedEnvelopeStatus, 
+  getStubbedSigningUrl,
+  simulateStubbedSigning,
+  isDocuSignStubbed 
+} from '../../utils/stubbedDocuSign';
+import { 
   Button, 
   CircularProgress, 
   Dialog, 
@@ -86,6 +93,8 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
   const [replyText, setReplyText] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [signingCompleted, setSigningCompleted] = useState(false);
+  const [currentEnvelopeId, setCurrentEnvelopeId] = useState(null);
 
   useEffect(() => {
     fetchLeaseAgreementDetails();
@@ -323,34 +332,88 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
     try {
       setLoading(true);
       
-      // Create envelope and get signing URL through backend
-      const response = await axios.post(
-        `${API_ENDPOINTS.DOCUSIGN}/envelope/create`,
-        { leaseDetails },
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        }
-      );
-      
-      const { envelopeId, signingUrl } = response.data;
-      
-      // Update lease details with envelope ID
-      await axios.put(
-        `${API_ENDPOINTS.APPLICATIONS}/${leaseDetails._id}/envelope`,
-        { envelopeId },
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        }
-      );
-      
-      setSigningUrl(signingUrl);
-      setShowSigningDialog(true);
-      toast.success('Lease agreement sent for signing');
+      // Use stubbed DocuSign for development
+      if (isDocuSignStubbed()) {
+        console.log('🔧 [STUBBED] Using stubbed DocuSign for signing initiation');
+        
+        const result = await createStubbedEnvelope(leaseDetails);
+        const { envelopeId, signingUrl } = result;
+        
+        // Update lease details with envelope ID
+        await axios.put(
+          API_ENDPOINTS.APPLICATION_ENVELOPE(leaseDetails._id),
+          { envelopeId },
+          {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          }
+        );
+        
+        // Store envelope ID in local state for signing operations
+        setCurrentEnvelopeId(envelopeId);
+        
+        setSigningUrl(signingUrl);
+        setSigningCompleted(false);
+        setShowSigningDialog(true);
+        console.log('🔧 [STUBBED] Dialog opened with envelope ID:', envelopeId);
+        toast.success('Lease agreement sent for signing (Stubbed Mode)');
+      } else {
+        // Real DocuSign implementation (for production)
+        const response = await axios.post(
+          `${API_ENDPOINTS.DOCUSIGN_ENVELOPE_CREATE}`,
+          { leaseDetails },
+          {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          }
+        );
+        
+        const { envelopeId, signingUrl } = response.data;
+        
+        // Update lease details with envelope ID
+        await axios.put(
+          API_ENDPOINTS.APPLICATION_ENVELOPE(leaseDetails._id),
+          { envelopeId },
+          {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          }
+        );
+        
+        // Store envelope ID in local state for signing operations
+        setCurrentEnvelopeId(envelopeId);
+        
+        setSigningUrl(signingUrl);
+        setSigningCompleted(false);
+        setShowSigningDialog(true);
+        toast.success('Lease agreement sent for signing');
+      }
     } catch (error) {
-      // Error initiating signing
+      console.error('Error initiating signing:', error);
       toast.error('Failed to initiate signing process');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchEnvelopeStatus = async () => {
+    const envelopeId = currentEnvelopeId || leaseDetails.envelopeId;
+    if (!envelopeId) return;
+    
+    try {
+      if (isDocuSignStubbed()) {
+        console.log('🔧 [STUBBED] Fetching envelope status for:', envelopeId);
+        const status = await getStubbedEnvelopeStatus(envelopeId);
+        setEnvelopeStatus(status);
+      } else {
+        // Real DocuSign implementation
+        const response = await axios.get(
+          `${API_ENDPOINTS.DOCUSIGN_ENVELOPE_STATUS(envelopeId)}`,
+          {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          }
+        );
+        setEnvelopeStatus(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching envelope status:', error);
     }
   };
 
@@ -362,7 +425,16 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
   const getSigningStatus = () => {
     if (!envelopeStatus) return null;
 
-    const isLandlord = leaseDetails.landlord._id === localStorage.getItem('userId');
+    // Get landlord ID from the correct path in leaseDetails
+    const landlordId = leaseDetails?.property?.landlord?._id || leaseDetails?.landlord?._id;
+    const currentUserId = localStorage.getItem('userId');
+    
+    if (!landlordId || !currentUserId) {
+      console.warn('Missing landlord ID or current user ID for signing status');
+      return null;
+    }
+
+    const isLandlord = landlordId === currentUserId;
     const signer = envelopeStatus.recipients.signers.find(
       s => s.recipientId === (isLandlord ? '1' : '2')
     );
@@ -374,6 +446,55 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
       signedAt: signer.signedDateTime,
       color: signer.status === 'completed' ? 'success' : 'warning'
     };
+  };
+
+  // Get signing status for both parties
+  const getSigningStatusForRole = (role) => {
+    if (!envelopeStatus) return null;
+    
+    const recipientId = role === 'landlord' ? '1' : '2';
+    const signer = envelopeStatus.recipients.signers.find(s => s.recipientId === recipientId);
+    
+    if (!signer) return null;
+    
+    return {
+      status: signer.status,
+      signedAt: signer.signedDateTime,
+      color: signer.status === 'completed' ? 'success' : 'warning'
+    };
+  };
+
+  // Check if current user has already signed
+  const hasCurrentUserSigned = () => {
+    const signingStatus = getSigningStatus();
+    return signingStatus?.status === 'completed';
+  };
+
+  // Check if all parties have signed
+  const hasAllPartiesSigned = () => {
+    if (!envelopeStatus) return false;
+    return envelopeStatus.recipients.signers.every(s => s.status === 'completed');
+  };
+
+  // Check if signing step should be marked as completed
+  const isSigningStepCompleted = () => {
+    // Check if agreement status is signed OR if all parties have signed
+    return agreementStatus?.status === 'signed' || hasAllPartiesSigned();
+  };
+
+  // Check if current user's signing is completed (for step icon)
+  const isCurrentUserSigningCompleted = () => {
+    return hasCurrentUserSigned();
+  };
+
+  // Check if current user has started signing (envelope created)
+  const hasSigningStarted = () => {
+    return !!leaseDetails.envelopeId;
+  };
+
+  // Check if current user can sign (hasn't signed yet but signing has started)
+  const canCurrentUserSign = () => {
+    return hasSigningStarted() && !hasCurrentUserSigned();
   };
 
   const formatLocation = (location) => {
@@ -589,6 +710,16 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
     const isTenant = user?.role === 'tenant';
     const isLandlord = user?.role === 'landlord';
 
+    // Show 'Lease Agreement Signed' message if both parties have signed (even if status !== 'signed')
+    if (hasAllPartiesSigned()) {
+      return {
+        type: 'success',
+        title: 'Lease Agreement Signed',
+        message: 'Congratulations! The lease agreement has been signed by all parties. Your lease is now active.',
+        action: 'You can view the signed document and manage your lease from your dashboard.'
+      };
+    }
+
     // Check if lease start date needs to be set or approved
     const leaseStartDate = agreementStatus.leaseStartDate;
     
@@ -740,6 +871,42 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
     }
 
     if (status === 'landlord_approved') {
+      // Check if signing has already started
+      if (leaseDetails.envelopeId) {
+        const landlordSigned = getSigningStatusForRole('landlord')?.status === 'completed';
+        const tenantSigned = getSigningStatusForRole('tenant')?.status === 'completed';
+        
+        if (landlordSigned && tenantSigned) {
+          return {
+            type: 'success',
+            title: 'Lease Agreement Signed',
+            message: 'Congratulations! The lease agreement has been signed by all parties. Your lease is now active.',
+            action: 'You can view the signed document and manage your lease from your dashboard.'
+          };
+        } else if (landlordSigned && !tenantSigned) {
+          return {
+            type: 'info',
+            title: 'Waiting for Tenant Signature',
+            message: 'You have signed the lease agreement. Waiting for the tenant to complete their signature.',
+            action: 'No action required at this time.'
+          };
+        } else if (!landlordSigned && tenantSigned) {
+          return {
+            type: 'warning',
+            title: 'Tenant Has Signed',
+            message: 'The tenant has signed the lease agreement. Please complete your signature to finalize the agreement.',
+            action: 'Click "Send for Signing" to complete your signature.'
+          };
+        } else {
+          return {
+            type: 'info',
+            title: 'Signing in Progress',
+            message: 'The lease agreement is ready for signing. Both parties need to sign to complete the process.',
+            action: 'Click "Send for Signing" to initiate the digital signing process.'
+          };
+        }
+      }
+      
       return {
         type: 'success',
         title: 'Agreement Approved',
@@ -1092,16 +1259,23 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
       id: 'sign',
       title: 'Sign Agreement',
       description: 'Sign the lease agreement to make it legally binding.',
-      status: agreementStatus?.status === 'signed',
+      status: isSigningStepCompleted(),
       actions: agreementStatus?.status === 'landlord_approved' ? (
         <Button
           variant="contained"
           color="primary"
           startIcon={<SendIcon />}
-          onClick={() => setShowSigningDialog(true)}
+          onClick={() => {
+            if (!leaseDetails.envelopeId) {
+              handleInitiateSigning();
+            } else {
+              setShowSigningDialog(true);
+            }
+          }}
+          disabled={loading || hasCurrentUserSigned()}
           size="small"
         >
-          Start Signing Process
+          Sign Agreement
         </Button>
       ) : null
     }
@@ -1195,62 +1369,58 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
         </Box>
       </Paper>
 
-      <div className="bg-white shadow rounded-lg p-6">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h2 className="text-2xl font-bold">Lease Agreement</h2>
-            {signingStatus && (
-              <Chip
-                label={signingStatus.status.charAt(0).toUpperCase() + signingStatus.status.slice(1)}
-                color={signingStatus.color}
-                size="small"
-                sx={{ mt: 1 }}
-              />
-            )}
-          </div>
-          <div className="flex gap-2">
+      {/* Full-size Lease Actions Section */}
+      <Paper sx={{ p: 1.5, mb: 2, background: 'rgba(245, 248, 255, 0.8)' }} elevation={0}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 500, mr: 2, color: 'text.secondary' }}>
+            Lease Actions
+          </Typography>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
             <Tooltip title="Preview PDF">
-              <IconButton
-                onClick={handlePreview}
-                disabled={loading || previewLoading}
-                color="primary"
-              >
-                {previewLoading ? <CircularProgress size={24} /> : <PreviewIcon />}
-              </IconButton>
+              <span>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  startIcon={<PreviewIcon />}
+                  onClick={handlePreview}
+                  disabled={loading || previewLoading}
+                  size="small"
+                >
+                  Preview
+                </Button>
+              </span>
             </Tooltip>
             <Tooltip title="Download PDF">
-              <IconButton
-                onClick={handleDownload}
-                disabled={loading}
-                color="primary"
-              >
-                <DownloadIcon />
-              </IconButton>
+              <span>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  startIcon={<DownloadIcon />}
+                  onClick={handleDownload}
+                  disabled={loading}
+                  size="small"
+                >
+                  Download
+                </Button>
+              </span>
             </Tooltip>
-            {!leaseDetails.envelopeId && (
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleInitiateSigning}
-                disabled={loading}
-                startIcon={loading ? <CircularProgress size={20} /> : null}
-              >
-                {loading ? 'Preparing...' : 'Send for Signing'}
-              </Button>
-            )}
-            <Button
-              variant="contained"
-              color="error"
-              onClick={handleTerminate}
-              disabled={loading}
-            >
-              Terminate Lease
-            </Button>
-          </div>
-        </div>
-        
-
-      </div>
+            <Tooltip title="Terminate Lease">
+              <span>
+                <Button
+                  variant="contained"
+                  color="error"
+                  startIcon={<WarningIcon />}
+                  onClick={handleTerminate}
+                  disabled={loading}
+                  size="small"
+                >
+                  Terminate Lease
+                </Button>
+              </span>
+            </Tooltip>
+          </Stack>
+        </Box>
+      </Paper>
 
       <Dialog
         open={showSigningDialog}
@@ -1258,15 +1428,166 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>Sign Lease Agreement</DialogTitle>
+        <DialogTitle>
+          {signingCompleted ? 'Signing Completed!' : 
+           hasCurrentUserSigned() ? 'You Have Already Signed' : 'Sign Lease Agreement'}
+        </DialogTitle>
         <DialogContent>
           <Box sx={{ height: '600px', width: '100%' }}>
-            {signingUrl ? (
-              <iframe
-                src={signingUrl}
-                style={{ width: '100%', height: '100%', border: 'none' }}
-                onLoad={handleSigningComplete}
-              />
+            {signingCompleted ? (
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column',
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                height: '100%',
+                textAlign: 'center'
+              }}>
+                <CheckCircleIcon sx={{ fontSize: 64, color: 'success.main', mb: 2 }} />
+                <Typography variant="h6" color="success.main" gutterBottom>
+                  Signing Completed Successfully!
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  The lease agreement has been signed by all parties.
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  This dialog will close automatically in a moment...
+                </Typography>
+              </Box>
+            ) : hasCurrentUserSigned() ? (
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column',
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                height: '100%',
+                textAlign: 'center'
+              }}>
+                <CheckCircleIcon sx={{ fontSize: 64, color: 'success.main', mb: 2 }} />
+                <Typography variant="h6" color="success.main" gutterBottom>
+                  You Have Already Signed!
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  You have completed your signature for this lease agreement.
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  Waiting for the other party to complete their signature.
+                </Typography>
+              </Box>
+            ) : signingUrl ? (
+              <>
+                <iframe
+                  src={signingUrl}
+                  style={{ width: '100%', height: '80%', border: 'none' }}
+                  title="DocuSign Signing Interface"
+                />
+                {/* Development Helper Section */}
+                {isDocuSignStubbed() && !signingCompleted && (
+                  <Box sx={{ mt: 2, p: 2, bgcolor: 'warning.light', borderRadius: 1 }}>
+                    <Typography variant="subtitle2" color="warning.dark" gutterBottom>
+                      🔧 Development Mode - DocuSign Stubbed
+                    </Typography>
+                    <Typography variant="body2" color="warning.dark" sx={{ mb: 2 }}>
+                      This is a mock signing interface. Use the buttons below to simulate signing actions.
+                    </Typography>
+                    
+                    {/* Signing Status Display */}
+                    <Box sx={{ mb: 2, p: 1, bgcolor: 'white', borderRadius: 1 }}>
+                      <Typography variant="subtitle2" color="text.primary" gutterBottom>
+                        Signing Status:
+                      </Typography>
+                      <Box sx={{ display: 'flex', gap: 2 }}>
+                        <Chip
+                          label={`Landlord: ${getSigningStatusForRole('landlord')?.status || 'Not Started'}`}
+                          color={getSigningStatusForRole('landlord')?.status === 'completed' ? 'success' : 'default'}
+                          size="small"
+                        />
+                        <Chip
+                          label={`Tenant: ${getSigningStatusForRole('tenant')?.status || 'Not Started'}`}
+                          color={getSigningStatusForRole('tenant')?.status === 'completed' ? 'success' : 'default'}
+                          size="small"
+                        />
+                      </Box>
+                    </Box>
+                    <Stack direction="row" spacing={2}>
+                      <Button
+                        variant="contained"
+                        color="success"
+                        size="small"
+                        disabled={hasAllPartiesSigned()}
+                        onClick={async () => {
+                          try {
+                            console.log('🔧 [STUBBED] Attempting to sign with envelope ID:', currentEnvelopeId);
+                            if (!currentEnvelopeId) {
+                              toast.error('No envelope ID available for signing');
+                              return;
+                            }
+                            await simulateStubbedSigning(currentEnvelopeId, '1', 'sign');
+                            await simulateStubbedSigning(currentEnvelopeId, '2', 'sign');
+                            toast.success('Both parties signed successfully (Mock)');
+                            setSigningCompleted(true);
+                            fetchEnvelopeStatus();
+                            // Close dialog after a short delay to show the success message
+                            setTimeout(() => {
+                              setShowSigningDialog(false);
+                              setSigningCompleted(false);
+                            }, 1500);
+                          } catch (error) {
+                            console.error('Signing error:', error);
+                            toast.error('Failed to simulate signing');
+                          }
+                        }}
+                      >
+                        Simulate Both Sign
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="warning"
+                        size="small"
+                        disabled={getSigningStatusForRole('landlord')?.status === 'completed'}
+                        onClick={async () => {
+                          try {
+                            if (!currentEnvelopeId) {
+                              toast.error('No envelope ID available for signing');
+                              return;
+                            }
+                            await simulateStubbedSigning(currentEnvelopeId, '1', 'sign');
+                            toast.success('Landlord signed (Mock)');
+                            fetchEnvelopeStatus();
+                          } catch (error) {
+                            console.error('Signing error:', error);
+                            toast.error('Failed to simulate signing');
+                          }
+                        }}
+                      >
+                        Landlord Sign Only
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="warning"
+                        size="small"
+                        disabled={getSigningStatusForRole('tenant')?.status === 'completed'}
+                        onClick={async () => {
+                          try {
+                            if (!currentEnvelopeId) {
+                              toast.error('No envelope ID available for signing');
+                              return;
+                            }
+                            await simulateStubbedSigning(currentEnvelopeId, '2', 'sign');
+                            toast.success('Tenant signed (Mock)');
+                            fetchEnvelopeStatus();
+                          } catch (error) {
+                            console.error('Signing error:', error);
+                            toast.error('Failed to simulate signing');
+                          }
+                        }}
+                      >
+                        Tenant Sign Only
+                      </Button>
+                    </Stack>
+                  </Box>
+                )}
+              </>
             ) : (
               <Box sx={{ 
                 display: 'flex', 
@@ -1280,7 +1601,20 @@ const LeaseAgreement = ({ leaseDetails, onLeaseUpdate }) => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowSigningDialog(false)}>Close</Button>
+          {signingCompleted ? (
+            <Button 
+              variant="contained" 
+              color="success" 
+              onClick={() => {
+                setShowSigningDialog(false);
+                setSigningCompleted(false);
+              }}
+            >
+              Done
+            </Button>
+          ) : (
+            <Button onClick={() => setShowSigningDialog(false)}>Close</Button>
+          )}
         </DialogActions>
       </Dialog>
 
