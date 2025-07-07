@@ -16,7 +16,51 @@ export default function About() {
             <div className="flex flex-col">
               <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
                 <svg
-                  className="h-5 w-5 flex-none text-indigo-600"
+                  className="h-6 w-6 flex-none text-primary-600"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                Guaranteed Income Protection
+              </dt>
+              <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                <p className="flex-auto">
+                  Landlords receive guaranteed income protection of up to 12 months in case tenants default on their rent payments, ensuring financial security.
+                </p>
+              </dd>
+            </div>
+            <div className="flex flex-col">
+              <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                <svg
+                  className="h-6 w-6 flex-none text-primary-600"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4.93 1.31a41.401 41.401 0 0110.14 0C16.194 1.45 17 2.414 17 3.517V18.25a.75.75 0 01-1.075.676l-2.8-1.344-2.8 1.344a.75.75 0 01-.65 0l-2.8-1.344-2.8 1.344A.75.75 0 013 18.25V3.517c0-1.103.806-2.068 1.93-2.207z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                Legal Assistance
+              </dt>
+              <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                <p className="flex-auto">
+                  We provide comprehensive legal assistance and support for landlords dealing with eviction cases and other legal matters.
+                </p>
+              </dd>
+            </div>
+            <div className="flex flex-col">
+              <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                <svg
+                  className="h-6 w-6 flex-none text-primary-600"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                   aria-hidden="true"
@@ -38,7 +82,7 @@ export default function About() {
             <div className="flex flex-col">
               <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
                 <svg
-                  className="h-5 w-5 flex-none text-indigo-600"
+                  className="h-6 w-6 flex-none text-primary-600"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                   aria-hidden="true"
@@ -60,7 +104,7 @@ export default function About() {
             <div className="flex flex-col">
               <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
                 <svg
-                  className="h-5 w-5 flex-none text-indigo-600"
+                  className="h-6 w-6 flex-none text-primary-600"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                   aria-hidden="true"
@@ -93,7 +137,7 @@ export default function About() {
                   List your properties, manage applications, and communicate with potential tenants all in one place. Our platform helps you find the perfect tenant for your property.
                 </p>
                 <p className="mt-6">
-                  <a href="/register" className="text-sm font-semibold leading-6 text-indigo-600">
+                  <a href="/register" className="text-sm font-semibold leading-6 text-primary-600">
                     Become a Landlord <span aria-hidden="true">→</span>
                   </a>
                 </p>
@@ -108,7 +152,7 @@ export default function About() {
                   Browse through our extensive collection of properties, apply for rentals, and communicate with landlords directly. Find your perfect home with ease.
                 </p>
                 <p className="mt-6">
-                  <a href="/register" className="text-sm font-semibold leading-6 text-indigo-600">
+                  <a href="/register" className="text-sm font-semibold leading-6 text-primary-600">
                     Find Your Home <span aria-hidden="true">→</span>
                   </a>
                 </p>

@@ -43,7 +43,7 @@ export default function Login() {
       
       if (result.success) {
         if (result.role === 'landlord') {
-          navigate('/my-properties');
+          navigate('/landlord-dashboard');
         } else {
           navigate('/');
         }

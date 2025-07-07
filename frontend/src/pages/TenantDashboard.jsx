@@ -468,7 +468,7 @@ const TenantDashboard = () => {
                               </tbody>
                             </table>
                           </div>
-                          <Link to="/tickets">
+                          <Link to="/my-lease#tickets">
                             <Button variant="outline-primary" className="w-100 mt-3">View All Tickets</Button>
                           </Link>
                         </>
@@ -582,7 +582,7 @@ const TenantDashboard = () => {
                           </p>
                         </div>
                       )}
-                      <Link to="/payments">
+                      <Link to="/my-lease#payments">
                         <Button variant="outline-primary" className="w-100 mt-3">View All Payments</Button>
                       </Link>
                     </Card.Body>
