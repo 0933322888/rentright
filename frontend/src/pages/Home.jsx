@@ -27,7 +27,7 @@ export default function Home() {
   const landlordBenefits = [
     {
       title: "Guaranteed Rent Payments",
-      description: "Enjoy peace of mind with guaranteed rental income — even if your tenant delays or defaults on payment.",
+      description: "Enjoy peace of mind with guaranteed rental income — even if your tenant defaults on payment.",
       icon: (
         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -106,10 +106,10 @@ export default function Home() {
                 Rent Smarter. Live Easier.
               </h1>
               <p className="mt-6 text-lg leading-8 text-gray-600">
-                Like a real estate agent, but for your rental property.
+                Your best alternative to a real estate agent.
               </p>
               <p className="mt-6 text-lg leading-8 text-gray-600">
-              RentRight connects landlords and tenants with guaranteed payments, AI-powered screening, and full-service rental management — all in one platform.
+              RentRight connects landlords and tenants, offers guaranteed payments, AI-powered screening, and full-service rental management — all in one platform.
               </p>
               <div className="mt-10 flex items-center gap-x-6">
                 <Link

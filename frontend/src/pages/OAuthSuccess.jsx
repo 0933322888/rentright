@@ -46,7 +46,11 @@ export default function OAuthSuccess() {
           setHasProcessed(true);
           // Show success message briefly
           setTimeout(() => {
-            navigate('/');
+            if (result.role === 'landlord') {
+              navigate('/landlord-dashboard');
+            } else {
+              navigate('/');
+            }
           }, 2000);
         } else {
           setError(result.message);
@@ -92,7 +96,11 @@ export default function OAuthSuccess() {
         setShowRoleSelection(false);
         // Show success message briefly
         setTimeout(() => {
-          navigate('/');
+          if (loginResult.role === 'landlord') {
+            navigate('/landlord-dashboard');
+          } else {
+            navigate('/');
+          }
         }, 2000);
       } else {
         throw new Error(loginResult.message);

@@ -44,7 +44,7 @@ export default function TenantBenefits() {
     {
       id: 3,
       title: "Secure Rent Payments",
-      description: "Manage your rent payments securely and conveniently. Set up automatic payments, split rent with roommates, and maintain a complete payment history. Our platform ensures your financial transactions are protected.",
+      description: "Manage your rent payments securely and conveniently. Set up automatic payments, and maintain a complete payment history. Our platform ensures your financial transactions are protected and helps you build credit by reporting on-time rent payments to credit bureaus.",
       icon: (
         <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -54,9 +54,9 @@ export default function TenantBenefits() {
       features: [
         "Multiple payment methods",
         "Automatic rent reminders",
-        "Split rent with roommates",
         "Payment history tracking",
-        "Late fee prevention"
+        "Late fee prevention",
+        "Credit score improvement through on-time payments"
       ]
     },
     {
@@ -137,7 +137,7 @@ export default function TenantBenefits() {
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <Link
                 to="/properties"
-                className="rounded-md bg-blue-600 px-5 py-3 text-base font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                className="rounded-md bg-primary-600 px-5 py-3 text-base font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
               >
                 Browse Properties
               </Link>
@@ -162,7 +162,7 @@ export default function TenantBenefits() {
                 <div className={`space-y-6 ${index % 2 === 0 ? 'lg:order-1' : 'lg:order-2'}`}>
                   <div className="flex items-center gap-4">
                     <div className="flex-shrink-0">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 text-white">
+                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-600 text-white">
                         {benefit.icon}
                       </div>
                     </div>
@@ -176,7 +176,7 @@ export default function TenantBenefits() {
                   <ul className="space-y-3">
                     {benefit.features.map((feature, featureIndex) => (
                       <li key={featureIndex} className="flex items-start gap-3">
-                        <svg className="h-6 w-6 flex-none text-blue-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="h-6 w-6 flex-none text-primary-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <span className="text-gray-600">{feature}</span>
@@ -212,7 +212,7 @@ export default function TenantBenefits() {
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <Link
                 to="/register"
-                className="rounded-md bg-blue-600 px-5 py-3 text-base font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                className="rounded-md bg-primary-600 px-5 py-3 text-base font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
               >
                 Create Free Account
               </Link>

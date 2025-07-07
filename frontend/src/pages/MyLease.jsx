@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_ENDPOINTS } from '../config/api';
 import { 
@@ -32,6 +33,8 @@ import EmptyState from '../components/EmptyState';
 
 const MyLease = () => {
   const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [leaseDetails, setLeaseDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -60,6 +63,16 @@ const MyLease = () => {
     fetchLeaseDetails();
   }, []);
 
+  // Handle URL hash for tab navigation
+  useEffect(() => {
+    const hash = location.hash.replace('#', '');
+    const validTabs = ['lease', 'insurance', 'tickets', 'payments'];
+    
+    if (hash && validTabs.includes(hash)) {
+      setTabValue(hash);
+    }
+  }, [location.hash]);
+
   const handleLeaseUpdate = (updatedLease) => {
     setLeaseDetails(updatedLease);
   };
@@ -70,6 +83,8 @@ const MyLease = () => {
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+    // Update URL hash when tab changes
+    navigate(`/my-lease#${newValue}`, { replace: true });
   };
 
   if (loading) {

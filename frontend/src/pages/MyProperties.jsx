@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
   Tabs, 
@@ -36,6 +36,7 @@ import SecurityIcon from '@mui/icons-material/Security';
 
 export default function MyProperties() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedPropertyIndex, setSelectedPropertyIndex] = useState(0);
   const [innerTabValue, setInnerTabValue] = useState('overview');
   const [clickedButton, setClickedButton] = useState(null);
@@ -74,12 +75,41 @@ export default function MyProperties() {
     }
   }, [properties]);
 
+  // Handle URL hash for tab navigation
+  useEffect(() => {
+    const hash = location.hash.replace('#', '');
+    const validInnerTabs = ['overview', 'applications', 'lease', 'insurance', 'payments', 'tickets', 'statistics'];
+    
+    if (hash) {
+      // Check if hash contains property index and tab (format: propertyIndex:tabName)
+      const parts = hash.split(':');
+      
+      if (parts.length === 2) {
+        const propertyIndex = parseInt(parts[0]);
+        const tabName = parts[1];
+        
+        // Validate property index
+        if (propertyIndex >= 0 && propertyIndex < properties.length && validInnerTabs.includes(tabName)) {
+          setSelectedPropertyIndex(propertyIndex);
+          setInnerTabValue(tabName);
+        }
+      } else if (validInnerTabs.includes(hash)) {
+        // Just tab name, keep current property
+        setInnerTabValue(hash);
+      }
+    }
+  }, [location.hash, properties.length]);
+
   const handlePropertyTabChange = (event, newValue) => {
     setSelectedPropertyIndex(newValue);
+    // Update URL hash when property changes
+    navigate(`/my-properties#${newValue}:${innerTabValue}`, { replace: true });
   };
 
   const handleInnerTabChange = (event, newValue) => {
     setInnerTabValue(newValue);
+    // Update URL hash when inner tab changes
+    navigate(`/my-properties#${selectedPropertyIndex}:${newValue}`, { replace: true });
   };
 
   const handleNavigateToLease = () => {

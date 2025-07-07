@@ -57,13 +57,11 @@ const router = express.Router();
 
 // Tenant routes
 router.post('/', protect, restrictTo('tenant'), upload.array('images', 5), createTicket);
+router.get('/my-tickets', protect, restrictTo('tenant'), getTenantTickets);
+router.get('/property/:propertyId', protect, getPropertyTickets);
 router.delete('/:ticketId', protect, restrictTo('tenant'), deleteTicket);
 router.patch('/:ticketId/tenant-status', protect, restrictTo('tenant'), updateTenantTicketStatus);
-router.get('/my-tickets', protect, restrictTo('tenant'), getTenantTickets);
 router.get('/:ticketId', protect, getTicketById);
-
-// Property tickets route
-router.get('/property/:propertyId', protect, getPropertyTickets);
 
 // Admin routes
 router.get('/', protect, restrictTo('admin'), getAllTickets);

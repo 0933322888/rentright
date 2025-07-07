@@ -145,7 +145,7 @@ export default function CreateTicket() {
         }
       );
       toast.success('Ticket created successfully');
-      navigate('/my-tickets');
+      navigate('/my-lease#tickets');
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to create ticket');
     } finally {

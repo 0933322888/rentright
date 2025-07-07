@@ -7,6 +7,49 @@ export default function LandlordBenefits() {
   const benefits = [
     {
       id: 1,
+      title: "Financial Loss Protection",
+      description: (
+        <>
+          Protect your rental income with our comprehensive financial loss coverage. We understand the risks landlords face when tenants stop paying rent, and we provide up to 12 months of financial protection to ensure your investment remains secure and profitable.</>
+      ),
+      icon: (
+        <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+        </svg>
+      ),
+      image: "/images/benefits/secure-payments.jpg",
+      features: [
+        "Up to 12 months of rent coverage if tenant stops paying",
+        "Automatic claim processing and verification",
+        "No additional insurance premiums required",
+        "Coverage for legal fees and eviction costs",
+        "Peace of mind knowing your income is protected"
+      ]
+    },
+    {
+      id: 2,
+      title: "Legal Compliance & Protection",
+      description: (
+        <>
+          Stay compliant with local rental laws and protect your investments. Our platform keeps you updated on legal requirements, provides standardized legal documents, and helps you maintain proper documentation for all your properties.
+        </>
+      ),
+      icon: (
+        <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+        </svg>
+      ),
+      image: "/images/benefits/legal-compliance.jpg",
+      features: [
+        "State-specific lease agreements",
+        "Legal document templates and generation",
+        "Compliance checklist and reminders",
+        "Eviction process guidance",
+        "Record keeping and documentation"
+      ]
+    },
+    {
+      id: 3,
       title: "Smart Property Management",
       description: "Take control of your rental properties with our comprehensive management tools. From automated rent collection and maintenance tracking to tenant screening and digital lease signing, our platform streamlines every aspect of property management. Save valuable time and reduce administrative overhead with our intuitive dashboard.",
       icon: (
@@ -24,7 +67,7 @@ export default function LandlordBenefits() {
       ]
     },
     {
-      id: 2,
+      id: 4,
       title: "Financial Optimization",
       description: "Maximize your rental income with data-driven insights and financial tools. Our platform provides market analysis, competitive pricing recommendations, and comprehensive financial tracking to help you make informed decisions and optimize your returns.",
       icon: (
@@ -39,42 +82,6 @@ export default function LandlordBenefits() {
         "Tax preparation assistance",
         "ROI calculations and forecasting",
         "Cash flow monitoring"
-      ]
-    },
-    {
-      id: 3,
-      title: "Legal Compliance & Protection",
-      description: "Stay compliant with local rental laws and protect your investments. Our platform keeps you updated on legal requirements, provides standardized legal documents, and helps you maintain proper documentation for all your properties.",
-      icon: (
-        <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-        </svg>
-      ),
-      image: "/images/benefits/legal-compliance.jpg",
-      features: [
-        "State-specific lease agreements",
-        "Legal document templates and generation",
-        "Compliance checklist and reminders",
-        "Eviction process guidance",
-        "Record keeping and documentation"
-      ]
-    },
-    {
-      id: 4,
-      title: "Tenant Communication Hub",
-      description: "Build better relationships with your tenants through our centralized communication platform. Handle maintenance requests, announcements, and document sharing efficiently while maintaining a professional record of all interactions.",
-      icon: (
-        <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-        </svg>
-      ),
-      image: "/images/benefits/communication-hub.jpg",
-      features: [
-        "In-app messaging system",
-        "Maintenance request management",
-        "Automated notifications and reminders",
-        "Document sharing and e-signing",
-        "Announcement broadcasts"
       ]
     },
     {
@@ -93,6 +100,24 @@ export default function LandlordBenefits() {
         "Automated showing scheduler",
         "Application management system",
         "Multi-platform listing syndication"
+      ]
+    },
+    {
+      id: 6,
+      title: "Tenant Communication Hub",
+      description: "Build better relationships with your tenants through our centralized communication platform. Handle maintenance requests, announcements, and document sharing efficiently while maintaining a professional record of all interactions.",
+      icon: (
+        <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+      ),
+      image: "/images/benefits/communication-hub.jpg",
+      features: [
+        "In-app messaging system",
+        "Maintenance request management",
+        "Automated notifications and reminders",
+        "Document sharing and e-signing",
+        "Announcement broadcasts"
       ]
     }
   ];

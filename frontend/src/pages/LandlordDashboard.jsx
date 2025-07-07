@@ -333,19 +333,19 @@ const LandlordDashboard = () => {
             </Card.Header>
             <Card.Body>
               <div className="d-grid gap-2">
-                <Button variant="success" size="sm">
+                <Button as={Link} to="/properties/create" variant="success" size="sm">
                   <div className="d-flex align-items-center gap-1 justify-content-center py-2">
                     <FaPlus className="me-2" />
                     <span>Add New Property</span>
                   </div>
                 </Button>
-                <Button variant="primary" size="sm">
+                <Button as={Link} to="/my-properties" variant="primary" size="sm">
                   <div className="d-flex align-items-center gap-1 justify-content-center py-2">
                     <FaHome className="me-2" />
                     <span>Manage Properties</span>
                   </div>
                 </Button>
-                <Button variant="warning" size="sm">
+                <Button as={Link} to="/my-properties" variant="warning" size="sm">
                   <div className="d-flex align-items-center gap-1 justify-content-center py-2">
                     <FaTicketAlt className="me-2" />
                     <span>View Tickets</span>
