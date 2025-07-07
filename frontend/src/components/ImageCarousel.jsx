@@ -6,13 +6,15 @@ export default function ImageCarousel({ images }) {
   const [imageError, setImageError] = useState(false);
   const [errorCount, setErrorCount] = useState(0);
 
-  const nextSlide = () => {
+  const nextSlide = (e) => {
+    e.stopPropagation(); // Prevent event bubbling to parent
     setCurrentIndex((prevIndex) => 
       prevIndex === images.length - 1 ? 0 : prevIndex + 1
     );
   };
 
-  const prevSlide = () => {
+  const prevSlide = (e) => {
+    e.stopPropagation(); // Prevent event bubbling to parent
     setCurrentIndex((prevIndex) => 
       prevIndex === 0 ? images.length - 1 : prevIndex - 1
     );
@@ -42,7 +44,7 @@ export default function ImageCarousel({ images }) {
 
   if (!images || images.length === 0) {
     return (
-      <div className="relative h-96 w-full bg-gray-100 flex items-center justify-center">
+      <div className="relative h-full w-full bg-gray-100 flex items-center justify-center">
         <div className="text-center text-gray-500">
           <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -54,7 +56,7 @@ export default function ImageCarousel({ images }) {
   }
 
   return (
-    <div className="relative h-96 w-full">
+    <div className="relative h-full w-full">
       <img
         src={getImageUrl(images[currentIndex])}
         alt={`Property image ${currentIndex + 1}`}
@@ -70,7 +72,7 @@ export default function ImageCarousel({ images }) {
         <>
           <button
             onClick={prevSlide}
-            className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75"
+            className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-all duration-200 z-10"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -79,19 +81,22 @@ export default function ImageCarousel({ images }) {
           
           <button
             onClick={nextSlide}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75"
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-all duration-200 z-10"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
 
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2">
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 z-10">
             {images.map((_, index) => (
               <button
                 key={index}
-                onClick={() => setCurrentIndex(index)}
-                className={`w-2 h-2 rounded-full ${
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent event bubbling to parent
+                  setCurrentIndex(index);
+                }}
+                className={`w-2 h-2 rounded-full transition-all duration-200 ${
                   currentIndex === index ? 'bg-white' : 'bg-white bg-opacity-50'
                 }`}
               />

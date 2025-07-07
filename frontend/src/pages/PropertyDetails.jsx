@@ -242,13 +242,18 @@ const PropertyDetails = () => {
       <div className="flex flex-col md:flex-row gap-8 w-full">
         {/* Left: Images Section and Apply Button */}
         <div className="w-full md:w-[800px] flex flex-col gap-6 mb-6 md:mb-0">
-          <div className="h-[500px] md:h-[700px] rounded-lg overflow-hidden shadow-lg relative cursor-pointer group transition-transform duration-200 hover:scale-[1.02] hover:shadow-2xl" onClick={() => { 
-            if (property.images && property.images.length > 0) {
-              setGalleryOpen(true); 
-              setGalleryIndex(0);
+          <div className="h-[500px] md:h-[700px] rounded-lg overflow-hidden shadow-lg relative cursor-pointer group transition-transform duration-200 hover:scale-[1.02] hover:shadow-2xl" onClick={(e) => { 
+            // Only open gallery if clicking on the image area, not on carousel controls
+            if (e.target.tagName === 'IMG' || e.target.classList.contains('image-container')) {
+              if (property.images && property.images.length > 0) {
+                setGalleryOpen(true); 
+                setGalleryIndex(0);
+              }
             }
           }}>
-            <ImageCarousel images={property.images || []} />
+            <div className="image-container w-full h-full">
+              <ImageCarousel images={property.images || []} />
+            </div>
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent z-10 pointer-events-none" />
             <div className="absolute bottom-0 left-0 p-6 z-20 text-white pointer-events-none">
               <h1 className="text-3xl md:text-4xl font-bold mb-2 drop-shadow-lg">{property.title}</h1>
