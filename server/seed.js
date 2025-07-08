@@ -34,7 +34,8 @@ const sampleLandlords = [
     role: 'landlord',
     isVerified: true,
     phone: '555-0101',
-    termsAccepted: true
+    termsAccepted: true,
+    profilePicture: "https://rentright-data.s3.ca-central-1.amazonaws.com/profile-pictures/686d1e64411eb9bcef82a16b/landlord_avatar_1.jpg",
   },
   {
     name: 'Sarah Johnson',
@@ -43,7 +44,8 @@ const sampleLandlords = [
     role: 'landlord',
     isVerified: true,
     phone: '555-0102',
-    termsAccepted: true
+    termsAccepted: true,
+    profilePicture: "https://rentright-data.s3.ca-central-1.amazonaws.com/profile-pictures/686d1e64411eb9bcef82a16c/landlord_avatar_2.jpg",
   },
   {
     name: 'Michael Brown',
@@ -52,7 +54,8 @@ const sampleLandlords = [
     role: 'landlord',
     isVerified: false,
     phone: '555-0103',
-    termsAccepted: true
+    termsAccepted: true,
+    profilePicture: "https://rentright-data.s3.ca-central-1.amazonaws.com/profile-pictures/686d1e64411eb9bcef82a16d/avatar.jpg",
   }
 ];
 
@@ -64,7 +67,8 @@ const sampleTenants = [
     role: 'tenant',
     hasProfile: true,
     phone: '555-0201',
-    termsAccepted: true
+    termsAccepted: true,
+    profilePicture: "https://rentright-data.s3.ca-central-1.amazonaws.com/profile-pictures/686d1e64411eb9bcef82a16f/tenant_avatar_1.jpg",
   },
   {
     name: 'David Wilson',
@@ -73,7 +77,8 @@ const sampleTenants = [
     role: 'tenant',
     hasProfile: true,
     phone: '555-0202',
-    termsAccepted: true
+    termsAccepted: true,
+    profilePicture: "https://rentright-data.s3.ca-central-1.amazonaws.com/profile-pictures/686d1e64411eb9bcef82a16d/avatar.jpg",
   },
   {
     name: 'Lisa Anderson',
@@ -82,7 +87,8 @@ const sampleTenants = [
     role: 'tenant',
     hasProfile: false,
     phone: '555-0203',
-    termsAccepted: true
+    termsAccepted: true,
+    profilePicture: "https://rentright-data.s3.ca-central-1.amazonaws.com/profile-pictures/686d1e64411eb9bcef82a16f/tenant_avatar_1.jpg",
   },
   {
     name: 'Lisa Anderson',
