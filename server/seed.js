@@ -153,7 +153,12 @@ const sampleProperties = [
         ]
       }
     ],
-    images: ['https://media.istockphoto.com/id/1255835530/photo/modern-custom-suburban-home-exterior.jpg?s=1024x1024&w=is&k=20&c=4TmxYMrPLVb8u09dT5amw1vBsAVbHCxMWZIXqoy-I34=', 'https://media.istockphoto.com/id/520774645/photo/house-exterior-with-curb-appeal.jpg?s=1024x1024&w=is&k=20&c=4rwljqZ3Sd5f2aI3e7um6fKpILko-OrrFiEQCJA38ug=', 'https://media.istockphoto.com/id/590074124/photo/classic-american-house-with-siding-trim-and-red-entry-door.jpg?s=1024x1024&w=is&k=20&c=NXIxkzhayUFnOGqI1hhNFW04ufCpYO_F6KNgNiCHNMo='],
+    images: [
+      'https://images.pexels.com/photos/275484/pexels-photo-275484.jpeg',
+      'https://images.pexels.com/photos/1446378/pexels-photo-1446378.jpeg',
+      'https://images.pexels.com/photos/1918291/pexels-photo-1918291.jpeg',
+      'https://images.pexels.com/photos/2082087/pexels-photo-2082087.jpeg'
+    ],
     status: 'active'
   },
   {
@@ -207,11 +212,17 @@ const sampleProperties = [
         ]
       }
     ],
-    images: ['https://media.istockphoto.com/id/520774645/photo/house-exterior-with-curb-appeal.jpg?s=1024x1024&w=is&k=20&c=4rwljqZ3Sd5f2aI3e7um6fKpILko-OrrFiEQCJA38ug=', 'https://media.istockphoto.com/id/590074124/photo/classic-american-house-with-siding-trim-and-red-entry-door.jpg?s=1024x1024&w=is&k=20&c=NXIxkzhayUFnOGqI1hhNFW04ufCpYO_F6KNgNiCHNMo='],
+    images: [
+      'https://images.pexels.com/photos/7031607/pexels-photo-7031607.jpeg',
+      'https://images.pexels.com/photos/2507016/pexels-photo-2507016.jpeg',
+      'https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg',
+      'https://images.pexels.com/photos/1571458/pexels-photo-1571458.jpeg',
+      'https://images.pexels.com/photos/3209045/pexels-photo-3209045.jpeg'
+    ],
     status: 'active'
   },
   {
-    title: 'Cozy Suburban House 2',
+    title: 'Lake View 2 Bedroom House',
     description: 'Less charming house in a loud neighborhood',
     type: 'house',
     price: 1500,
@@ -261,18 +272,23 @@ const sampleProperties = [
         ]
       }
     ],
-    images: ['https://media.istockphoto.com/id/520774645/photo/house-exterior-with-curb-appeal.jpg?s=1024x1024&w=is&k=20&c=4rwljqZ3Sd5f2aI3e7um6fKpILko-OrrFiEQCJA38ug=', 'https://media.istockphoto.com/id/590074124/photo/classic-american-house-with-siding-trim-and-red-entry-door.jpg?s=1024x1024&w=is&k=20&c=NXIxkzhayUFnOGqI1hhNFW04ufCpYO_F6KNgNiCHNMo='],
+    images: [
+      'https://images.pexels.com/photos/259685/pexels-photo-259685.jpeg',
+      'https://images.pexels.com/photos/1571463/pexels-photo-1571463.jpeg',
+      'https://images.pexels.com/photos/262048/pexels-photo-262048.jpeg',
+      'https://images.pexels.com/photos/2134224/pexels-photo-2134224.jpeg'
+    ],
     status: 'active'
   },
   {
-    title: 'Cozy Suburban House 3',
+    title: '3 Bedroom Lake View House',
     description: "House in a quiet neighborhood",
     type: 'house',
     price: 1900,
     availableFrom: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
     features: {
-      bedrooms: 1,
-      bathrooms: 1,
+      bedrooms: 3,
+      bathrooms: 2,
       squareFootage: 800,
       parking: true,
       furnished: true,
@@ -315,7 +331,12 @@ const sampleProperties = [
         ]
       }
     ],
-    images: ['https://media.istockphoto.com/id/520774645/photo/house-exterior-with-curb-appeal.jpg?s=1024x1024&w=is&k=20&c=4rwljqZ3Sd5f2aI3e7um6fKpILko-OrrFiEQCJA38ug=', 'https://media.istockphoto.com/id/590074124/photo/classic-american-house-with-siding-trim-and-red-entry-door.jpg?s=1024x1024&w=is&k=20&c=NXIxkzhayUFnOGqI1hhNFW04ufCpYO_F6KNgNiCHNMo='],
+    images: [
+      'https://images.pexels.com/photos/1732414/pexels-photo-1732414.jpeg',
+      'https://images.pexels.com/photos/2155202/pexels-photo-2155202.jpeg',
+      'https://images.pexels.com/photos/276554/pexels-photo-276554.jpeg',
+      'https://images.pexels.com/photos/323781/pexels-photo-323781.jpeg'
+    ],
     status: 'active'
   },
   {
@@ -376,9 +397,11 @@ const sampleProperties = [
       }
     ],
     images: [
-      'https://media.istockphoto.com/id/520774645/photo/house-exterior-with-curb-appeal.jpg?s=1024x1024&w=is&k=20&c=4rwljqZ3Sd5f2aI3e7um6fKpILko-OrrFiEQCJA38ug=',
-      'https://media.istockphoto.com/id/590074124/photo/classic-american-house-with-siding-trim-and-red-entry-door.jpg?s=1024x1024&w=is&k=20&c=NXIxkzhayUFnOGqI1hhNFW04ufCpYO_F6KNgNiCHNMo=',
-      'https://media.istockphoto.com/id/1255835530/photo/modern-custom-suburban-home-exterior.jpg?s=1024x1024&w=is&k=20&c=4TmxYMrPLVb8u09dT5amw1vBsAVbHCxMWZIXqoy-I34='],
+      'https://images.pexels.com/photos/7045920/pexels-photo-7045920.jpeg',
+      'https://images.pexels.com/photos/8572163/pexels-photo-8572163.jpeg',
+      'https://images.pexels.com/photos/7045918/pexels-photo-7045918.jpeg',
+      'https://images.pexels.com/photos/12838528/pexels-photo-12838528.jpeg'
+    ],
     status: 'active'
   }
 ];
